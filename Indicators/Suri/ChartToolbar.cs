@@ -9,7 +9,7 @@ using System.Windows.Controls;
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
-	public class SuriChartToolbar : Indicator {
+	public class ChartToolbar : Indicator {
 		
 		private NinjaTrader.Gui.Chart.Chart				chartWindow;
 		private System.Windows.Controls.Grid			chartGrid;
@@ -24,7 +24,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		protected override void OnStateChange() {
 			if (State == State.SetDefaults) {
 				Description							= @"";
-				Name								= "SuriChartToolbar";
+				Name								= "Toolbar";
 				Calculate							= Calculate.OnBarClose;
 				IsOverlay							= true;
 				DisplayInDataBox					= false;
@@ -180,19 +180,19 @@ namespace NinjaTrader.NinjaScript.Indicators
 {
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
-		private Suri.SuriChartToolbar[] cacheSuriChartToolbar;
-		public Suri.SuriChartToolbar SuriChartToolbar()
+		private Suri.ChartToolbar[] cacheChartToolbar;
+		public Suri.ChartToolbar ChartToolbar()
 		{
-			return SuriChartToolbar(Input);
+			return ChartToolbar(Input);
 		}
 
-		public Suri.SuriChartToolbar SuriChartToolbar(ISeries<double> input)
+		public Suri.ChartToolbar ChartToolbar(ISeries<double> input)
 		{
-			if (cacheSuriChartToolbar != null)
-				for (int idx = 0; idx < cacheSuriChartToolbar.Length; idx++)
-					if (cacheSuriChartToolbar[idx] != null &&  cacheSuriChartToolbar[idx].EqualsInput(input))
-						return cacheSuriChartToolbar[idx];
-			return CacheIndicator<Suri.SuriChartToolbar>(new Suri.SuriChartToolbar(), input, ref cacheSuriChartToolbar);
+			if (cacheChartToolbar != null)
+				for (int idx = 0; idx < cacheChartToolbar.Length; idx++)
+					if (cacheChartToolbar[idx] != null &&  cacheChartToolbar[idx].EqualsInput(input))
+						return cacheChartToolbar[idx];
+			return CacheIndicator<Suri.ChartToolbar>(new Suri.ChartToolbar(), input, ref cacheChartToolbar);
 		}
 	}
 }
@@ -201,14 +201,14 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.SuriChartToolbar SuriChartToolbar()
+		public Indicators.Suri.ChartToolbar ChartToolbar()
 		{
-			return indicator.SuriChartToolbar(Input);
+			return indicator.ChartToolbar(Input);
 		}
 
-		public Indicators.Suri.SuriChartToolbar SuriChartToolbar(ISeries<double> input )
+		public Indicators.Suri.ChartToolbar ChartToolbar(ISeries<double> input )
 		{
-			return indicator.SuriChartToolbar(input);
+			return indicator.ChartToolbar(input);
 		}
 	}
 }
@@ -217,14 +217,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.SuriChartToolbar SuriChartToolbar()
+		public Indicators.Suri.ChartToolbar ChartToolbar()
 		{
-			return indicator.SuriChartToolbar(Input);
+			return indicator.ChartToolbar(Input);
 		}
 
-		public Indicators.Suri.SuriChartToolbar SuriChartToolbar(ISeries<double> input )
+		public Indicators.Suri.ChartToolbar ChartToolbar(ISeries<double> input )
 		{
-			return indicator.SuriChartToolbar(input);
+			return indicator.ChartToolbar(input);
 		}
 	}
 }

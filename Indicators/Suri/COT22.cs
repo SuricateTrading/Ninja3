@@ -6,11 +6,11 @@ using NinjaTrader.Gui;
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
-	public class SuriCOT22 : Indicator {
+	public class COT22 : Indicator {
 		protected override void OnStateChange() {
 			if (State == State.SetDefaults) {
-				Description									= @"SuriCOT22";
-				Name										= "SuriCOT22";
+				Description									= @"COT22";
+				Name										= "COT 22";
 				Calculate									= Calculate.OnBarClose;
 				IsOverlay									= false;
 				DisplayInDataBox							= true;
@@ -85,19 +85,19 @@ namespace NinjaTrader.NinjaScript.Indicators
 {
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
-		private Suri.SuriCOT22[] cacheSuriCOT22;
-		public Suri.SuriCOT22 SuriCOT22()
+		private Suri.COT22[] cacheCOT22;
+		public Suri.COT22 COT22()
 		{
-			return SuriCOT22(Input);
+			return COT22(Input);
 		}
 
-		public Suri.SuriCOT22 SuriCOT22(ISeries<double> input)
+		public Suri.COT22 COT22(ISeries<double> input)
 		{
-			if (cacheSuriCOT22 != null)
-				for (int idx = 0; idx < cacheSuriCOT22.Length; idx++)
-					if (cacheSuriCOT22[idx] != null &&  cacheSuriCOT22[idx].EqualsInput(input))
-						return cacheSuriCOT22[idx];
-			return CacheIndicator<Suri.SuriCOT22>(new Suri.SuriCOT22(), input, ref cacheSuriCOT22);
+			if (cacheCOT22 != null)
+				for (int idx = 0; idx < cacheCOT22.Length; idx++)
+					if (cacheCOT22[idx] != null &&  cacheCOT22[idx].EqualsInput(input))
+						return cacheCOT22[idx];
+			return CacheIndicator<Suri.COT22>(new Suri.COT22(), input, ref cacheCOT22);
 		}
 	}
 }
@@ -106,14 +106,14 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.SuriCOT22 SuriCOT22()
+		public Indicators.Suri.COT22 COT22()
 		{
-			return indicator.SuriCOT22(Input);
+			return indicator.COT22(Input);
 		}
 
-		public Indicators.Suri.SuriCOT22 SuriCOT22(ISeries<double> input )
+		public Indicators.Suri.COT22 COT22(ISeries<double> input )
 		{
-			return indicator.SuriCOT22(input);
+			return indicator.COT22(input);
 		}
 	}
 }
@@ -122,14 +122,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.SuriCOT22 SuriCOT22()
+		public Indicators.Suri.COT22 COT22()
 		{
-			return indicator.SuriCOT22(Input);
+			return indicator.COT22(Input);
 		}
 
-		public Indicators.Suri.SuriCOT22 SuriCOT22(ISeries<double> input )
+		public Indicators.Suri.COT22 COT22(ISeries<double> input )
 		{
-			return indicator.SuriCOT22(input);
+			return indicator.COT22(input);
 		}
 	}
 }

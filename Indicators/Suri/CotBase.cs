@@ -24,20 +24,15 @@ using SharpDX.DirectWrite;
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
-	public class CotBasis : Indicator {
+	public class CotBase : Indicator {
 		
 		protected override void OnStateChange() {
 			if (State == State.SetDefaults) {
 				Description = Custom.Resource.NinjaScriptIndicatorDescriptionCOT;
-				Name = "Cot";
+				Name = "COT";
 				IsSuspendedWhileInactive = true;
 				
 				SCot = new CotReport { ReportType = CotReportType.Futures, Field = CotReportField.OpenInterest };
-				
-				
-				foreach (CotReportField t in Enum.GetValues(typeof(CotReportField))) {
-					Print(t + " " + (int)t);
-				}
 				
 				AddPlot(Brushes.CornflowerBlue, Custom.Resource.COT1);
 			}
@@ -144,19 +139,19 @@ namespace NinjaTrader.NinjaScript.Indicators
 {
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
-		private Suri.CotBasis[] cacheCotBasis;
-		public Suri.CotBasis CotBasis(CotReportField sReportField)
+		private Suri.CotBase[] cacheCotBase;
+		public Suri.CotBase CotBase(CotReportField sReportField)
 		{
-			return CotBasis(Input, sReportField);
+			return CotBase(Input, sReportField);
 		}
 
-		public Suri.CotBasis CotBasis(ISeries<double> input, CotReportField sReportField)
+		public Suri.CotBase CotBase(ISeries<double> input, CotReportField sReportField)
 		{
-			if (cacheCotBasis != null)
-				for (int idx = 0; idx < cacheCotBasis.Length; idx++)
-					if (cacheCotBasis[idx] != null && cacheCotBasis[idx].SReportField == sReportField && cacheCotBasis[idx].EqualsInput(input))
-						return cacheCotBasis[idx];
-			return CacheIndicator<Suri.CotBasis>(new Suri.CotBasis(){ SReportField = sReportField }, input, ref cacheCotBasis);
+			if (cacheCotBase != null)
+				for (int idx = 0; idx < cacheCotBase.Length; idx++)
+					if (cacheCotBase[idx] != null && cacheCotBase[idx].SReportField == sReportField && cacheCotBase[idx].EqualsInput(input))
+						return cacheCotBase[idx];
+			return CacheIndicator<Suri.CotBase>(new Suri.CotBase(){ SReportField = sReportField }, input, ref cacheCotBase);
 		}
 	}
 }
@@ -165,14 +160,14 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.CotBasis CotBasis(CotReportField sReportField)
+		public Indicators.Suri.CotBase CotBase(CotReportField sReportField)
 		{
-			return indicator.CotBasis(Input, sReportField);
+			return indicator.CotBase(Input, sReportField);
 		}
 
-		public Indicators.Suri.CotBasis CotBasis(ISeries<double> input , CotReportField sReportField)
+		public Indicators.Suri.CotBase CotBase(ISeries<double> input , CotReportField sReportField)
 		{
-			return indicator.CotBasis(input, sReportField);
+			return indicator.CotBase(input, sReportField);
 		}
 	}
 }
@@ -181,14 +176,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.CotBasis CotBasis(CotReportField sReportField)
+		public Indicators.Suri.CotBase CotBase(CotReportField sReportField)
 		{
-			return indicator.CotBasis(Input, sReportField);
+			return indicator.CotBase(Input, sReportField);
 		}
 
-		public Indicators.Suri.CotBasis CotBasis(ISeries<double> input , CotReportField sReportField)
+		public Indicators.Suri.CotBase CotBase(ISeries<double> input , CotReportField sReportField)
 		{
-			return indicator.CotBasis(input, sReportField);
+			return indicator.CotBase(input, sReportField);
 		}
 	}
 }

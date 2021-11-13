@@ -23,7 +23,7 @@ using NinjaTrader.NinjaScript.DrawingTools;
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri
 {
-	public class SuriCOT2 : Indicator
+	public class COT2 : Indicator
 	{
 		private CotReport cotReportCommShort;
 		
@@ -39,8 +39,8 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri
 		{
 			if (State == State.SetDefaults)
 			{
-				Description									= @"COT 2";
-				Name										= "SuriCOT2";
+				Description									= @"";
+				Name										= "COT 2";
 				Calculate									= Calculate.OnBarClose;
 				IsOverlay									= false;
 				DisplayInDataBox							= true;
@@ -55,7 +55,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri
 				ShowMaxMin					= false;
 				linientyp					= LineType.Dynamic;
 				
-				cotReportCommShort					= new CotReport { ReportType = CotReportType.Futures, Field = CotReportField.CommercialShort };
+				cotReportCommShort			= new CotReport { ReportType = CotReportType.Futures, Field = CotReportField.CommercialShort };
 			
 				AddPlot(Brushes.White, "CommShort");
 				AddPlot(Brushes.Red, "75%");
@@ -375,22 +375,22 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri
 		#region Properties
 		[NinjaScriptProperty]
 		[Range(1, int.MaxValue)]
-		[Display(Name="COT2Periode", Description="Periode in Bars", Order=1, GroupName="Parameters")]
+		[Display(Name="COT2Periode", Description="Periode in Bars", Order=1, GroupName="Parameter")]
 		public int COT2Periode
 		{ get; set; }
 		
 		[NinjaScriptProperty]
-		[Display(Name="ShowMaxMin", Description="Max Min Linien Zeigen", Order=2, GroupName="Parameters")]
+		[Display(Name="ShowMaxMin", Description="Max Min Linien Zeigen", Order=2, GroupName="Parameter")]
 		public bool ShowMaxMin
 		{ get; set; }
 
 		[NinjaScriptProperty]
-		[Display(Name="COT2LinienSchieben", Description="COT2", Order=3, GroupName="Parameters")]
+		[Display(Name="COT2LinienSchieben", Description="COT2", Order=3, GroupName="Parameter")]
 		public bool COT2LinienSchieben
 		{ get; set; }
 		
 		[NinjaScriptProperty]
-		[Display(Name="Linientyp", Description="Linien am letzen COT-Wert oder dynamisch in der Vergangenheit anzeigen", Order=4, GroupName="Parameters")]
+		[Display(Name="Linientyp", Description="Linien am letzen COT-Wert oder dynamisch in der Vergangenheit anzeigen", Order=4, GroupName="Parameter")]
 		public LineType linientyp
 		{ get; set; }
 		#endregion
@@ -410,19 +410,19 @@ namespace NinjaTrader.NinjaScript.Indicators
 {
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
-		private Suri.SuriCOT2[] cacheSuriCOT2;
-		public Suri.SuriCOT2 SuriCOT2(int cOT2Periode, bool showMaxMin, bool cOT2LinienSchieben, LineType linientyp)
+		private Suri.COT2[] cacheCOT2;
+		public Suri.COT2 COT2(int cOT2Periode, bool showMaxMin, bool cOT2LinienSchieben, LineType linientyp)
 		{
-			return SuriCOT2(Input, cOT2Periode, showMaxMin, cOT2LinienSchieben, linientyp);
+			return COT2(Input, cOT2Periode, showMaxMin, cOT2LinienSchieben, linientyp);
 		}
 
-		public Suri.SuriCOT2 SuriCOT2(ISeries<double> input, int cOT2Periode, bool showMaxMin, bool cOT2LinienSchieben, LineType linientyp)
+		public Suri.COT2 COT2(ISeries<double> input, int cOT2Periode, bool showMaxMin, bool cOT2LinienSchieben, LineType linientyp)
 		{
-			if (cacheSuriCOT2 != null)
-				for (int idx = 0; idx < cacheSuriCOT2.Length; idx++)
-					if (cacheSuriCOT2[idx] != null && cacheSuriCOT2[idx].COT2Periode == cOT2Periode && cacheSuriCOT2[idx].ShowMaxMin == showMaxMin && cacheSuriCOT2[idx].COT2LinienSchieben == cOT2LinienSchieben && cacheSuriCOT2[idx].linientyp == linientyp && cacheSuriCOT2[idx].EqualsInput(input))
-						return cacheSuriCOT2[idx];
-			return CacheIndicator<Suri.SuriCOT2>(new Suri.SuriCOT2(){ COT2Periode = cOT2Periode, ShowMaxMin = showMaxMin, COT2LinienSchieben = cOT2LinienSchieben, linientyp = linientyp }, input, ref cacheSuriCOT2);
+			if (cacheCOT2 != null)
+				for (int idx = 0; idx < cacheCOT2.Length; idx++)
+					if (cacheCOT2[idx] != null && cacheCOT2[idx].COT2Periode == cOT2Periode && cacheCOT2[idx].ShowMaxMin == showMaxMin && cacheCOT2[idx].COT2LinienSchieben == cOT2LinienSchieben && cacheCOT2[idx].linientyp == linientyp && cacheCOT2[idx].EqualsInput(input))
+						return cacheCOT2[idx];
+			return CacheIndicator<Suri.COT2>(new Suri.COT2(){ COT2Periode = cOT2Periode, ShowMaxMin = showMaxMin, COT2LinienSchieben = cOT2LinienSchieben, linientyp = linientyp }, input, ref cacheCOT2);
 		}
 	}
 }
@@ -431,14 +431,14 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.SuriCOT2 SuriCOT2(int cOT2Periode, bool showMaxMin, bool cOT2LinienSchieben, LineType linientyp)
+		public Indicators.Suri.COT2 COT2(int cOT2Periode, bool showMaxMin, bool cOT2LinienSchieben, LineType linientyp)
 		{
-			return indicator.SuriCOT2(Input, cOT2Periode, showMaxMin, cOT2LinienSchieben, linientyp);
+			return indicator.COT2(Input, cOT2Periode, showMaxMin, cOT2LinienSchieben, linientyp);
 		}
 
-		public Indicators.Suri.SuriCOT2 SuriCOT2(ISeries<double> input , int cOT2Periode, bool showMaxMin, bool cOT2LinienSchieben, LineType linientyp)
+		public Indicators.Suri.COT2 COT2(ISeries<double> input , int cOT2Periode, bool showMaxMin, bool cOT2LinienSchieben, LineType linientyp)
 		{
-			return indicator.SuriCOT2(input, cOT2Periode, showMaxMin, cOT2LinienSchieben, linientyp);
+			return indicator.COT2(input, cOT2Periode, showMaxMin, cOT2LinienSchieben, linientyp);
 		}
 	}
 }
@@ -447,14 +447,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.SuriCOT2 SuriCOT2(int cOT2Periode, bool showMaxMin, bool cOT2LinienSchieben, LineType linientyp)
+		public Indicators.Suri.COT2 COT2(int cOT2Periode, bool showMaxMin, bool cOT2LinienSchieben, LineType linientyp)
 		{
-			return indicator.SuriCOT2(Input, cOT2Periode, showMaxMin, cOT2LinienSchieben, linientyp);
+			return indicator.COT2(Input, cOT2Periode, showMaxMin, cOT2LinienSchieben, linientyp);
 		}
 
-		public Indicators.Suri.SuriCOT2 SuriCOT2(ISeries<double> input , int cOT2Periode, bool showMaxMin, bool cOT2LinienSchieben, LineType linientyp)
+		public Indicators.Suri.COT2 COT2(ISeries<double> input , int cOT2Periode, bool showMaxMin, bool cOT2LinienSchieben, LineType linientyp)
 		{
-			return indicator.SuriCOT2(input, cOT2Periode, showMaxMin, cOT2LinienSchieben, linientyp);
+			return indicator.COT2(input, cOT2Periode, showMaxMin, cOT2LinienSchieben, linientyp);
 		}
 	}
 }

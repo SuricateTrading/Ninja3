@@ -163,7 +163,6 @@
     <Compile Include="Indicators\%40VolumeUpDown.cs" />
     <Compile Include="Indicators\%40VolumeZones.cs" />
     <Compile Include="Indicators\%40Vortex.cs" />
-    <Compile Include="Indicators\Suri\CotBasis.cs" />
     <Compile Include="MarketAnalyzerColumns\%40ChartMini.cs" />
     <Compile Include="MarketAnalyzerColumns\%40ChartNetChange.cs" />
     <Compile Include="MarketAnalyzerColumns\%40DaysUntilRollover.cs" />
@@ -377,17 +376,15 @@
     <Compile Include="SuperDomColumns\%40Volume.cs" />
     <Compile Include="obj\Debug\.NETFramework,Version=v4.8.AssemblyAttributes.cs" />
     <Compile Include="AddOns\SuriAddOn.cs" />
-    <Compile Include="Indicators\SuriCOT.cs" />
-    <Compile Include="Indicators\SuriCOT2.cs" />
-    <Compile Include="Indicators\SuriCOT1.cs" />
-    <Compile Include="Indicators\SuriChartToolbar.cs" />
     <Compile Include="AddOns\Strings\SuriStrings.cs" />
     <Compile Include="AddOns\Templates\Commodity.xaml.cs" />
     <Compile Include="AddOns\AddOnFramework.cs" />
-    <Compile Include="Indicators\Suri\SuriCOT2.cs" />
-    <Compile Include="Indicators\Suri\SuriChartToolbar.cs" />
-    <Compile Include="Indicators\Suri\SuriCOT1.cs" />
-    <Compile Include="Indicators\Suri\SuriCOT22.cs" />
+    <Compile Include="Indicators\Suri\Oscillator.cs" />
+    <Compile Include="Indicators\Suri\ChartToolbar.cs" />
+    <Compile Include="Indicators\Suri\COT1.cs" />
+    <Compile Include="Indicators\Suri\COT2.cs" />
+    <Compile Include="Indicators\Suri\COT22.cs" />
+    <Compile Include="Indicators\Suri\CotBase.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resource.resx">
@@ -444,12 +441,10 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
+    <PostBuildEvent></PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PreBuildEvent>
-    </PreBuildEvent>
+    <PreBuildEvent></PreBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

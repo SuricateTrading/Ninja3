@@ -22,11 +22,15 @@ using NinjaTrader.NinjaScript.DrawingTools;
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
-	public class SuriCOT1 : Indicator {
+	public class COT1 : Indicator {
+		
+		private CotReport CotData;
+		private CotBase cot2;
+		
 		protected override void OnStateChange() {
 			if (State == State.SetDefaults) {
 				Description									= @"";
-				Name										= "SuriCOT1";
+				Name										= "COT 1";
 				Calculate									= Calculate.OnBarClose;
 				IsOverlay									= false;
 				DisplayInDataBox							= true;
@@ -36,27 +40,37 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				PaintPriceMarkers							= true;
 				ScaleJustification							= NinjaTrader.Gui.Chart.ScaleJustification.Right;
 				IsSuspendedWhileInactive					= true;
-				Period										= 125;
+				Days										= 125;
 				
-				AddPlot(new Stroke(Brushes.DarkOrange, 2), PlotStyle.Line, "SuriCOT1");
+				CotData = new CotReport { ReportType = CotReportType.Futures, Field = CotReportField.CommercialNet };
+				
+				AddPlot(new Stroke(Brushes.DarkOrange, 2), PlotStyle.Line, "COT1");
 				AddLine(new Stroke(Brushes.Red, 2), 10.0, "10%");
 				AddLine(Brushes.DimGray, 50.0, "50%");
 				AddLine(new Stroke(Brushes.Green, 2), 90.0, "90%");
+				
+				cot2 = CotBase(CotReportField.CommercialNet);
 			}
 		}
 		
+		
+		private double getCot(int barsAgo) {
+			return cot2.Values[0][barsAgo];
+			//return CotData.Calculate(Instrument.MasterInstrument.Name, Time[barsAgo]);
+		}
+		
 		protected override void OnBarUpdate() {
-			if (CurrentBar < Period) return;
+			if (CurrentBar < Days) return;
 			
 			double? min = null, max = null;
-			for (int barsAgo = 0; barsAgo < Period; barsAgo++) {
-				double v = Input[barsAgo];
+			for (int barsAgo = 0; barsAgo < Days; barsAgo++) {
+				double v = getCot(barsAgo);
 				if (min == null || min > v) min = v;
 				if (max == null || max < v) max = v;
 			}
 			
 			// min and max cannot be null at this point
-			double osci = 100.0 * (Input[0] - min.Value) / (max.Value - min.Value);
+			double osci = 100.0 * (getCot(0) - min.Value) / (max.Value - min.Value);
 			OsciPlot[0] = osci;
 			
 			
@@ -65,7 +79,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				bool signal = false;
 				int signalStartindex = 0;
 				
-				for (int barsAgo = 1; barsAgo <= CurrentBar - Period; barsAgo++) {
+				for (int barsAgo = 1; barsAgo <= CurrentBar - Days; barsAgo++) {
 					double v = OsciPlot[barsAgo];
 					
 					if (v > 90.0 && osci > 90.0 || v < 10.0 && osci < 10.0) {
@@ -90,9 +104,9 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 						if ( sma[0] > sma[1] && osci > 90.0 || sma[0] > sma[1] && osci > 90.0 ) {
 							PlotBrushes[0][i] = Brushes.Gray;
 						} else*/ if (osci > 90.0) {
-							PlotBrushes[0][i] = Brushes.Green;
-						} else {
 							PlotBrushes[0][i] = Brushes.Red;
+						} else {
+							PlotBrushes[0][i] = Brushes.Green;
 						}
 					}
 				}
@@ -101,11 +115,10 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		}
 
 		#region Properties
-
 		[NinjaScriptProperty]
 		[Range(1, int.MaxValue)]
-		[Display(Name="Wochen", Order=1, GroupName="Parameters")]
-		public int Period
+		[Display(Name="Tage", Order=1, GroupName="Parameter")]
+		public int Days
 		{ get; set; }
 
 		[Browsable(false)]
@@ -113,7 +126,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		public Series<double> OsciPlot {
 			get { return Values[0]; }
 		}
-
 		#endregion
 
 	}
@@ -125,19 +137,19 @@ namespace NinjaTrader.NinjaScript.Indicators
 {
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
-		private Suri.SuriCOT1[] cacheSuriCOT1;
-		public Suri.SuriCOT1 SuriCOT1(int period)
+		private Suri.COT1[] cacheCOT1;
+		public Suri.COT1 COT1(int days)
 		{
-			return SuriCOT1(Input, period);
+			return COT1(Input, days);
 		}
 
-		public Suri.SuriCOT1 SuriCOT1(ISeries<double> input, int period)
+		public Suri.COT1 COT1(ISeries<double> input, int days)
 		{
-			if (cacheSuriCOT1 != null)
-				for (int idx = 0; idx < cacheSuriCOT1.Length; idx++)
-					if (cacheSuriCOT1[idx] != null && cacheSuriCOT1[idx].Period == period && cacheSuriCOT1[idx].EqualsInput(input))
-						return cacheSuriCOT1[idx];
-			return CacheIndicator<Suri.SuriCOT1>(new Suri.SuriCOT1(){ Period = period }, input, ref cacheSuriCOT1);
+			if (cacheCOT1 != null)
+				for (int idx = 0; idx < cacheCOT1.Length; idx++)
+					if (cacheCOT1[idx] != null && cacheCOT1[idx].Days == days && cacheCOT1[idx].EqualsInput(input))
+						return cacheCOT1[idx];
+			return CacheIndicator<Suri.COT1>(new Suri.COT1(){ Days = days }, input, ref cacheCOT1);
 		}
 	}
 }
@@ -146,14 +158,14 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.SuriCOT1 SuriCOT1(int period)
+		public Indicators.Suri.COT1 COT1(int days)
 		{
-			return indicator.SuriCOT1(Input, period);
+			return indicator.COT1(Input, days);
 		}
 
-		public Indicators.Suri.SuriCOT1 SuriCOT1(ISeries<double> input , int period)
+		public Indicators.Suri.COT1 COT1(ISeries<double> input , int days)
 		{
-			return indicator.SuriCOT1(input, period);
+			return indicator.COT1(input, days);
 		}
 	}
 }
@@ -162,14 +174,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.SuriCOT1 SuriCOT1(int period)
+		public Indicators.Suri.COT1 COT1(int days)
 		{
-			return indicator.SuriCOT1(Input, period);
+			return indicator.COT1(Input, days);
 		}
 
-		public Indicators.Suri.SuriCOT1 SuriCOT1(ISeries<double> input , int period)
+		public Indicators.Suri.COT1 COT1(ISeries<double> input , int days)
 		{
-			return indicator.SuriCOT1(input, period);
+			return indicator.COT1(input, days);
 		}
 	}
 }
