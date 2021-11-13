@@ -8,7 +8,7 @@ using NinjaTrader.NinjaScript.DrawingTools;
 using System.Windows.Controls;
 #endregion
 
-namespace NinjaTrader.NinjaScript.Indicators {
+namespace NinjaTrader.NinjaScript.Indicators.Suri {
 	public class SuriChartToolbar : Indicator {
 		
 		private NinjaTrader.Gui.Chart.Chart				chartWindow;
@@ -180,19 +180,19 @@ namespace NinjaTrader.NinjaScript.Indicators
 {
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
-		private SuriChartToolbar[] cacheSuriChartToolbar;
-		public SuriChartToolbar SuriChartToolbar()
+		private Suri.SuriChartToolbar[] cacheSuriChartToolbar;
+		public Suri.SuriChartToolbar SuriChartToolbar()
 		{
 			return SuriChartToolbar(Input);
 		}
 
-		public SuriChartToolbar SuriChartToolbar(ISeries<double> input)
+		public Suri.SuriChartToolbar SuriChartToolbar(ISeries<double> input)
 		{
 			if (cacheSuriChartToolbar != null)
 				for (int idx = 0; idx < cacheSuriChartToolbar.Length; idx++)
 					if (cacheSuriChartToolbar[idx] != null &&  cacheSuriChartToolbar[idx].EqualsInput(input))
 						return cacheSuriChartToolbar[idx];
-			return CacheIndicator<SuriChartToolbar>(new SuriChartToolbar(), input, ref cacheSuriChartToolbar);
+			return CacheIndicator<Suri.SuriChartToolbar>(new Suri.SuriChartToolbar(), input, ref cacheSuriChartToolbar);
 		}
 	}
 }
@@ -201,12 +201,12 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.SuriChartToolbar SuriChartToolbar()
+		public Indicators.Suri.SuriChartToolbar SuriChartToolbar()
 		{
 			return indicator.SuriChartToolbar(Input);
 		}
 
-		public Indicators.SuriChartToolbar SuriChartToolbar(ISeries<double> input )
+		public Indicators.Suri.SuriChartToolbar SuriChartToolbar(ISeries<double> input )
 		{
 			return indicator.SuriChartToolbar(input);
 		}
@@ -217,12 +217,12 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.SuriChartToolbar SuriChartToolbar()
+		public Indicators.Suri.SuriChartToolbar SuriChartToolbar()
 		{
 			return indicator.SuriChartToolbar(Input);
 		}
 
-		public Indicators.SuriChartToolbar SuriChartToolbar(ISeries<double> input )
+		public Indicators.Suri.SuriChartToolbar SuriChartToolbar(ISeries<double> input )
 		{
 			return indicator.SuriChartToolbar(input);
 		}

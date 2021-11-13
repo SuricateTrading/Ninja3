@@ -27,8 +27,6 @@ namespace NinjaTrader.Gui.NinjaScript {
 
 		protected override void OnWindowCreated(Window window) {
 			
-			Print(window);
-			
 			
 			ControlCenter cc = window as ControlCenter;
 			if (cc == null) return;

@@ -1,33 +1,16 @@
 #region Using declarations
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Input;
 using System.Windows.Media;
 using System.Xml.Serialization;
-using NinjaTrader.Cbi;
 using NinjaTrader.Gui;
-using NinjaTrader.Gui.Chart;
-using NinjaTrader.Gui.SuperDom;
-using NinjaTrader.Gui.Tools;
-using NinjaTrader.Data;
-using NinjaTrader.NinjaScript;
-using NinjaTrader.Core.FloatingPoint;
-using NinjaTrader.NinjaScript.DrawingTools;
 #endregion
 
-//This namespace holds Indicators in this folder and is required. Do not change it. 
-namespace NinjaTrader.NinjaScript.Indicators {
-	public class SuriCOT2 : Indicator {
+namespace NinjaTrader.NinjaScript.Indicators.Suri {
+	public class SuriCOT22 : Indicator {
 		protected override void OnStateChange() {
 			if (State == State.SetDefaults) {
-				Description									= @"SuriCOT2";
-				Name										= "SuriCOT2";
+				Description									= @"SuriCOT22";
+				Name										= "SuriCOT22";
 				Calculate									= Calculate.OnBarClose;
 				IsOverlay									= false;
 				DisplayInDataBox							= true;
@@ -36,8 +19,6 @@ namespace NinjaTrader.NinjaScript.Indicators {
 				DrawVerticalGridLines						= true;
 				PaintPriceMarkers							= true;
 				ScaleJustification							= NinjaTrader.Gui.Chart.ScaleJustification.Right;
-				//Disable this property if your indicator requires custom values that cumulate with each new market data event. 
-				//See Help Guide for additional information.
 				IsSuspendedWhileInactive					= true;
 				AddPlot(new Stroke(Brushes.DarkOrange, 2), PlotStyle.Line, "Com Net");
 				AddLine(new Stroke(Brushes.Red, 2), 0, "75%");
@@ -104,19 +85,19 @@ namespace NinjaTrader.NinjaScript.Indicators
 {
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
-		private SuriCOT2[] cacheSuriCOT2;
-		public SuriCOT2 SuriCOT2()
+		private Suri.SuriCOT22[] cacheSuriCOT22;
+		public Suri.SuriCOT22 SuriCOT22()
 		{
-			return SuriCOT2(Input);
+			return SuriCOT22(Input);
 		}
 
-		public SuriCOT2 SuriCOT2(ISeries<double> input)
+		public Suri.SuriCOT22 SuriCOT22(ISeries<double> input)
 		{
-			if (cacheSuriCOT2 != null)
-				for (int idx = 0; idx < cacheSuriCOT2.Length; idx++)
-					if (cacheSuriCOT2[idx] != null &&  cacheSuriCOT2[idx].EqualsInput(input))
-						return cacheSuriCOT2[idx];
-			return CacheIndicator<SuriCOT2>(new SuriCOT2(), input, ref cacheSuriCOT2);
+			if (cacheSuriCOT22 != null)
+				for (int idx = 0; idx < cacheSuriCOT22.Length; idx++)
+					if (cacheSuriCOT22[idx] != null &&  cacheSuriCOT22[idx].EqualsInput(input))
+						return cacheSuriCOT22[idx];
+			return CacheIndicator<Suri.SuriCOT22>(new Suri.SuriCOT22(), input, ref cacheSuriCOT22);
 		}
 	}
 }
@@ -125,14 +106,14 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.SuriCOT2 SuriCOT2()
+		public Indicators.Suri.SuriCOT22 SuriCOT22()
 		{
-			return indicator.SuriCOT2(Input);
+			return indicator.SuriCOT22(Input);
 		}
 
-		public Indicators.SuriCOT2 SuriCOT2(ISeries<double> input )
+		public Indicators.Suri.SuriCOT22 SuriCOT22(ISeries<double> input )
 		{
-			return indicator.SuriCOT2(input);
+			return indicator.SuriCOT22(input);
 		}
 	}
 }
@@ -141,14 +122,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.SuriCOT2 SuriCOT2()
+		public Indicators.Suri.SuriCOT22 SuriCOT22()
 		{
-			return indicator.SuriCOT2(Input);
+			return indicator.SuriCOT22(Input);
 		}
 
-		public Indicators.SuriCOT2 SuriCOT2(ISeries<double> input )
+		public Indicators.Suri.SuriCOT22 SuriCOT22(ISeries<double> input )
 		{
-			return indicator.SuriCOT2(input);
+			return indicator.SuriCOT22(input);
 		}
 	}
 }

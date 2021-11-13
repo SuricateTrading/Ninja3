@@ -21,7 +21,7 @@ using NinjaTrader.Core.FloatingPoint;
 using NinjaTrader.NinjaScript.DrawingTools;
 #endregion
 
-namespace NinjaTrader.NinjaScript.Indicators {
+namespace NinjaTrader.NinjaScript.Indicators.Suri {
 	public class SuriCOT1 : Indicator {
 		protected override void OnStateChange() {
 			if (State == State.SetDefaults) {
@@ -35,7 +35,6 @@ namespace NinjaTrader.NinjaScript.Indicators {
 				DrawVerticalGridLines						= true;
 				PaintPriceMarkers							= true;
 				ScaleJustification							= NinjaTrader.Gui.Chart.ScaleJustification.Right;
-				//Disable this property if your indicator requires custom values that cumulate with each new market data event.
 				IsSuspendedWhileInactive					= true;
 				Period										= 125;
 				
@@ -126,19 +125,19 @@ namespace NinjaTrader.NinjaScript.Indicators
 {
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
-		private SuriCOT1[] cacheSuriCOT1;
-		public SuriCOT1 SuriCOT1(int period)
+		private Suri.SuriCOT1[] cacheSuriCOT1;
+		public Suri.SuriCOT1 SuriCOT1(int period)
 		{
 			return SuriCOT1(Input, period);
 		}
 
-		public SuriCOT1 SuriCOT1(ISeries<double> input, int period)
+		public Suri.SuriCOT1 SuriCOT1(ISeries<double> input, int period)
 		{
 			if (cacheSuriCOT1 != null)
 				for (int idx = 0; idx < cacheSuriCOT1.Length; idx++)
 					if (cacheSuriCOT1[idx] != null && cacheSuriCOT1[idx].Period == period && cacheSuriCOT1[idx].EqualsInput(input))
 						return cacheSuriCOT1[idx];
-			return CacheIndicator<SuriCOT1>(new SuriCOT1(){ Period = period }, input, ref cacheSuriCOT1);
+			return CacheIndicator<Suri.SuriCOT1>(new Suri.SuriCOT1(){ Period = period }, input, ref cacheSuriCOT1);
 		}
 	}
 }
@@ -147,12 +146,12 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.SuriCOT1 SuriCOT1(int period)
+		public Indicators.Suri.SuriCOT1 SuriCOT1(int period)
 		{
 			return indicator.SuriCOT1(Input, period);
 		}
 
-		public Indicators.SuriCOT1 SuriCOT1(ISeries<double> input , int period)
+		public Indicators.Suri.SuriCOT1 SuriCOT1(ISeries<double> input , int period)
 		{
 			return indicator.SuriCOT1(input, period);
 		}
@@ -163,12 +162,12 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.SuriCOT1 SuriCOT1(int period)
+		public Indicators.Suri.SuriCOT1 SuriCOT1(int period)
 		{
 			return indicator.SuriCOT1(Input, period);
 		}
 
-		public Indicators.SuriCOT1 SuriCOT1(ISeries<double> input , int period)
+		public Indicators.Suri.SuriCOT1 SuriCOT1(ISeries<double> input , int period)
 		{
 			return indicator.SuriCOT1(input, period);
 		}

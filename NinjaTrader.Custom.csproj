@@ -163,6 +163,7 @@
     <Compile Include="Indicators\%40VolumeUpDown.cs" />
     <Compile Include="Indicators\%40VolumeZones.cs" />
     <Compile Include="Indicators\%40Vortex.cs" />
+    <Compile Include="Indicators\Suri\CotBasis.cs" />
     <Compile Include="MarketAnalyzerColumns\%40ChartMini.cs" />
     <Compile Include="MarketAnalyzerColumns\%40ChartNetChange.cs" />
     <Compile Include="MarketAnalyzerColumns\%40DaysUntilRollover.cs" />
@@ -379,11 +380,14 @@
     <Compile Include="Indicators\SuriCOT.cs" />
     <Compile Include="Indicators\SuriCOT2.cs" />
     <Compile Include="Indicators\SuriCOT1.cs" />
-    <Compile Include="AddOns\SuriChart.cs" />
     <Compile Include="Indicators\SuriChartToolbar.cs" />
     <Compile Include="AddOns\Strings\SuriStrings.cs" />
     <Compile Include="AddOns\Templates\Commodity.xaml.cs" />
     <Compile Include="AddOns\AddOnFramework.cs" />
+    <Compile Include="Indicators\Suri\SuriCOT2.cs" />
+    <Compile Include="Indicators\Suri\SuriChartToolbar.cs" />
+    <Compile Include="Indicators\Suri\SuriCOT1.cs" />
+    <Compile Include="Indicators\Suri\SuriCOT22.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resource.resx">
@@ -433,13 +437,19 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="AddOns\Templates\Commodity.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent></PostBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PreBuildEvent></PreBuildEvent>
+    <PreBuildEvent>
+    </PreBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
