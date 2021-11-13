@@ -1,0 +1,47 @@
+<Page	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		xmlns:t="clr-namespace:NinjaTrader.Gui.Tools;assembly=NinjaTrader.Gui"
+        xmlns:templates="clr-namespace:NinjaTrader.NinjaScript.AddOns.Templates;assembly=NinjaTrader.NinjaScript.AddOns.Templates"
+		xmlns:system="clr-namespace:System;assembly=mscorlib" Height="600" Width="450" >
+    <Grid Background="Transparent">
+
+        <TabControl Background="Transparent">
+            <TabItem Header="Suricate">
+                <StackPanel >
+                    <Image Height="100" Width="100" VerticalAlignment="Top" Margin="0,10,0,0" Source="Suri.png"/>
+                    <Label Content="Suricate Trading" HorizontalAlignment="Center" VerticalAlignment="Top" Foreground="White" />
+                </StackPanel>
+            </TabItem>
+            <TabItem Header="Trading">
+                <Grid>
+                    <StackPanel VerticalAlignment="Top" Margin="0,10,0,0" >
+                        <Button x:Name="Start" Content="Start" Width="100" />
+                    </StackPanel>
+
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,10" >
+                        <TextBlock HorizontalAlignment="Center">
+                        <Hyperlink NavigateUri="https://www.suricate-trading.de/">suricate-trading.de</Hyperlink>
+                        </TextBlock>
+                        <TextBlock HorizontalAlignment="Center">
+                        <Hyperlink NavigateUri="https://www.suricate-trading.de/terminkurven/">Terminkurven</Hyperlink>
+                        </TextBlock>
+                        <TextBlock HorizontalAlignment="Center">
+                        <Hyperlink NavigateUri="https://www.suricate-trading.de/seasonal-charts/seasonal-cot-data-charts/">Saisonalitaeten</Hyperlink>
+                        </TextBlock>
+                    </StackPanel>
+                </Grid>
+
+            </TabItem>
+            <TabItem Header="Termine">
+
+            </TabItem>
+            <TabItem Header="Hilfe">
+                <TextBlock TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" VerticalAlignment="Top" Foreground="White" Margin="20,0">
+                    Falls du eine Frage oder Verbesserungswuensche hast, schreibe bitte eine Mail an it@suricate-trading.de.<LineBreak/>
+                    Fuer Fragen ueber Trading bitte an trading@suricate-trading.com.<LineBreak/>
+                    Und fuer alle anderen Fragen an info@suricate-trading.com.
+                </TextBlock>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Page>
