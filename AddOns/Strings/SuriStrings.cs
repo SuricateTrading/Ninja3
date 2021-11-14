@@ -19,11 +19,63 @@ using NinjaTrader.Data;
 using NinjaTrader.NinjaScript;
 using NinjaTrader.Core.FloatingPoint;
 using NinjaTrader.Gui.Tools;
+using System.Text.RegularExpressions;
 #endregion
 
 namespace NinjaTrader.NinjaScript.AddOns.Strings {}
 
 public static class SuriStrings {
+	
+	public static string instrumentToName(string instrumentName) {
+		string name = Regex.Replace(instrumentName, " .+", "");
+		name = TempS[name];
+		
+		if(name != null)
+			return name + " (" + instrumentName + ")";
+		else
+			return instrumentName;
+	}
+	
+	public static Dictionary<string, string> TempS = new Dictionary<string, string> {
+		{"GC", "Gold"},
+		{"SI", "Silber"},
+		{"PL", "Platin"},
+		{"PA", "Palladium"},
+		{"HG", "Kupfer"},
+		//{Coms.Iron, "Eisen"},
+		//{Coms.Zinc, "Zink"},
+		
+		
+		{"CL", "Rohöl"},
+		{"EH", "Ethanol"},
+		{"NG", "Erdgas"},
+		//{Coms.BrentCrude, "Brent Öl"},
+		//{Coms.HeatingOil, "Heizöl"},
+		{"RB", "Benzin"},
+
+		{"ZC", "Mais"},
+		{"ZW", "Weizen"},
+		{"KW", "Weizen"},
+		{"ZR", "Reis"},
+		{"ZO", "Hafer"},
+		{"ZS", "Sojabohnen"},
+		{"ZM", "Sojamehl"},
+		{"ZL", "Sojaöl"},
+		//{Coms.Milk, "Milch"},
+
+		{"CC", "Kakao"},
+		{"CT", "Baumwolle"},
+		{"OJ", "OSaft"},
+		{"KC", "Kaffee C"},
+		{"SB", "Zucker #11"},
+		{"LB", "Bauholz"},
+
+		{"LE", "Lebendrind"},
+		{"GF", "Mastrind"},
+		{"HE", "Schwein"},
+	};
+	
+	
 	public static Dictionary<Coms, string> ComsD = new Dictionary<Coms, string> {
 		{Coms.Gold, "Gold"},
 		{Coms.Silver, "Silber"},

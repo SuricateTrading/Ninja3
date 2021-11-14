@@ -37,7 +37,11 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				AddPlot(Brushes.CornflowerBlue, Custom.Resource.COT1);
 			}
 		}
-
+		
+        public override string DisplayName {
+          get { return "COT " + SCot.Field + " - " + SuriStrings.instrumentToName(Instrument.FullName); }
+        }
+		
 		protected override void OnBarUpdate() {
 			if (CotData.GetCotReportNames(Instrument.MasterInstrument.Name).Count == 0) {
 				Draw.TextFixed(this, "Error", Custom.Resource.CotDataError, TextPosition.BottomRight);

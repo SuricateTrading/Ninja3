@@ -41,7 +41,8 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				AddPlot(Brushes.Orange, "OsciPlot");
 			}
 		}
-
+		
+		
 		protected override void OnBarUpdate() {
 			if (CurrentBar < Days) return;
 			

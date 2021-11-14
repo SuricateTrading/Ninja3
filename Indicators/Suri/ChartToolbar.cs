@@ -37,6 +37,10 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 					ChartControl.Dispatcher.InvokeAsync((Action)(() => DisposeWPFControls()));
 			}
 		}
+		
+        public override string DisplayName {
+          get { return "Toolbar"; }
+        }
 
 		protected void CreateWPFControls() {
 			chartWindow	= System.Windows.Window.GetWindow(ChartControl.Parent) as NinjaTrader.Gui.Chart.Chart;
