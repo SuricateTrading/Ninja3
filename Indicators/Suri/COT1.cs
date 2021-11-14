@@ -24,8 +24,8 @@ using NinjaTrader.NinjaScript.DrawingTools;
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
 	public class COT1 : Indicator {
 		
-		private CotReport CotData;
-		private CotBase cot2;
+		private CotReport CotDataOld;
+		private CotBase CotData;
 		
 		protected override void OnStateChange() {
 			if (State == State.SetDefaults) {
@@ -42,21 +42,24 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				IsSuspendedWhileInactive					= true;
 				Days										= 125;
 				
-				CotData = new CotReport { ReportType = CotReportType.Futures, Field = CotReportField.CommercialNet };
+				CotDataOld = new CotReport { ReportType = CotReportType.Futures, Field = CotReportField.CommercialNet };
 				
 				AddPlot(new Stroke(Brushes.DarkOrange, 2), PlotStyle.Line, "COT1");
 				AddLine(new Stroke(Brushes.Red, 2), 10.0, "10%");
 				AddLine(Brushes.DimGray, 50.0, "50%");
 				AddLine(new Stroke(Brushes.Green, 2), 90.0, "90%");
 				
-				cot2 = CotBase(CotReportField.CommercialNet);
+				CotData = CotBase(CotReportField.CommercialNet);
 			}
 		}
 		
+        public override string DisplayName {
+          get { return "COT 1 - " + SuriStrings.instrumentToName(Instrument.FullName); }
+        }
 		
 		private double getCot(int barsAgo) {
-			return cot2.Values[0][barsAgo];
-			//return CotData.Calculate(Instrument.MasterInstrument.Name, Time[barsAgo]);
+			return CotData.Values[0][barsAgo];
+			//return CotDataOld.Calculate(Instrument.MasterInstrument.Name, Time[barsAgo]);
 		}
 		
 		protected override void OnBarUpdate() {
