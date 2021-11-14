@@ -16,6 +16,40 @@
 # Mono auto generated files
 mono_crash.*
 
+
+# Ignore Ninja Trader Files
+BarsTypes/
+bin/
+ChartStyles/
+de-DE/
+DrawingTools/
+es-ES/
+ExportNinjaScript/
+fr-FR/
+ImportTypes/
+it-IT/
+MarketAnalyzerColumns/
+obj/
+OptimizationFitnesses/
+Optimizers/
+PerformanceMetrics/
+pt-PT/
+ru-RU/
+ShareServices/
+Strategies/
+SuperDomColumns/
+zh-Hans/
+*.csproj
+*.dll
+*.sln
+NinjaTrader.Custom.xml
+NinjaTrader.Vendor.cs
+NinjaTrader.Vendor.dll
+Resource.Designer.cs
+Resource.*.resx
+ResourceEnumConverter.cs
+
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
