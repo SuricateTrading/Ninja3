@@ -39,7 +39,12 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		}
 		
         public override string DisplayName {
-          get { return "COT " + SCot.Field + " - " + SuriStrings.instrumentToName(Instrument.FullName); }
+          get {
+				if (SCot != null && Instrument != null)
+					return "COT " + SCot.Field + " - " + SuriStrings.instrumentToName(Instrument.FullName);
+				else
+					return "COT Daten";
+			}
         }
 		
 		protected override void OnBarUpdate() {

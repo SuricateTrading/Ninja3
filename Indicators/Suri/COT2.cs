@@ -67,10 +67,15 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri
 			}
 		}
 
-        public override string DisplayName {
-          get { return "COT 2 - " + SuriStrings.instrumentToName(Instrument.FullName); }
-        }
-		
+		public override string DisplayName {
+			get {
+				if (Instrument != null)
+					return "COT 2 - " + SuriStrings.instrumentToName(Instrument.FullName);
+				else
+					return "COT 2";
+			}
+		}
+
 		protected override void OnBarUpdate()
 		{
 
