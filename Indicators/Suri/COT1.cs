@@ -24,8 +24,9 @@ using NinjaTrader.NinjaScript.DrawingTools;
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
 	public class COT1 : Indicator {
 		
-		private CotReport CotDataOld;
 		private CotBase CotData;
+		private bool hasGoneAbove = false;
+		private bool hasGoneBelow = false;
 		
 		protected override void OnStateChange() {
 			if (State == State.SetDefaults) {
@@ -41,15 +42,12 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				ScaleJustification							= NinjaTrader.Gui.Chart.ScaleJustification.Right;
 				IsSuspendedWhileInactive					= true;
 				Days										= 125;
+				CotData = CotBase(new CotReport { ReportType = CotReportType.Futures, Field = CotReportField.CommercialNet });
 				
-				CotDataOld = new CotReport { ReportType = CotReportType.Futures, Field = CotReportField.CommercialNet };
-				
-				AddPlot(new Stroke(Brushes.DarkOrange, 2), PlotStyle.Line, "COT1");
+				AddPlot(new Stroke(Brushes.DarkGray, 2), PlotStyle.Line, "COT1");
 				AddLine(new Stroke(Brushes.Red, 2), 10.0, "10%");
 				AddLine(Brushes.DimGray, 50.0, "50%");
 				AddLine(new Stroke(Brushes.Green, 2), 90.0, "90%");
-				
-				CotData = CotBase(CotReportField.CommercialNet);
 			}
 		}
 		
@@ -62,82 +60,86 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			}
         }
 		
-		private double getCot(int barsAgo) {
-			return CotData.Values[0][barsAgo];
-			//return CotDataOld.Calculate(Instrument.MasterInstrument.Name, Time[barsAgo]);
-		}
-		
 		protected override void OnBarUpdate() {
 			if (CurrentBar < Days) return;
 			
 			double? min = null, max = null;
 			for (int barsAgo = 0; barsAgo < Days; barsAgo++) {
-				double v = getCot(barsAgo);
+				double v = CotData.Value[barsAgo];
 				if (min == null || min > v) min = v;
 				if (max == null || max < v) max = v;
 			}
 			
 			// min and max cannot be null at this point
-			double osci = 100.0 * (getCot(0) - min.Value) / (max.Value - min.Value);
-			OsciPlot[0] = osci;
+			double osci = 100.0 * (CotData.Value[0] - min.Value) / (max.Value - min.Value);
+			Value[0] = osci;
 			
+			if (CurrentBar == Days) return;
 			
-			if(osci > 90.0 || osci < 10.0) {
-				
-				bool signal = false;
-				int signalStartindex = 0;
-				
-				for (int barsAgo = 1; barsAgo <= CurrentBar - Days; barsAgo++) {
-					double v = OsciPlot[barsAgo];
-					
-					if (v > 90.0 && osci > 90.0 || v < 10.0 && osci < 10.0) {
-						signal = false;
-						break;
-					}
-					if (v < 10.0 && osci > 90.0 || v > 90.0 && osci < 10.0) {
-						signal = true;
-					}
-					if (signal && (v > 10.0 && osci > 90.0 || v < 90.0 && osci < 10.0)) {
-						signalStartindex = barsAgo;
-						break;
-					}
+			// this section colors the starting point of cot 1 signals
+			if (osci > 90.0 && Value[1] > 90.0 && hasGoneBelow) {
+				SMA sma = SMA(125);
+				if (sma[0] > sma[1]) {
+					PlotBrushes[0][0] = Brushes.Green;
+				} else {
+					PlotBrushes[0][0] = Brushes.Yellow;
 				}
-				if (signal) {
-					for (int i = 0; i < signalStartindex; i++) {
-						
-						/*
-						todo
-						
-						SMA sma = SMA(125);
-						if ( sma[0] > sma[1] && osci > 90.0 || sma[0] > sma[1] && osci > 90.0 ) {
-							PlotBrushes[0][i] = Brushes.Gray;
-						} else*/ if (osci > 90.0) {
-							PlotBrushes[0][i] = Brushes.Red;
-						} else {
-							PlotBrushes[0][i] = Brushes.Green;
-						}
-					}
+			} else if (osci < 10.0 && Value[1] < 10.0 && hasGoneAbove) {
+				SMA sma = SMA(125);
+				if (sma[0] < sma[1]) {
+					PlotBrushes[0][0] = Brushes.Red;
+				} else {
+					PlotBrushes[0][0] = Brushes.Yellow;
+				}
+			} else {
+				if (Value[1] < 10.0 && Value[0] > 10.0) {
+					hasGoneBelow = true;
+					hasGoneAbove = false;
+				}
+				if (Value[1] > 90.0 && Value[0] < 90.0) {
+					hasGoneAbove = true;
+					hasGoneBelow = false;
 				}
 			}
-			
 		}
-
+		
+		
+		
+		
 		#region Properties
 		[NinjaScriptProperty]
 		[Range(1, int.MaxValue)]
 		[Display(Name="Tage", Order=1, GroupName="Parameter")]
 		public int Days
 		{ get; set; }
-
-		[Browsable(false)]
-		[XmlIgnore]
-		public Series<double> OsciPlot {
-			get { return Values[0]; }
-		}
 		#endregion
-
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//
 
 #region NinjaScript generated code. Neither change nor remove.
 

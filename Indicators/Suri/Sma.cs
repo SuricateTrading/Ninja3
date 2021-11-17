@@ -40,6 +40,10 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				Days										= 125;
 				DrawColors									= true;
 				AddPlot(new Stroke(Brushes.DarkOrange, 2), PlotStyle.Line, "SMA");
+			} else if (State == State.DataLoaded) {
+				ChartControl.MouseMove += OnMouseMove;
+			} else if (State == State.Terminated) {
+				ChartControl.MouseMove -= OnMouseMove;
 			}
 		}
 		
@@ -52,8 +56,19 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			}
         }
 		
+		protected override void OnRender(ChartControl chartControl, ChartScale chartScale) {
+			base.OnRender(chartControl, chartScale);
+			//Draw.Text(this, "tag1", "Text to draw", 10, 10, Brushes.White);
+			
+			
+			//ChartControl.InvalidateVisual();
+		}
+		
 		protected override void OnBarUpdate() {
 			Value[0] = SMA(Days)[0];
+			
+			if(CurrentBar > 10)
+				Print(Value[5]);
 			
 			if (CurrentBar > 0 && DrawColors) {
 				if (Value[0] > Value[1]) {
@@ -77,8 +92,78 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		{ get; set; }
 		#endregion
 
+		
+		
+		
+		private	int				barIndex					= 0;
+		private	int				barsAgo						= 0;
+		private Point mousePosition;
+		private void OnMouseMove(object sender, MouseEventArgs e) {
+			mousePosition 			= e.GetPosition(ChartControl);
+			mousePosition.X   		= ChartingExtensions.ConvertToHorizontalPixels(mousePosition.X, ChartControl.PresentationSource);
+			barIndex	   			= ChartBars.GetBarIdxByX(ChartControl, Convert.ToInt32(Math.Round(mousePosition.X, 0)));
+			barsAgo					= Bars.Count-1 - barIndex;
+			//Print(barIndex + " / " + Bars.Count-1);
+			//ChartControl.InvalidateVisual();
+			if (barsAgo > Days) {
+				try {
+					
+					
+					//Print(barsAgo + " " + CurrentBar + " " + Value.Count);
+					//Print(CurrentBar);
+					//Draw.TextFixed(this, "infobox", "" + Value[1], TextPosition.BottomLeft, Brushes.Green, new Gui.Tools.SimpleFont("Arial", 14), Brushes.Transparent, Brushes.Transparent, 100);
+				} catch (Exception ex) {
+					Print(ex);
+				}
+			}
+			
+        }
+		
+		
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//
 
 #region NinjaScript generated code. Neither change nor remove.
 

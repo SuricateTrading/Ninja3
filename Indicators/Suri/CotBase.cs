@@ -66,79 +66,18 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		}
 		
 		#region Properties
-
 		[Browsable(false)]
 		public int Cot1Serialize {
 			get { return (int)SCot.ReportType * 100 + (int)SCot.Field; }
 			set { SCot = new CotReport { ReportType = (CotReportType)(value / 100), Field = (CotReportField)(value % 100) }; }
 		}
 		
-		[Browsable(false)]
-		[XmlIgnore]
-		public CotReport SCot {  get; set; }
-		
 		[NinjaScriptProperty]
-		[Range(0, int.MaxValue)]
-		[Display(Name = "Report Feld", GroupName = "Parameter", Order = 1)]
-		//[TypeConverter(typeof(RangeEnumConverter))]
-		//[EnumDataType(typeof(CotReportField))]
-		//[RegularExpression(@"0")]
-		[NoStringInListBiggerThanAttribute]
+		[Display(Name = "COT Daten", GroupName = "Parameter", Order = 1)]
 		[XmlIgnore]
-		public CotReportField SReportField  {
-			get { return SCot.Field; }
-			set { SCot.Field = value; }
-		}
-		/*
-		[NinjaScriptProperty]
-		[Range(0, 1)]
-		[Display(Name = "kk", GroupName = "Parameter", Order = 1)]
-		[TypeConverter(typeof(RangeEnumConverter))]
-		[RefreshProperties(RefreshProperties.All)]
-		[XmlIgnore]
-		public Test hghg  {
-			get;
-			set;
-		}
-		
-		
-		[Range(1, 5)]
-		[NinjaScriptProperty]
-		[Display(ResourceType = typeof(Custom.Resource), Name = "NumberOfCotPlots", GroupName = "NinjaScriptParameters", Order = 0)]
-		[TypeConverter(typeof(RangeEnumConverter))]
-		[RefreshProperties(RefreshProperties.All)]
-		public int Number { get; set; }
-		*/
-		
+		public CotReport SCot { get; set; }
 		#endregion
 	}
-	
-	
-	
-	
-	
-	
-}
-
-public class NoStringInListBiggerThanAttribute : ValidationAttribute {
-    
-
-    public NoStringInListBiggerThanAttribute() {
-        
-    }
-
-    protected override ValidationResult IsValid(object value, ValidationContext validationContext) {
-        return new ValidationResult("The following strings");
-    }
-}
-
-
-
-
-public enum Test {
-	K0 = 0,
-	K1 = 1,
-	K2 = 2
 	
 }
 
@@ -149,18 +88,18 @@ namespace NinjaTrader.NinjaScript.Indicators
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
 		private Suri.CotBase[] cacheCotBase;
-		public Suri.CotBase CotBase(CotReportField sReportField)
+		public Suri.CotBase CotBase(CotReport sCot)
 		{
-			return CotBase(Input, sReportField);
+			return CotBase(Input, sCot);
 		}
 
-		public Suri.CotBase CotBase(ISeries<double> input, CotReportField sReportField)
+		public Suri.CotBase CotBase(ISeries<double> input, CotReport sCot)
 		{
 			if (cacheCotBase != null)
 				for (int idx = 0; idx < cacheCotBase.Length; idx++)
-					if (cacheCotBase[idx] != null && cacheCotBase[idx].SReportField == sReportField && cacheCotBase[idx].EqualsInput(input))
+					if (cacheCotBase[idx] != null && cacheCotBase[idx].SCot == sCot && cacheCotBase[idx].EqualsInput(input))
 						return cacheCotBase[idx];
-			return CacheIndicator<Suri.CotBase>(new Suri.CotBase(){ SReportField = sReportField }, input, ref cacheCotBase);
+			return CacheIndicator<Suri.CotBase>(new Suri.CotBase(){ SCot = sCot }, input, ref cacheCotBase);
 		}
 	}
 }
@@ -169,14 +108,14 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.CotBase CotBase(CotReportField sReportField)
+		public Indicators.Suri.CotBase CotBase(CotReport sCot)
 		{
-			return indicator.CotBase(Input, sReportField);
+			return indicator.CotBase(Input, sCot);
 		}
 
-		public Indicators.Suri.CotBase CotBase(ISeries<double> input , CotReportField sReportField)
+		public Indicators.Suri.CotBase CotBase(ISeries<double> input , CotReport sCot)
 		{
-			return indicator.CotBase(input, sReportField);
+			return indicator.CotBase(input, sCot);
 		}
 	}
 }
@@ -185,14 +124,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.CotBase CotBase(CotReportField sReportField)
+		public Indicators.Suri.CotBase CotBase(CotReport sCot)
 		{
-			return indicator.CotBase(Input, sReportField);
+			return indicator.CotBase(Input, sCot);
 		}
 
-		public Indicators.Suri.CotBase CotBase(ISeries<double> input , CotReportField sReportField)
+		public Indicators.Suri.CotBase CotBase(ISeries<double> input , CotReport sCot)
 		{
-			return indicator.CotBase(input, sReportField);
+			return indicator.CotBase(input, sCot);
 		}
 	}
 }
