@@ -39,8 +39,8 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri
 		{
 			if (State == State.SetDefaults)
 			{
-				Description = @"Enter the description for your new custom Indicator here.";
-				Name = "SuriCOT2";
+				Description = @"";
+				Name = "Cot 2";
 				Calculate = Calculate.OnBarClose;
 				IsOverlay = false;
 				DisplayInDataBox = true;
@@ -55,7 +55,9 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri
 				COT2Periode = 1011;
 				COT2LinienSchieben = true;
 				ShowMaxMin = false;
-				linientyp = LineType.Dynamic;
+				Linientyp = LineType.Dynamic;
+				LongBereich = 25;
+				ShortBereich = 75;
 
 				cotReportCommShort = new CotReport { ReportType = CotReportType.Futures, Field = CotReportField.CommercialShort };
 
@@ -65,7 +67,8 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri
 				AddPlot(Brushes.Cyan, "100%");
 				AddPlot(Brushes.Cyan, "0%");
 				AddPlot(Brushes.Gray, "50%");
-				AddPlot(Brushes.DarkRed, "Test"); // 6
+				AddPlot(Brushes.Yellow, "Test"); // 6
+				AddPlot(Brushes.Yellow, "Test2"); // 7
 			}
 			else if (State == State.Configure)
 			{
@@ -94,7 +97,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri
 					lastMinBar = 0;
 				}
 
-				if (linientyp == LineType.Dynamic)
+				if (Linientyp == LineType.Dynamic)
 				{
 					#region LineType.Dynamic										
 
@@ -163,10 +166,10 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri
 
 					#region linien75und50und25 berechnen
 
-					linie75 = (lastMax - lastMin) * 0.75 + lastMin;
+					linie75 = (lastMax - lastMin) * ShortBereich / 100 + lastMin;
 					linie50 = (lastMax - lastMin) * 0.5 + lastMin;
 					Values[5][0] = linie50;
-					linie25 = (lastMax - lastMin) * 0.25 + lastMin;
+					linie25 = (lastMax - lastMin) * LongBereich / 100 + lastMin;
 
 					#endregion linien75und50und25 berechnen
 
@@ -176,15 +179,17 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri
 					if (COT2LinienSchieben)
 					{
 						double tempCommShortPre = cotReportCommShort.Calculate(Instrument.MasterInstrument.Name, Time[COT2Periode + 1]);
-						double xHighTemp = 0; // Extremwert-Hoch aktuellen "Berges"
-						double xHighMin = 0; // niedrigster Extremwert-Hoch
-						double xLowTemp = 0; // Extremwert-Tief aktuellen "Berges"
-						double xLowMax = 0; // höchster Extremwert-Tief
+						double xHighTemp = -1; // Extremwert-Hoch aktuellen "Berges"
+						double xHighMin = -1; // niedrigster Extremwert-Hoch
+						double xLowTemp = -1; // Extremwert-Tief aktuellen "Berges"
+						double xLowMax = -1; // höchster Extremwert-Tief
 						int lastxHigh; // Position vom letzten Extremwert-Hoch
 						int lastxLow; // Position vom letzten Extremwert-Tief
+						int countHigh = 0;
+						int countLow = 0;
 
 
-						for (int i = COT2Periode; i > 0; i--)
+						for (int i = COT2Periode; i >= 0; i--)
 						{
 							double tempCommShort = cotReportCommShort.Calculate(Instrument.MasterInstrument.Name, Time[i]);
 							#region linie75v
@@ -193,6 +198,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri
 								xHighTemp = tempCommShort;
 								lastxHigh = CurrentBar - i;
 							}
+							
 							if (tempCommShort > linie75) //nach Max Wert Suchen solange über 75%
 							{
 								if (tempCommShort > xHighTemp)
@@ -204,15 +210,17 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri
 							}
 							if (tempCommShort < linie75 && tempCommShortPre > linie75) //Punkt finden wo 75% Linie nach unten überschritten wird
 							{
-								if (xHighMin == 0) // wenn erster Wert dann abspeichern
+								if (xHighMin == -1) // wenn erster Wert dann abspeichern
 									xHighMin = xHighTemp;
 								else
 								{
-									if (xHighMin > xHighTemp)   // abspeichern wenn neuster niedrigster Extremwert-Hoch												
+									if (xHighTemp < xHighMin)   // abspeichern wenn neuster niedrigster Extremwert-Hoch												
 									{
 										xHighMin = xHighTemp;
+										//Draw.ArrowLine(this, "verschieben auf" + CurrentBar,Time[CurrentBar - lastxHigh],xHighMin ,Time[0],xHighMin,Brushes.Red);  //TEST										
 									}
 								}
+								countHigh++;
 							}
 							#endregion
 
@@ -228,22 +236,30 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri
 							}
 							if (tempCommShort > linie25 && tempCommShortPre < linie25) //Punkt finden wo 75% Linie nach unten überschritten wird
 							{
-								if (xLowMax == 0) // wenn erster Wert dann abspeichern
+								if (xLowMax == -1) // wenn erster Wert dann abspeichern
 									xLowMax = xLowTemp;
 								else
 								{
 									if (xLowMax < xLowTemp) // abspeichern wenn neuster höchster Extremwert-Tief												
 										xLowMax = xLowTemp;
 								}
+								countLow++;
 							}
 							#endregion
 							tempCommShortPre = tempCommShort;
 						}
-						double linie75v = xHighMin; // verschobene linie75 definieren
-						double linie25v = xLowMax; // verschobene linie25 definieren
+						//Print(Time[0] + " countHigh " + countHigh + " xHighMin " + xHighMin + " countLow " + countLow + " xLowMax " + xLowMax + " Schieben auf : ");
+						double linie75v = linie75;
+						double linie25v = linie25;						
+						if (countHigh > 1 && xHighMin > -1)
+							linie75v = xHighMin; // verschobene linie75 definieren
+						if (countLow > 1 && xLowMax > -1)
+							linie25v = xLowMax; // verschobene linie25 definieren
 
 						Values[1][0] = linie75v;
 						Values[2][0] = linie25v;
+//						Values[6][0] = linie75;
+//						Values[7][0] = linie25;
 
 						//						for (int i = lastMaxBar; i >= 0; i--)
 						//						{
@@ -272,7 +288,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri
 				{
 					#region LineType.Last
 
-					if (linientyp == LineType.Last)
+					if (Linientyp == LineType.Last)
 					{
 						if (CurrentBar >= Count - 2)
 						{
@@ -427,8 +443,19 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri
 
 		[NinjaScriptProperty]
 		[Display(Name = "Linientyp", Description = "Linien am letzen COT-Wert oder dynamisch in der Vergangenheit anzeigen", Order = 4, GroupName = "Parameters")]
-		public LineType linientyp
+		public LineType Linientyp
 		{ get; set; }
+		
+		[NinjaScriptProperty]
+		[Display(Name = "Long-Bereich", Description = "Prozentwert unter dem der Long-Bereich liegt", Order = 4, GroupName = "Parameters")]
+		public int LongBereich
+		{ get; set; }
+		
+		[NinjaScriptProperty]
+		[Display(Name = "Short-Bereich", Description = "Prozentwert über dem der Short-Bereich liegt", Order = 4, GroupName = "Parameters")]
+		public int ShortBereich
+		{ get; set; }
+		
 		#endregion
 
 	}
@@ -447,18 +474,18 @@ namespace NinjaTrader.NinjaScript.Indicators
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
 		private Suri.COT2[] cacheCOT2;
-		public Suri.COT2 COT2(int cOT2Periode, bool showMaxMin, bool cOT2LinienSchieben, LineType linientyp)
+		public Suri.COT2 COT2(int cOT2Periode, bool showMaxMin, bool cOT2LinienSchieben, LineType linientyp, int longBereich, int shortBereich)
 		{
-			return COT2(Input, cOT2Periode, showMaxMin, cOT2LinienSchieben, linientyp);
+			return COT2(Input, cOT2Periode, showMaxMin, cOT2LinienSchieben, linientyp, longBereich, shortBereich);
 		}
 
-		public Suri.COT2 COT2(ISeries<double> input, int cOT2Periode, bool showMaxMin, bool cOT2LinienSchieben, LineType linientyp)
+		public Suri.COT2 COT2(ISeries<double> input, int cOT2Periode, bool showMaxMin, bool cOT2LinienSchieben, LineType linientyp, int longBereich, int shortBereich)
 		{
 			if (cacheCOT2 != null)
 				for (int idx = 0; idx < cacheCOT2.Length; idx++)
-					if (cacheCOT2[idx] != null && cacheCOT2[idx].COT2Periode == cOT2Periode && cacheCOT2[idx].ShowMaxMin == showMaxMin && cacheCOT2[idx].COT2LinienSchieben == cOT2LinienSchieben && cacheCOT2[idx].linientyp == linientyp && cacheCOT2[idx].EqualsInput(input))
+					if (cacheCOT2[idx] != null && cacheCOT2[idx].COT2Periode == cOT2Periode && cacheCOT2[idx].ShowMaxMin == showMaxMin && cacheCOT2[idx].COT2LinienSchieben == cOT2LinienSchieben && cacheCOT2[idx].Linientyp == linientyp && cacheCOT2[idx].LongBereich == longBereich && cacheCOT2[idx].ShortBereich == shortBereich && cacheCOT2[idx].EqualsInput(input))
 						return cacheCOT2[idx];
-			return CacheIndicator<Suri.COT2>(new Suri.COT2(){ COT2Periode = cOT2Periode, ShowMaxMin = showMaxMin, COT2LinienSchieben = cOT2LinienSchieben, linientyp = linientyp }, input, ref cacheCOT2);
+			return CacheIndicator<Suri.COT2>(new Suri.COT2(){ COT2Periode = cOT2Periode, ShowMaxMin = showMaxMin, COT2LinienSchieben = cOT2LinienSchieben, Linientyp = linientyp, LongBereich = longBereich, ShortBereich = shortBereich }, input, ref cacheCOT2);
 		}
 	}
 }
@@ -467,14 +494,14 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.COT2 COT2(int cOT2Periode, bool showMaxMin, bool cOT2LinienSchieben, LineType linientyp)
+		public Indicators.Suri.COT2 COT2(int cOT2Periode, bool showMaxMin, bool cOT2LinienSchieben, LineType linientyp, int longBereich, int shortBereich)
 		{
-			return indicator.COT2(Input, cOT2Periode, showMaxMin, cOT2LinienSchieben, linientyp);
+			return indicator.COT2(Input, cOT2Periode, showMaxMin, cOT2LinienSchieben, linientyp, longBereich, shortBereich);
 		}
 
-		public Indicators.Suri.COT2 COT2(ISeries<double> input , int cOT2Periode, bool showMaxMin, bool cOT2LinienSchieben, LineType linientyp)
+		public Indicators.Suri.COT2 COT2(ISeries<double> input , int cOT2Periode, bool showMaxMin, bool cOT2LinienSchieben, LineType linientyp, int longBereich, int shortBereich)
 		{
-			return indicator.COT2(input, cOT2Periode, showMaxMin, cOT2LinienSchieben, linientyp);
+			return indicator.COT2(input, cOT2Periode, showMaxMin, cOT2LinienSchieben, linientyp, longBereich, shortBereich);
 		}
 	}
 }
@@ -483,14 +510,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.COT2 COT2(int cOT2Periode, bool showMaxMin, bool cOT2LinienSchieben, LineType linientyp)
+		public Indicators.Suri.COT2 COT2(int cOT2Periode, bool showMaxMin, bool cOT2LinienSchieben, LineType linientyp, int longBereich, int shortBereich)
 		{
-			return indicator.COT2(Input, cOT2Periode, showMaxMin, cOT2LinienSchieben, linientyp);
+			return indicator.COT2(Input, cOT2Periode, showMaxMin, cOT2LinienSchieben, linientyp, longBereich, shortBereich);
 		}
 
-		public Indicators.Suri.COT2 COT2(ISeries<double> input , int cOT2Periode, bool showMaxMin, bool cOT2LinienSchieben, LineType linientyp)
+		public Indicators.Suri.COT2 COT2(ISeries<double> input , int cOT2Periode, bool showMaxMin, bool cOT2LinienSchieben, LineType linientyp, int longBereich, int shortBereich)
 		{
-			return indicator.COT2(input, cOT2Periode, showMaxMin, cOT2LinienSchieben, linientyp);
+			return indicator.COT2(input, cOT2Periode, showMaxMin, cOT2LinienSchieben, linientyp, longBereich, shortBereich);
 		}
 	}
 }

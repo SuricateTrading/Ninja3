@@ -1,39 +1,45 @@
 <Page	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
 		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 		xmlns:t="clr-namespace:NinjaTrader.Gui.Tools;assembly=NinjaTrader.Gui"
-        xmlns:templates="clr-namespace:NinjaTrader.NinjaScript.AddOns.Templates;assembly=NinjaTrader.NinjaScript.AddOns.Templates"
+        xmlns:templates="clr-namespace:NinjaTrader.NinjaScript.AddOns.Templates"
 		xmlns:system="clr-namespace:System;assembly=mscorlib" Height="600" Width="450" >
     <Grid Background="Transparent">
 
         <TabControl Background="Transparent">
             <TabItem Header="Suricate">
                 <StackPanel >
-                    <Image Height="100" Width="100" VerticalAlignment="Top" Margin="0,10,0,0" Source="Suri.png"/>
-                    <Label Content="Suricate Trading" HorizontalAlignment="Center" VerticalAlignment="Top" Foreground="White" />
+                    <Image Height="200" Width="200" VerticalAlignment="Top" Margin="10" Source="C:/Users/Bo/Documents/NinjaTrader 8/bin/Custom/AddOns/Suri.png"/>
+                    <TextBlock x:Name="SuricateTextBlock" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Center" Foreground="White" Margin="10,0" >
+                        
+                    </TextBlock>
                 </StackPanel>
             </TabItem>
             <TabItem Header="Trading">
                 <Grid>
-                    <StackPanel VerticalAlignment="Top" Margin="0,10,0,0" >
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="32*"/>
+                        <ColumnDefinition Width="411*"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Top" Margin="0,10,0.333,0" Grid.ColumnSpan="2" >
                         <Button x:Name="Start" Content="Start" Width="100" />
                     </StackPanel>
 
-                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,10" >
+                    <StackPanel Margin="0,0,0,10" Grid.Column="1" VerticalAlignment="Bottom" >
                         <TextBlock HorizontalAlignment="Center">
-                        <Hyperlink NavigateUri="https://www.suricate-trading.de/">suricate-trading.de</Hyperlink>
+                            <Hyperlink x:Name="website" NavigateUri="https://www.suricate-trading.de/">suricate-trading.de</Hyperlink>
                         </TextBlock>
                         <TextBlock HorizontalAlignment="Center">
-                        <Hyperlink NavigateUri="https://www.suricate-trading.de/terminkurven/">Terminkurven</Hyperlink>
+                            <Hyperlink x:Name="terminkurven" NavigateUri="https://www.suricate-trading.de/terminkurven/">Terminkurven</Hyperlink>
                         </TextBlock>
                         <TextBlock HorizontalAlignment="Center">
-                        <Hyperlink NavigateUri="https://www.suricate-trading.de/seasonal-charts/seasonal-cot-data-charts/">Saisonalitaeten</Hyperlink>
+                            <Hyperlink x:Name="seasonals" NavigateUri="https://www.suricate-trading.de/seasonal-charts/seasonal-cot-data-charts/">Saisonalitaeten</Hyperlink>
                         </TextBlock>
                     </StackPanel>
                 </Grid>
 
             </TabItem>
             <TabItem Header="Termine">
-
+                <Grid />
             </TabItem>
             <TabItem Header="Hilfe">
                 <TextBlock TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" VerticalAlignment="Top" Foreground="White" Margin="20,0">

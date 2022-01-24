@@ -1,33 +1,14 @@
 #region Using declarations
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Xml.Serialization;
-using NinjaTrader.Cbi;
-using NinjaTrader.Gui;
-using NinjaTrader.Gui.Chart;
-using NinjaTrader.Gui.SuperDom;
-using NinjaTrader.Gui.Tools;
-using NinjaTrader.Data;
-using NinjaTrader.NinjaScript;
-using NinjaTrader.Core.FloatingPoint;
-using NinjaTrader.NinjaScript.DrawingTools;
 #endregion
 
-//This namespace holds Indicators in this folder and is required. Do not change it. 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
 	public class Oscillator : Indicator {
 		protected override void OnStateChange() {
 			if (State == State.SetDefaults) {
 				Description									= @"";
-				Name										= "Oscillator";
+				Name										= "Oszillator";
 				Calculate									= Calculate.OnBarClose;
 				IsOverlay									= false;
 				DisplayInDataBox							= true;
@@ -35,13 +16,12 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				DrawHorizontalGridLines						= true;
 				DrawVerticalGridLines						= true;
 				PaintPriceMarkers							= true;
-				ScaleJustification							= NinjaTrader.Gui.Chart.ScaleJustification.Right;
+				ScaleJustification							= Gui.Chart.ScaleJustification.Right;
 				IsSuspendedWhileInactive					= true;
 				Days										= 125;
-				AddPlot(Brushes.Orange, "OsciPlot");
+				AddPlot(Brushes.Orange, "Oszillator");
 			}
 		}
-		
 		
 		protected override void OnBarUpdate() {
 			if (CurrentBar < Days) return;
@@ -52,10 +32,8 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				if (min == null || min > v) min = v;
 				if (max == null || max < v) max = v;
 			}
-			
 			// min and max cannot be null at this point
-			double osci = 100.0 * (Input[0] - min.Value) / (max.Value - min.Value);
-			OsciPlot[0] = osci;
+			Value[0] = 100.0 * (Input[0] - min.Value) / (max.Value - min.Value);
 		}
 
 		#region Properties
@@ -64,16 +42,34 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		[Display(Name="Tage", Order=1, GroupName="Parameter")]
 		public int Days
 		{ get; set; }
-
-		[Browsable(false)]
-		[XmlIgnore]
-		public Series<double> OsciPlot {
-			get { return Values[0]; }
-		}
 		#endregion
 
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//
 
 #region NinjaScript generated code. Neither change nor remove.
 

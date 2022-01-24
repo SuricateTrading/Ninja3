@@ -86,11 +86,15 @@
     <Reference Include="SharpDX.Direct2D1">
       <HintPath>C:\Program Files (x86)\NinjaTrader 8\bin64\SharpDX.Direct2D1.dll</HintPath>
     </Reference>
+    <Reference Include="VendorLicensing">
+      <HintPath>C:\Users\Bo\Documents\NinjaTrader 8\bin\Custom\VendorLicensing.dll</HintPath>
+    </Reference>
     <Reference Include="NinjaTrader.Vendor">
       <HintPath>C:\Users\Bo\Documents\NinjaTrader 8\bin\Custom\NinjaTrader.Vendor.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AddOns\SuriServer.cs" />
     <Compile Include="BarsTypes\%40DayBarsType.cs" />
     <Compile Include="BarsTypes\%40HeikenAshiBarsType.cs" />
     <Compile Include="BarsTypes\%40KagiBarsType.cs" />
@@ -163,6 +167,7 @@
     <Compile Include="Indicators\%40VolumeUpDown.cs" />
     <Compile Include="Indicators\%40VolumeZones.cs" />
     <Compile Include="Indicators\%40Vortex.cs" />
+    <Compile Include="Indicators\Suri\AbstractRange.cs" />
     <Compile Include="MarketAnalyzerColumns\%40ChartMini.cs" />
     <Compile Include="MarketAnalyzerColumns\%40ChartNetChange.cs" />
     <Compile Include="MarketAnalyzerColumns\%40DaysUntilRollover.cs" />
@@ -381,10 +386,28 @@
     <Compile Include="AddOns\AddOnFramework.cs" />
     <Compile Include="Indicators\Suri\Oscillator.cs" />
     <Compile Include="Indicators\Suri\ChartToolbar.cs" />
-    <Compile Include="Indicators\Suri\COT1.cs" />
+    <Compile Include="Indicators\Suri\Cot1.cs" />
     <Compile Include="Indicators\Suri\COT2.cs" />
-    <Compile Include="Indicators\Suri\COT22.cs" />
+    <Compile Include="Indicators\Suri\Cot22.cs" />
     <Compile Include="Indicators\Suri\CotBase.cs" />
+    <Compile Include="Indicators\Suri\Sma.cs" />
+    <Compile Include="Indicators\Suri\BarInfo.cs" />
+    <Compile Include="Strategies\SuriTest.cs" />
+    <Compile Include="Indicators\Suri\StrategyInterface.cs" />
+    <Compile Include="Indicators\Suri\Volumen.cs" />
+    <Compile Include="Indicators\Suri\SuriTester.cs" />
+    <Compile Include="Indicators\Suri\Terminkurve.cs" />
+    <Compile Include="Indicators\Suri\DbCot.cs" />
+    <Compile Include="VendorLicensing.cs" />
+    <Compile Include="Indicators\Suri\SuriRange.cs" />
+    <Compile Include="Strategies\StrategyCOT1.cs" />
+    <Compile Include="Strategies\StrategyCOT2.cs" />
+    <Compile Include="DrawingTools\DrawRange.cs" />
+    <Compile Include="Indicators\Suri\RolloverButton.cs" />
+    <Compile Include="Indicators\Suri\SuriControls.cs" />
+    <Compile Include="Indicators\Suri\ComShortOpenInterest.cs" />
+    <Compile Include="Indicators\Suri\TkDelta.cs" />
+    <Compile Include="Indicators\Suri\Mega.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resource.resx">
