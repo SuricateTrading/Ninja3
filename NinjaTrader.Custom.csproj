@@ -119,6 +119,7 @@
     <Compile Include="ChartStyles\%40OhlcStyle.cs" />
     <Compile Include="ChartStyles\%40OpenCloseStyle.cs" />
     <Compile Include="ChartStyles\%40PointAndFigureStyle.cs" />
+    <Compile Include="ChartStyles\GapCandleStyle.cs" />
     <Compile Include="DrawingTools\%40AndrewsPitchfork.cs" />
     <Compile Include="DrawingTools\%40Arc.cs" />
     <Compile Include="DrawingTools\%40ChartMarkers.cs" />
@@ -137,6 +138,9 @@
     <Compile Include="DrawingTools\%40Shapes.cs" />
     <Compile Include="DrawingTools\%40TimeCycles.cs" />
     <Compile Include="DrawingTools\%40TrendChannel.cs" />
+    <Compile Include="DrawingTools\BarInfo.cs" />
+    <Compile Include="DrawingTools\StrikingSpot.cs" />
+    <Compile Include="DrawingTools\Tester.cs" />
     <Compile Include="ImportTypes\%40TickDataImportType.cs" />
     <Compile Include="Indicators\%40BarTimer.cs" />
     <Compile Include="Indicators\%40Correlation.cs" />
@@ -168,6 +172,9 @@
     <Compile Include="Indicators\%40VolumeZones.cs" />
     <Compile Include="Indicators\%40Vortex.cs" />
     <Compile Include="Indicators\Suri\AbstractRange.cs" />
+    <Compile Include="Indicators\Suri\IStrategyInterface.cs" />
+    <Compile Include="Indicators\Suri\SuriDrawingToolTile.cs" />
+    <Compile Include="Indicators\Suri\VolumeProfileBig.cs" />
     <Compile Include="MarketAnalyzerColumns\%40ChartMini.cs" />
     <Compile Include="MarketAnalyzerColumns\%40ChartNetChange.cs" />
     <Compile Include="MarketAnalyzerColumns\%40DaysUntilRollover.cs" />
@@ -392,15 +399,13 @@
     <Compile Include="Indicators\Suri\CotBase.cs" />
     <Compile Include="Indicators\Suri\Sma.cs" />
     <Compile Include="Indicators\Suri\BarInfo.cs" />
-    <Compile Include="Strategies\SuriTest.cs" />
-    <Compile Include="Indicators\Suri\StrategyInterface.cs" />
+    <Compile Include="Strategies\SuriStrategy.cs" />
     <Compile Include="Indicators\Suri\Volumen.cs" />
     <Compile Include="Indicators\Suri\SuriTester.cs" />
     <Compile Include="Indicators\Suri\Terminkurve.cs" />
     <Compile Include="Indicators\Suri\DbCot.cs" />
     <Compile Include="VendorLicensing.cs" />
     <Compile Include="Indicators\Suri\SuriRange.cs" />
-    <Compile Include="Strategies\StrategyCOT1.cs" />
     <Compile Include="Strategies\StrategyCOT2.cs" />
     <Compile Include="DrawingTools\DrawRange.cs" />
     <Compile Include="Indicators\Suri\RolloverButton.cs" />
@@ -408,6 +413,7 @@
     <Compile Include="Indicators\Suri\ComShortOpenInterest.cs" />
     <Compile Include="Indicators\Suri\TkDelta.cs" />
     <Compile Include="Indicators\Suri\Mega.cs" />
+    <Compile Include="Indicators\Suri\VolumeProfileIntraday.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resource.resx">

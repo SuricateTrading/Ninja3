@@ -38,10 +38,8 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				return "Range " + Periode + " Tage - " + SuriStrings.instrumentToName(Instrument.FullName);
 			}
         }
-
-        public double Percentage() {
-	        return 100 * Values[0][0] / Values[1][0];
-        }
+        public double Percentage() { return 100 * Values[0][0] / Values[1][0]; }
+        public bool IsMegaRange() { return Math.Abs(Values[0][0] - Values[1][0]) < 0.001; }
 
         protected override void OnBarUpdate() {
 	        if (CurrentBar != 0) {
@@ -66,8 +64,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		        }
 	        }
 	        Values[1][0] = max;
-	        if(Values[0][0] == Values[1][0]) 
-		        PlotBrushes[0][0] = Brushes.Yellow;
+	        if(IsMegaRange()) PlotBrushes[0][0] = Brushes.Yellow;
         }
 
         

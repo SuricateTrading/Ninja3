@@ -40,7 +40,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri
 			if (State == State.SetDefaults)
 			{
 				Description = @"";
-				Name = "Cot 2";
+				Name = "COT2";
 				Calculate = Calculate.OnBarClose;
 				IsOverlay = false;
 				DisplayInDataBox = true;
@@ -332,7 +332,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri
 							#endregion linienZeichnen25,50,75 
 
 
-							#region linienSchieben							
+							#region linienSchieben
 
 							if (COT2LinienSchieben)
 							{
