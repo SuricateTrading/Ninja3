@@ -12,7 +12,7 @@ using NinjaTrader.Gui.Tools;
 using NinjaTrader.Data;
 #endregion
 
-namespace NinjaTrader.NinjaScript.Indicators.Suri {
+namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
     public class BarInfo : Indicator {
         private Point mousePosition;
         private int barIndex;
@@ -600,19 +600,19 @@ namespace NinjaTrader.NinjaScript.Indicators
 {
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
-		private Suri.BarInfo[] cacheBarInfo;
-		public Suri.BarInfo BarInfo()
+		private Suri.dev.BarInfo[] cacheBarInfo;
+		public Suri.dev.BarInfo BarInfo()
 		{
 			return BarInfo(Input);
 		}
 
-		public Suri.BarInfo BarInfo(ISeries<double> input)
+		public Suri.dev.BarInfo BarInfo(ISeries<double> input)
 		{
 			if (cacheBarInfo != null)
 				for (int idx = 0; idx < cacheBarInfo.Length; idx++)
 					if (cacheBarInfo[idx] != null &&  cacheBarInfo[idx].EqualsInput(input))
 						return cacheBarInfo[idx];
-			return CacheIndicator<Suri.BarInfo>(new Suri.BarInfo(), input, ref cacheBarInfo);
+			return CacheIndicator<Suri.dev.BarInfo>(new Suri.dev.BarInfo(), input, ref cacheBarInfo);
 		}
 	}
 }
@@ -621,12 +621,12 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.BarInfo BarInfo()
+		public Indicators.Suri.dev.BarInfo BarInfo()
 		{
 			return indicator.BarInfo(Input);
 		}
 
-		public Indicators.Suri.BarInfo BarInfo(ISeries<double> input )
+		public Indicators.Suri.dev.BarInfo BarInfo(ISeries<double> input )
 		{
 			return indicator.BarInfo(input);
 		}
@@ -637,12 +637,12 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.BarInfo BarInfo()
+		public Indicators.Suri.dev.BarInfo BarInfo()
 		{
 			return indicator.BarInfo(Input);
 		}
 
-		public Indicators.Suri.BarInfo BarInfo(ISeries<double> input )
+		public Indicators.Suri.dev.BarInfo BarInfo(ISeries<double> input )
 		{
 			return indicator.BarInfo(input);
 		}

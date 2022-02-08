@@ -9,7 +9,7 @@ using Brush = SharpDX.Direct2D1.Brush;
 
 #endregion
 
-namespace NinjaTrader.NinjaScript.Indicators.Suri {
+namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 	public class VolumeProfileIntraday : Indicator {
 		protected override void OnStateChange() {
 			if (State == State.SetDefaults) {
@@ -92,19 +92,19 @@ namespace NinjaTrader.NinjaScript.Indicators
 {
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
-		private Suri.VolumeProfileIntraday[] cacheVolumeProfileIntraday;
-		public Suri.VolumeProfileIntraday VolumeProfileIntraday()
+		private Suri.dev.VolumeProfileIntraday[] cacheVolumeProfileIntraday;
+		public Suri.dev.VolumeProfileIntraday VolumeProfileIntraday()
 		{
 			return VolumeProfileIntraday(Input);
 		}
 
-		public Suri.VolumeProfileIntraday VolumeProfileIntraday(ISeries<double> input)
+		public Suri.dev.VolumeProfileIntraday VolumeProfileIntraday(ISeries<double> input)
 		{
 			if (cacheVolumeProfileIntraday != null)
 				for (int idx = 0; idx < cacheVolumeProfileIntraday.Length; idx++)
 					if (cacheVolumeProfileIntraday[idx] != null &&  cacheVolumeProfileIntraday[idx].EqualsInput(input))
 						return cacheVolumeProfileIntraday[idx];
-			return CacheIndicator<Suri.VolumeProfileIntraday>(new Suri.VolumeProfileIntraday(), input, ref cacheVolumeProfileIntraday);
+			return CacheIndicator<Suri.dev.VolumeProfileIntraday>(new Suri.dev.VolumeProfileIntraday(), input, ref cacheVolumeProfileIntraday);
 		}
 	}
 }
@@ -113,12 +113,12 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.VolumeProfileIntraday VolumeProfileIntraday()
+		public Indicators.Suri.dev.VolumeProfileIntraday VolumeProfileIntraday()
 		{
 			return indicator.VolumeProfileIntraday(Input);
 		}
 
-		public Indicators.Suri.VolumeProfileIntraday VolumeProfileIntraday(ISeries<double> input )
+		public Indicators.Suri.dev.VolumeProfileIntraday VolumeProfileIntraday(ISeries<double> input )
 		{
 			return indicator.VolumeProfileIntraday(input);
 		}
@@ -129,12 +129,12 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.VolumeProfileIntraday VolumeProfileIntraday()
+		public Indicators.Suri.dev.VolumeProfileIntraday VolumeProfileIntraday()
 		{
 			return indicator.VolumeProfileIntraday(Input);
 		}
 
-		public Indicators.Suri.VolumeProfileIntraday VolumeProfileIntraday(ISeries<double> input )
+		public Indicators.Suri.dev.VolumeProfileIntraday VolumeProfileIntraday(ISeries<double> input )
 		{
 			return indicator.VolumeProfileIntraday(input);
 		}

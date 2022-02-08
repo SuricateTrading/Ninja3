@@ -4,7 +4,7 @@ using System.Windows.Media;
 using NinjaTrader.Gui;
 #endregion
 
-namespace NinjaTrader.NinjaScript.Indicators.Suri {
+namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 	public class AbstractRange : Indicator {
 		
 		private double? min;
@@ -121,19 +121,19 @@ namespace NinjaTrader.NinjaScript.Indicators
 {
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
-		private Suri.AbstractRange[] cacheAbstractRange;
-		public Suri.AbstractRange AbstractRange(bool drawLinesPara, int days, bool drawDotedLinePara)
+		private Suri.dev.AbstractRange[] cacheAbstractRange;
+		public Suri.dev.AbstractRange AbstractRange(bool drawLinesPara, int days, bool drawDotedLinePara)
 		{
 			return AbstractRange(Input, drawLinesPara, days, drawDotedLinePara);
 		}
 
-		public Suri.AbstractRange AbstractRange(ISeries<double> input, bool drawLinesPara, int days, bool drawDotedLinePara)
+		public Suri.dev.AbstractRange AbstractRange(ISeries<double> input, bool drawLinesPara, int days, bool drawDotedLinePara)
 		{
 			if (cacheAbstractRange != null)
 				for (int idx = 0; idx < cacheAbstractRange.Length; idx++)
 					if (cacheAbstractRange[idx] != null && cacheAbstractRange[idx].DrawLinesPara == drawLinesPara && cacheAbstractRange[idx].Days == days && cacheAbstractRange[idx].DrawDotedLinePara == drawDotedLinePara && cacheAbstractRange[idx].EqualsInput(input))
 						return cacheAbstractRange[idx];
-			return CacheIndicator<Suri.AbstractRange>(new Suri.AbstractRange(){ DrawLinesPara = drawLinesPara, Days = days, DrawDotedLinePara = drawDotedLinePara }, input, ref cacheAbstractRange);
+			return CacheIndicator<Suri.dev.AbstractRange>(new Suri.dev.AbstractRange(){ DrawLinesPara = drawLinesPara, Days = days, DrawDotedLinePara = drawDotedLinePara }, input, ref cacheAbstractRange);
 		}
 	}
 }
@@ -142,12 +142,12 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.AbstractRange AbstractRange(bool drawLinesPara, int days, bool drawDotedLinePara)
+		public Indicators.Suri.dev.AbstractRange AbstractRange(bool drawLinesPara, int days, bool drawDotedLinePara)
 		{
 			return indicator.AbstractRange(Input, drawLinesPara, days, drawDotedLinePara);
 		}
 
-		public Indicators.Suri.AbstractRange AbstractRange(ISeries<double> input , bool drawLinesPara, int days, bool drawDotedLinePara)
+		public Indicators.Suri.dev.AbstractRange AbstractRange(ISeries<double> input , bool drawLinesPara, int days, bool drawDotedLinePara)
 		{
 			return indicator.AbstractRange(input, drawLinesPara, days, drawDotedLinePara);
 		}
@@ -158,12 +158,12 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.AbstractRange AbstractRange(bool drawLinesPara, int days, bool drawDotedLinePara)
+		public Indicators.Suri.dev.AbstractRange AbstractRange(bool drawLinesPara, int days, bool drawDotedLinePara)
 		{
 			return indicator.AbstractRange(Input, drawLinesPara, days, drawDotedLinePara);
 		}
 
-		public Indicators.Suri.AbstractRange AbstractRange(ISeries<double> input , bool drawLinesPara, int days, bool drawDotedLinePara)
+		public Indicators.Suri.dev.AbstractRange AbstractRange(ISeries<double> input , bool drawLinesPara, int days, bool drawDotedLinePara)
 		{
 			return indicator.AbstractRange(input, drawLinesPara, days, drawDotedLinePara);
 		}

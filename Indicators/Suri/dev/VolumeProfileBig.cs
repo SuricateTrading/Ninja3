@@ -11,7 +11,7 @@ using SolidColorBrush = System.Windows.Media.SolidColorBrush;
 
 #endregion
 
-namespace NinjaTrader.NinjaScript.Indicators.Suri {
+namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 	public class VolumeProfileBig : Indicator {
 		protected override void OnStateChange() {
 			if (State == State.SetDefaults) {
@@ -90,19 +90,19 @@ namespace NinjaTrader.NinjaScript.Indicators
 {
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
-		private Suri.VolumeProfileBig[] cacheVolumeProfileBig;
-		public Suri.VolumeProfileBig VolumeProfileBig()
+		private Suri.dev.VolumeProfileBig[] cacheVolumeProfileBig;
+		public Suri.dev.VolumeProfileBig VolumeProfileBig()
 		{
 			return VolumeProfileBig(Input);
 		}
 
-		public Suri.VolumeProfileBig VolumeProfileBig(ISeries<double> input)
+		public Suri.dev.VolumeProfileBig VolumeProfileBig(ISeries<double> input)
 		{
 			if (cacheVolumeProfileBig != null)
 				for (int idx = 0; idx < cacheVolumeProfileBig.Length; idx++)
 					if (cacheVolumeProfileBig[idx] != null &&  cacheVolumeProfileBig[idx].EqualsInput(input))
 						return cacheVolumeProfileBig[idx];
-			return CacheIndicator<Suri.VolumeProfileBig>(new Suri.VolumeProfileBig(), input, ref cacheVolumeProfileBig);
+			return CacheIndicator<Suri.dev.VolumeProfileBig>(new Suri.dev.VolumeProfileBig(), input, ref cacheVolumeProfileBig);
 		}
 	}
 }
@@ -111,12 +111,12 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.VolumeProfileBig VolumeProfileBig()
+		public Indicators.Suri.dev.VolumeProfileBig VolumeProfileBig()
 		{
 			return indicator.VolumeProfileBig(Input);
 		}
 
-		public Indicators.Suri.VolumeProfileBig VolumeProfileBig(ISeries<double> input )
+		public Indicators.Suri.dev.VolumeProfileBig VolumeProfileBig(ISeries<double> input )
 		{
 			return indicator.VolumeProfileBig(input);
 		}
@@ -127,12 +127,12 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.VolumeProfileBig VolumeProfileBig()
+		public Indicators.Suri.dev.VolumeProfileBig VolumeProfileBig()
 		{
 			return indicator.VolumeProfileBig(Input);
 		}
 
-		public Indicators.Suri.VolumeProfileBig VolumeProfileBig(ISeries<double> input )
+		public Indicators.Suri.dev.VolumeProfileBig VolumeProfileBig(ISeries<double> input )
 		{
 			return indicator.VolumeProfileBig(input);
 		}

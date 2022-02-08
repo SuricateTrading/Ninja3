@@ -6,7 +6,7 @@ using NinjaTrader.Gui.Chart;
 using NinjaTrader.Gui.NinjaScript;
 #endregion
 
-namespace NinjaTrader.NinjaScript.Indicators.Suri {
+namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 	public class DbCot : Indicator {
 		private List<DbCotData> dbCotData;
 		private int nextIndex;
@@ -103,19 +103,19 @@ namespace NinjaTrader.NinjaScript.Indicators
 {
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
-		private Suri.DbCot[] cacheDbCot;
-		public Suri.DbCot DbCot()
+		private Suri.dev.DbCot[] cacheDbCot;
+		public Suri.dev.DbCot DbCot()
 		{
 			return DbCot(Input);
 		}
 
-		public Suri.DbCot DbCot(ISeries<double> input)
+		public Suri.dev.DbCot DbCot(ISeries<double> input)
 		{
 			if (cacheDbCot != null)
 				for (int idx = 0; idx < cacheDbCot.Length; idx++)
 					if (cacheDbCot[idx] != null &&  cacheDbCot[idx].EqualsInput(input))
 						return cacheDbCot[idx];
-			return CacheIndicator<Suri.DbCot>(new Suri.DbCot(), input, ref cacheDbCot);
+			return CacheIndicator<Suri.dev.DbCot>(new Suri.dev.DbCot(), input, ref cacheDbCot);
 		}
 	}
 }
@@ -124,12 +124,12 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.DbCot DbCot()
+		public Indicators.Suri.dev.DbCot DbCot()
 		{
 			return indicator.DbCot(Input);
 		}
 
-		public Indicators.Suri.DbCot DbCot(ISeries<double> input )
+		public Indicators.Suri.dev.DbCot DbCot(ISeries<double> input )
 		{
 			return indicator.DbCot(input);
 		}
@@ -140,12 +140,12 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.DbCot DbCot()
+		public Indicators.Suri.dev.DbCot DbCot()
 		{
 			return indicator.DbCot(Input);
 		}
 
-		public Indicators.Suri.DbCot DbCot(ISeries<double> input )
+		public Indicators.Suri.dev.DbCot DbCot(ISeries<double> input )
 		{
 			return indicator.DbCot(input);
 		}

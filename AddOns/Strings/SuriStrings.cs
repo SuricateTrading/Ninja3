@@ -9,6 +9,7 @@ public static class SuriStrings {
 	
 	public static string instrumentToName(string instrumentName) {
 		string name = Regex.Replace(instrumentName, " .+", "");
+		if (!TempS.ContainsKey(name)) return instrumentName;
 		name = TempS[name];
 		
 		if(name != null)

@@ -10,7 +10,7 @@ using NinjaTrader.Gui;
 using NinjaTrader.Data;
 #endregion
 
-namespace NinjaTrader.NinjaScript.Indicators.Suri {
+namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 	public class SuriTester : Indicator {
 		
 		protected override void OnStateChange() {
@@ -90,19 +90,19 @@ namespace NinjaTrader.NinjaScript.Indicators
 {
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
-		private Suri.SuriTester[] cacheSuriTester;
-		public Suri.SuriTester SuriTester(String reportField)
+		private Suri.dev.SuriTester[] cacheSuriTester;
+		public Suri.dev.SuriTester SuriTester(String reportField)
 		{
 			return SuriTester(Input, reportField);
 		}
 
-		public Suri.SuriTester SuriTester(ISeries<double> input, String reportField)
+		public Suri.dev.SuriTester SuriTester(ISeries<double> input, String reportField)
 		{
 			if (cacheSuriTester != null)
 				for (int idx = 0; idx < cacheSuriTester.Length; idx++)
 					if (cacheSuriTester[idx] != null && cacheSuriTester[idx].ReportField == reportField && cacheSuriTester[idx].EqualsInput(input))
 						return cacheSuriTester[idx];
-			return CacheIndicator<Suri.SuriTester>(new Suri.SuriTester(){ ReportField = reportField }, input, ref cacheSuriTester);
+			return CacheIndicator<Suri.dev.SuriTester>(new Suri.dev.SuriTester(){ ReportField = reportField }, input, ref cacheSuriTester);
 		}
 	}
 }
@@ -111,12 +111,12 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.SuriTester SuriTester(String reportField)
+		public Indicators.Suri.dev.SuriTester SuriTester(String reportField)
 		{
 			return indicator.SuriTester(Input, reportField);
 		}
 
-		public Indicators.Suri.SuriTester SuriTester(ISeries<double> input , String reportField)
+		public Indicators.Suri.dev.SuriTester SuriTester(ISeries<double> input , String reportField)
 		{
 			return indicator.SuriTester(input, reportField);
 		}
@@ -127,12 +127,12 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.SuriTester SuriTester(String reportField)
+		public Indicators.Suri.dev.SuriTester SuriTester(String reportField)
 		{
 			return indicator.SuriTester(Input, reportField);
 		}
 
-		public Indicators.Suri.SuriTester SuriTester(ISeries<double> input , String reportField)
+		public Indicators.Suri.dev.SuriTester SuriTester(ISeries<double> input , String reportField)
 		{
 			return indicator.SuriTester(input, reportField);
 		}

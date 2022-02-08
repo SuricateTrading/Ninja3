@@ -20,7 +20,7 @@ namespace NinjaTrader.NinjaScript.Indicators {
 
 		protected override void OnStateChange() {
 			if (State == State.SetDefaults) {
-				Name										= "";
+				Name										= "Rollover Button";
 				Description									= @"Button um zum nächsten Kontraktmonat zu springen";
 				Calculate									= Calculate.OnBarClose;
 				IsOverlay									= true;

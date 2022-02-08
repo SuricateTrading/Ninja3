@@ -58,3 +58,29 @@ public abstract class StrategyIndicator : Indicator {
         return Name + " " + t + " In";
     }
 }
+
+public abstract class StrategyIndicator2 : Indicator {
+    public abstract TradePosition GetTradePosition();
+    /// A signal to start waiting for possible trades
+    public abstract bool IsSignal();
+    /// The Date when the signal happened. Expects to be called ONLY while IsSignal = true !
+    public abstract DateTime? FirstSignalDate();
+    /// Try to enter. Entering may fail due to too high stop or other criteria.
+    public abstract bool? IsEntry();
+    public abstract bool ShouldExit(TradePosition tradePosition);
+    public abstract double? GetStopValue();
+    /// The price to enter with a stop market order
+    public abstract double? GetEntryValue();
+    /// A value between 0 and 100 indicating the strength of the long / short position
+    public abstract double? GetPositionStrength();
+
+    public abstract bool IsLong();
+    public abstract bool IsShort();
+    public abstract bool IsInLongHalf();
+    public abstract bool IsInShortHalf();
+
+    public String GetEntryName(TradePosition? t = null) {
+        if (t==null) t = GetTradePosition();
+        return Name + " " + t + " In";
+    }
+}

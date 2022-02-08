@@ -26,14 +26,14 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		protected override void OnBarUpdate() {
 			if (CurrentBar < Days) return;
 			
-			double? min = null, max = null;
+			double min = double.MaxValue;
+			double max = double.MinValue;
 			for (int barsAgo = 0; barsAgo < Days; barsAgo++) {
 				double v = Input[barsAgo];
-				if (min == null || min > v) min = v;
-				if (max == null || max < v) max = v;
+				if (min > v) min = v;
+				if (max < v) max = v;
 			}
-			// min and max cannot be null at this point
-			Value[0] = 100.0 * (Input[0] - min.Value) / (max.Value - min.Value);
+			Value[0] = 100.0 * (Input[0] - min) / (max - min);
 		}
 
 		#region Properties

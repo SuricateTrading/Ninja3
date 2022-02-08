@@ -3,6 +3,8 @@
 using System.Windows.Media;
 using NinjaTrader.Gui;
 using NinjaTrader.Gui.Chart;
+using NinjaTrader.NinjaScript.Indicators.Suri.dev;
+
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {

@@ -11,6 +11,8 @@ using NinjaTrader.Core;
 using NinjaTrader.Gui;
 using NinjaTrader.NinjaScript;
 using NinjaTrader.NinjaScript.DrawingTools;
+using NinjaTrader.NinjaScript.Indicators.Suri.dev;
+
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {

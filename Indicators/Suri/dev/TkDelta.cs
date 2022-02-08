@@ -6,17 +6,15 @@ using NinjaTrader.Gui.Chart;
 using NinjaTrader.Gui.NinjaScript;
 #endregion
 
-
-
-namespace NinjaTrader.NinjaScript.Indicators.Suri {
-	public class Terminkurve : Indicator {
-		private List<TkData> tkData;
+namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
+	public class TkDelta : Indicator {
+		private List<TkData> tkDeltaData;
 		private int nextIndex;
 		
 		protected override void OnStateChange() {
 			if (State == State.SetDefaults) {
 				Description									= @"";
-				Name										= "Terminkurve";
+				Name										= "TK Delta";
 				Calculate									= Calculate.OnBarClose;
 				IsOverlay									= false;
 				DisplayInDataBox							= true;
@@ -24,69 +22,40 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				DrawHorizontalGridLines						= true;
 				DrawVerticalGridLines						= true;
 				PaintPriceMarkers							= true;
+				BarsRequiredToPlot							= 0;
 				ScaleJustification							= ScaleJustification.Right;
 				IsSuspendedWhileInactive					= true;
-				AddPlot(new Stroke(Brushes.DarkGray, 3), PlotStyle.Line, "Terminkurve");
+				AddPlot(new Stroke(Brushes.DarkGray, 3), PlotStyle.Line, "TK Delta");
 			} else if (State == State.DataLoaded) {
 				int id = SuriStrings.getId(Instrument.FullName);
 				if (id != -1) {
 					string oldDate = From.Date.ToString("yyyy-MM-dd");
 					string newDate = To.Date.ToString("yyyy-MM-dd");
-					tkData = SuriServer.GetTkData(id, oldDate, newDate);
+					tkDeltaData = SuriServer.GetTkData(id, oldDate, newDate);
 				}
 			}
 		}
 		
 		protected override void OnBarUpdate() {
-			if (tkData == null) return;
+			if (tkDeltaData == null) return;
 			
 			string now = Time[0].Date.ToString("yyyy-MM-dd");
-			for (int i = nextIndex; i < tkData.Count; i++) {
-				if (tkData[i].Date.Equals(now)) {
-					Value[0] = tkData[i].TkState;
+			for (int i = nextIndex; i < tkDeltaData.Count; i++) {
+				if (tkDeltaData[i].Date.Equals(now)) {
+					Value[0] = tkDeltaData[i].Delta;
 					nextIndex = i;
 					return;
 				}
 			}
 		}
-
+/*
 		public override void OnCalculateMinMax() {
-			MinValue = -2;
-			MaxValue = 2;
-		}
-		
+			MinValue = 0;
+			MaxValue = 100;
+		}*/
+
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -118,19 +87,19 @@ namespace NinjaTrader.NinjaScript.Indicators
 {
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
-		private Suri.Terminkurve[] cacheTerminkurve;
-		public Suri.Terminkurve Terminkurve()
+		private Suri.dev.TkDelta[] cacheTkDelta;
+		public Suri.dev.TkDelta TkDelta()
 		{
-			return Terminkurve(Input);
+			return TkDelta(Input);
 		}
 
-		public Suri.Terminkurve Terminkurve(ISeries<double> input)
+		public Suri.dev.TkDelta TkDelta(ISeries<double> input)
 		{
-			if (cacheTerminkurve != null)
-				for (int idx = 0; idx < cacheTerminkurve.Length; idx++)
-					if (cacheTerminkurve[idx] != null &&  cacheTerminkurve[idx].EqualsInput(input))
-						return cacheTerminkurve[idx];
-			return CacheIndicator<Suri.Terminkurve>(new Suri.Terminkurve(), input, ref cacheTerminkurve);
+			if (cacheTkDelta != null)
+				for (int idx = 0; idx < cacheTkDelta.Length; idx++)
+					if (cacheTkDelta[idx] != null &&  cacheTkDelta[idx].EqualsInput(input))
+						return cacheTkDelta[idx];
+			return CacheIndicator<Suri.dev.TkDelta>(new Suri.dev.TkDelta(), input, ref cacheTkDelta);
 		}
 	}
 }
@@ -139,14 +108,14 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.Terminkurve Terminkurve()
+		public Indicators.Suri.dev.TkDelta TkDelta()
 		{
-			return indicator.Terminkurve(Input);
+			return indicator.TkDelta(Input);
 		}
 
-		public Indicators.Suri.Terminkurve Terminkurve(ISeries<double> input )
+		public Indicators.Suri.dev.TkDelta TkDelta(ISeries<double> input )
 		{
-			return indicator.Terminkurve(input);
+			return indicator.TkDelta(input);
 		}
 	}
 }
@@ -155,14 +124,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.Terminkurve Terminkurve()
+		public Indicators.Suri.dev.TkDelta TkDelta()
 		{
-			return indicator.Terminkurve(Input);
+			return indicator.TkDelta(Input);
 		}
 
-		public Indicators.Suri.Terminkurve Terminkurve(ISeries<double> input )
+		public Indicators.Suri.dev.TkDelta TkDelta(ISeries<double> input )
 		{
-			return indicator.Terminkurve(input);
+			return indicator.TkDelta(input);
 		}
 	}
 }

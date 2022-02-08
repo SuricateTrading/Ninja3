@@ -12,7 +12,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				Description									= @"";
 				Name										= "SMA";
 				Calculate									= Calculate.OnBarClose;
-				IsOverlay									= false;
+				IsOverlay									= true;
 				DisplayInDataBox							= true;
 				DrawOnPricePanel							= true;
 				DrawHorizontalGridLines						= true;
