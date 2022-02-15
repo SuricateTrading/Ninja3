@@ -21,8 +21,8 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 
 		protected override void OnStateChange() {
 			if (State == State.SetDefaults) {
-				Description							= @"";
-				Name								= "Toolbar Alt";
+				Name								= "Toolbar";
+				Description							= @"Zeigt eine Toolbar an, mit der Indikatoren ein- und ausgeschaltet werden können.";
 				Calculate							= Calculate.OnBarClose;
 				IsOverlay							= true;
 				DisplayInDataBox					= false;
@@ -41,7 +41,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 						if (type != typeof(CotBase)) return indicator.IsVisible;
 						// for CotBase the report field must match too:
 						foreach (SuriCotReportField field in cotFields) {
-							if (((CotBase)indicator).ReportField == field) return indicator.IsVisible;
+							if (((CotBase)indicator).reportField == field) return indicator.IsVisible;
 						}
 					}
 				}
@@ -59,7 +59,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 								update = true;
 							} else {
 								foreach (SuriCotReportField field in cotFields) {
-									if (((CotBase) indicator).ReportField == field) {
+									if (((CotBase) indicator).reportField == field) {
 										indicator.IsVisible = !indicator.IsVisible;
 										update = true;
 									}

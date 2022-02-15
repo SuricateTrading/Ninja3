@@ -1,8 +1,11 @@
 #region Using declarations
 using System;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Windows.Media;
 using NinjaTrader.Gui;
+using NinjaTrader.Gui.Chart;
+
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
@@ -10,7 +13,35 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		private CotBase cotData;
 		private Sma sma;
 		
+		private bool isCurrentlyASignal;
+		
+		private TradePosition? lastSignal;
+		public bool LastSignalWasLong()  { return lastSignal == TradePosition.Long; }
+		public bool LastSignalWasShort() { return lastSignal == TradePosition.Short; }
+		
+		private int? lastSignalBar;
+		public int? GetLastSignalBar() { return lastSignalBar; }
+		
+		private bool _lookOutForEntry;
+		[Browsable(false)]
+		public bool doEnter {
+			get {
+				return
+					_lookOutForEntry &&
+					lastSignalBar != null &&
+					lastEntryValue != null &&
+					(Time[0].DayOfWeek == DayOfWeek.Monday || CurrentBar - lastSignalBar >= 4) &&
+					lastSignalBar != null && (Time[0] - Time[lastSignalBar.Value]).Days > 36 &&
+					LastSignalWasLong() && High[0] > lastEntryValue || LastSignalWasShort() && Low[0] < lastEntryValue
+				;
+			}
+			set { _lookOutForEntry = value; }
+		}
+		private double? lastEntryValue;
+		public double? LastEntryValue() { return lastEntryValue; }
+
 		#region Indicator
+		
 		[NinjaScriptProperty]
 		[Range(1, int.MaxValue)]
 		[Display(Name="Tage", Order=1, GroupName="Parameter")]
@@ -23,8 +54,8 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		
 		protected override void OnStateChange() {
 			if (State == State.SetDefaults) {
-				Description									= @"";
-				Name										= "Cot 1";
+				Description									= @"CoT 1 Commercials Netto";
+				Name										= "CoT 1";
 				Calculate									= Calculate.OnBarClose;
 				IsOverlay									= false;
 				DisplayInDataBox							= true;
@@ -32,7 +63,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				DrawHorizontalGridLines						= true;
 				DrawVerticalGridLines						= true;
 				PaintPriceMarkers							= true;
-				ScaleJustification							= Gui.Chart.ScaleJustification.Right;
+				ScaleJustification							= ScaleJustification.Right;
 				IsSuspendedWhileInactive					= true;
 				BarsRequiredToPlot							= 0;
 				days										= 125;
@@ -56,10 +87,16 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 	        MinValue = 0;
 	        MaxValue = 100;
         }
-        #endregion
-
         
-        private bool isCurrentlyASignal;
+        protected override void OnRender(ChartControl chartControl, ChartScale chartScale) {
+	        base.OnRender(chartControl, chartScale);
+	        chartScale.Properties.AutoScaleMarginType = AutoScaleMarginType.Percent;
+	        chartScale.Properties.AutoScaleMarginUpper = 30;
+	        chartScale.Properties.AutoScaleMarginLower = 30;
+        }
+        
+        #endregion
+        
 		protected override void OnBarUpdate() {
 			if (CurrentBar < days) return;
 
@@ -85,7 +122,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				else PlotBrushes[0][0] = Brushes.Yellow;
 			}
 		}
-		
 
 		public override bool IsLong()  { return Value[0] >= 90; }
 		public override bool IsShort() { return Value[0] <= 10; }
@@ -105,17 +141,28 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			// check if we come from the other side
 			for (int i = 2; i <= CurrentBar - days; i++) {
 				if (Value[i] <= 10 && Value[i - 1] > 10 || Value[i] >= 90 && Value[i - 1] < 90) {
-					return Math.Abs(Value[i] - Value[0]) >= 80;
+					if (Math.Abs(Value[i] - Value[0]) >= 80) {
+						if (IsShort()) lastSignal = TradePosition.Short;
+						if (IsLong()) lastSignal = TradePosition.Long;
+						lastSignalBar = CurrentBar;
+						doEnter = true;
+						return true;
+					}
+					return false;
 				}
 			}
 			return false;
 		}
 
 		public override bool? IsEntry() {
-			return IsSignal() && (
-				sma[0] > sma[1] && IsLong() ||
-				sma[0] < sma[1] && IsShort()
-			);
+			if (IsSignal() && (
+				    sma[0] > sma[1] && IsLong() ||
+				    sma[0] < sma[1] && IsShort()
+			)) {
+				SetEntryValue();
+				return true;
+			}
+			return false;
 		}
 		
 		public override DateTime? FirstSignalDate() {
@@ -129,7 +176,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		}
 		
 		/** Expects to be called on tuesday, right when the signal occured.*/
-		public override double? GetEntryValue() {
+		private double? SetEntryValue() {
 			double max = double.MinValue;
 			double min = double.MaxValue;
 			for (int i = CurrentBar - 1; i < CurrentBar + 4; i++) {
@@ -144,18 +191,14 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			return null;
 		}
 		
-		public override double? GetStopValue() {
+		public override double GetStopValue() {
 			double max = double.MinValue;
 			double min = double.MaxValue;
 			for (int i = 0; i < 10; i++) {
 				if (High[i] > max) max = High[i];
 				if (Low[i]  < min) min =  Low[i];
 			}
-			switch (GetTradePosition()) {
-				case TradePosition.Long:  return min - TickSize;
-				case TradePosition.Short: return max + TickSize;
-			}
-			return null;
+			return LastSignalWasLong() ? min - TickSize : max + TickSize;
 		}
 
 		public override bool ShouldExit(TradePosition tradePosition) {

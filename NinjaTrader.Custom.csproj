@@ -89,6 +89,15 @@
     <Reference Include="VendorLicensing">
       <HintPath>C:\Users\Bo\Documents\NinjaTrader 8\bin\Custom\VendorLicensing.dll</HintPath>
     </Reference>
+    <Reference Include="AcmeLicenseManager8.1.3.0">
+      <HintPath>C:\Users\Bo\Documents\NinjaTrader 8\bin\Custom\AcmeLicenseManager8.1.3.0.dll</HintPath>
+    </Reference>
+    <Reference Include="AcmeIntradayVP8.1.3.0">
+      <HintPath>C:\Users\Bo\Documents\NinjaTrader 8\bin\Custom\AcmeIntradayVP8.1.3.0.dll</HintPath>
+    </Reference>
+    <Reference Include="AcmeCompositeVP8.1.3.0">
+      <HintPath>C:\Users\Bo\Documents\NinjaTrader 8\bin\Custom\AcmeCompositeVP8.1.3.0.dll</HintPath>
+    </Reference>
     <Reference Include="NinjaTrader.Vendor">
       <HintPath>C:\Users\Bo\Documents\NinjaTrader 8\bin\Custom\NinjaTrader.Vendor.dll</HintPath>
     </Reference>
@@ -171,16 +180,16 @@
     <Compile Include="Indicators\%40VolumeUpDown.cs" />
     <Compile Include="Indicators\%40VolumeZones.cs" />
     <Compile Include="Indicators\%40Vortex.cs" />
-    <Compile Include="Indicators\Suri\dev\AbstractRange.cs" />
     <Compile Include="Indicators\Suri\dev\BarInfo.cs" />
+    <Compile Include="Indicators\Suri\dev\COTm.cs" />
     <Compile Include="Indicators\Suri\dev\DbCot.cs" />
     <Compile Include="Indicators\Suri\dev\IStrategyInterface.cs" />
     <Compile Include="Indicators\Suri\dev\SuriTester.cs" />
     <Compile Include="Indicators\Suri\dev\Terminkurve.cs" />
     <Compile Include="Indicators\Suri\dev\TkDelta.cs" />
-    <Compile Include="Indicators\Suri\dev\VolumeProfileBig.cs" />
-    <Compile Include="Indicators\Suri\dev\VolumeProfileIntraday.cs" />
     <Compile Include="Indicators\Suri\SuriDrawingToolTile.cs" />
+    <Compile Include="Indicators\Suri\VolumeProfileBig.cs" />
+    <Compile Include="Indicators\Suri\VolumeProfileIntraday.cs" />
     <Compile Include="MarketAnalyzerColumns\%40ChartMini.cs" />
     <Compile Include="MarketAnalyzerColumns\%40ChartNetChange.cs" />
     <Compile Include="MarketAnalyzerColumns\%40DaysUntilRollover.cs" />
@@ -400,19 +409,22 @@
     <Compile Include="Indicators\Suri\Oscillator.cs" />
     <Compile Include="Indicators\Suri\ChartToolbar.cs" />
     <Compile Include="Indicators\Suri\Cot1.cs" />
-    <Compile Include="Indicators\Suri\COT2.cs" />
-    <Compile Include="Indicators\Suri\Cot22.cs" />
+    <Compile Include="Indicators\Suri\Cot2.cs" />
     <Compile Include="Indicators\Suri\CotBase.cs" />
     <Compile Include="Indicators\Suri\Sma.cs" />
     <Compile Include="Strategies\SuriStrategy.cs" />
     <Compile Include="Indicators\Suri\Volumen.cs" />
+    <Compile Include="SuriCommon\Indicators\VpIntraData.cs" />
+    <Compile Include="SuriCommon\SuriHelper.cs" />
     <Compile Include="VendorLicensing.cs" />
-    <Compile Include="Indicators\Suri\SuriRange.cs" />
+    <Compile Include="Indicators\Suri\BarRange.cs" />
     <Compile Include="Strategies\StrategyCOT2.cs" />
     <Compile Include="DrawingTools\DrawRange.cs" />
     <Compile Include="Indicators\Suri\RolloverButton.cs" />
     <Compile Include="Indicators\Suri\ComShortOpenInterest.cs" />
-    <Compile Include="Indicators\Suri\Mega.cs" />
+    <Compile Include="AcmeLicenseManager8.1.3.0.cs" />
+    <Compile Include="AcmeIntradayVP8.1.3.0.cs" />
+    <Compile Include="AcmeCompositeVP8.1.3.0.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resource.resx">

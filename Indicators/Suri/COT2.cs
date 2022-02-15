@@ -1,471 +1,282 @@
 #region Using declarations
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Input;
 using System.Windows.Media;
 using System.Xml.Serialization;
-using NinjaTrader.Cbi;
 using NinjaTrader.Gui;
 using NinjaTrader.Gui.Chart;
-using NinjaTrader.Gui.SuperDom;
-using NinjaTrader.Gui.Tools;
-using NinjaTrader.Data;
-using NinjaTrader.NinjaScript;
-using NinjaTrader.Core.FloatingPoint;
-using NinjaTrader.NinjaScript.DrawingTools;
+
 #endregion
 
-namespace NinjaTrader.NinjaScript.Indicators.Suri
-{
-	public class COT2 : Indicator
-	{
-		private CotReport cotReportCommShort;
-
-		private double lastMax;
-		private int lastMaxBar;
-		private double lastMin;
-		private int lastMinBar;
-		private double linie75;
-		private double linie50;
-		private double linie25;
-
-		protected override void OnStateChange()
-		{
-			if (State == State.SetDefaults)
-			{
-				Description = @"";
-				Name = "COT2";
-				Calculate = Calculate.OnBarClose;
-				IsOverlay = false;
-				DisplayInDataBox = true;
-				DrawOnPricePanel = true;
-				DrawHorizontalGridLines = true;
-				DrawVerticalGridLines = true;
-				PaintPriceMarkers = true;
-				ScaleJustification = NinjaTrader.Gui.Chart.ScaleJustification.Right;
-				//Disable this property if your indicator requires custom values that cumulate with each new market data event. 
-				//See Help Guide for additional information.
-				IsSuspendedWhileInactive = true;
-				COT2Periode = 1011;
-				COT2LinienSchieben = true;
-				ShowMaxMin = false;
-				Linientyp = LineType.Dynamic;
-				LongBereich = 25;
-				ShortBereich = 75;
-
-				cotReportCommShort = new CotReport { ReportType = CotReportType.Futures, Field = CotReportField.CommercialShort };
-
-				AddPlot(Brushes.White, "CommShort");
-				AddPlot(Brushes.Red, "75%");
-				AddPlot(Brushes.Green, "25%");
-				AddPlot(Brushes.Cyan, "100%");
-				AddPlot(Brushes.Cyan, "0%");
-				AddPlot(Brushes.Gray, "50%");
-				AddPlot(Brushes.Yellow, "Test"); // 6
-				AddPlot(Brushes.Yellow, "Test2"); // 7
-			}
-			else if (State == State.Configure)
-			{
-			}
-
-
-		}
-
-		protected override void OnBarUpdate()
-		{
-
-
-			//COT Data
-			double valueCommShort = cotReportCommShort.Calculate(Instrument.MasterInstrument.Name, Time[0]);
-			if (!double.IsNaN(valueCommShort)) // returns NaN if Instrument/Report combination is not valid.
-				Values[0][0] = valueCommShort;
-
-			if (CurrentBar > COT2Periode)
-			{
-				//Max und Min der Periode rausfinden
-				if (CurrentBar == 0)
-				{
-					lastMax = 0;
-					lastMaxBar = 0;
-					lastMin = cotReportCommShort.Calculate(Instrument.MasterInstrument.Name, Time[0]);
-					lastMinBar = 0;
-				}
-
-				if (Linientyp == LineType.Dynamic)
-				{
-					#region LineType.Dynamic										
-
-					#region Max
-					if (CurrentBar - lastMaxBar >= COT2Periode)
-					{
-						double tempMax = valueCommShort;
-						int tempMaxBar = CurrentBar;
-						for (int i = CurrentBar; i > CurrentBar - COT2Periode; i--)
-						{
-							double tempCommShort = cotReportCommShort.Calculate(Instrument.MasterInstrument.Name, Time[CurrentBar - i]);
-							if (tempCommShort > tempMax)
-							{
-								tempMax = tempCommShort;
-								tempMaxBar = i;
-							}
-
-						}
-						lastMax = tempMax;
-						lastMaxBar = tempMaxBar;
-					}
-					else
-					{
-						if (valueCommShort > lastMax)
-						{
-							lastMax = valueCommShort;
-							lastMaxBar = CurrentBar;
-						}
-
-					}
-
-					#endregion Max
-
-					#region Min
-					if (CurrentBar - lastMinBar >= COT2Periode)
-					{
-						double tempMin = valueCommShort;
-						int tempMinBar = CurrentBar;
-						for (int i = CurrentBar; i > CurrentBar - COT2Periode; i--)
-						{
-							double tempCommShort = cotReportCommShort.Calculate(Instrument.MasterInstrument.Name, Time[CurrentBar - i]);
-							if (tempCommShort < tempMin)
-							{
-								tempMin = tempCommShort;
-								tempMinBar = i;
-							}
-
-						}
-						lastMin = tempMin;
-						lastMinBar = tempMinBar;
-
-						Draw.Text(this, "LastMinTag", "LastMin", 0, lastMin, Brushes.White);
-					}
-					else
-					{
-						if (valueCommShort < lastMin)
-						{
-							lastMin = valueCommShort;
-							lastMinBar = CurrentBar;
-						}
-					}
-
-
-
-					#endregion Min	
-
-					#region linien75und50und25 berechnen
-
-					linie75 = (lastMax - lastMin) * ShortBereich / 100 + lastMin;
-					linie50 = (lastMax - lastMin) * 0.5 + lastMin;
-					Values[5][0] = linie50;
-					linie25 = (lastMax - lastMin) * LongBereich / 100 + lastMin;
-
-					#endregion linien75und50und25 berechnen
-
-
-					#region LinienSchieben
-
-					if (COT2LinienSchieben)
-					{
-						double tempCommShortPre = cotReportCommShort.Calculate(Instrument.MasterInstrument.Name, Time[COT2Periode + 1]);
-						double xHighTemp = -1; // Extremwert-Hoch aktuellen "Berges"
-						double xHighMin = -1; // niedrigster Extremwert-Hoch
-						double xLowTemp = -1; // Extremwert-Tief aktuellen "Berges"
-						double xLowMax = -1; // höchster Extremwert-Tief
-						int lastxHigh; // Position vom letzten Extremwert-Hoch
-						int lastxLow; // Position vom letzten Extremwert-Tief
-						int countHigh = 0;
-						int countLow = 0;
-
-
-						for (int i = COT2Periode; i >= 0; i--)
-						{
-							double tempCommShort = cotReportCommShort.Calculate(Instrument.MasterInstrument.Name, Time[i]);
-							#region linie75v
-							if (tempCommShort > linie75 && tempCommShortPre < linie75) //Punkt finden wo 75% Linie nach oben überschritten wird
-							{
-								xHighTemp = tempCommShort;
-								lastxHigh = CurrentBar - i;
-							}
-							
-							if (tempCommShort > linie75) //nach Max Wert Suchen solange über 75%
-							{
-								if (tempCommShort > xHighTemp)
-								{
-									xHighTemp = tempCommShort;
-									lastxHigh = CurrentBar - i;
-								}
-
-							}
-							if (tempCommShort < linie75 && tempCommShortPre > linie75) //Punkt finden wo 75% Linie nach unten überschritten wird
-							{
-								if (xHighMin == -1) // wenn erster Wert dann abspeichern
-									xHighMin = xHighTemp;
-								else
-								{
-									if (xHighTemp < xHighMin)   // abspeichern wenn neuster niedrigster Extremwert-Hoch												
-									{
-										xHighMin = xHighTemp;
-										//Draw.ArrowLine(this, "verschieben auf" + CurrentBar,Time[CurrentBar - lastxHigh],xHighMin ,Time[0],xHighMin,Brushes.Red);  //TEST										
-									}
-								}
-								countHigh++;
-							}
-							#endregion
-
-							#region linie25v
-							if (tempCommShort < linie25 && tempCommShortPre > linie25) //Punkt finden wo 25% Linie nach unten überschritten wird
-							{
-								xLowTemp = tempCommShort;
-							}
-							if (tempCommShort < linie25) //nach Min Wert Suchen solange unter 25%
-							{
-								if (tempCommShort < xLowTemp)
-									xLowTemp = tempCommShort;
-							}
-							if (tempCommShort > linie25 && tempCommShortPre < linie25) //Punkt finden wo 75% Linie nach unten überschritten wird
-							{
-								if (xLowMax == -1) // wenn erster Wert dann abspeichern
-									xLowMax = xLowTemp;
-								else
-								{
-									if (xLowMax < xLowTemp) // abspeichern wenn neuster höchster Extremwert-Tief												
-										xLowMax = xLowTemp;
-								}
-								countLow++;
-							}
-							#endregion
-							tempCommShortPre = tempCommShort;
-						}
-						//Print(Time[0] + " countHigh " + countHigh + " xHighMin " + xHighMin + " countLow " + countLow + " xLowMax " + xLowMax + " Schieben auf : ");
-						double linie75v = linie75;
-						double linie25v = linie25;						
-						if (countHigh > 1 && xHighMin > -1)
-							linie75v = xHighMin; // verschobene linie75 definieren
-						if (countLow > 1 && xLowMax > -1)
-							linie25v = xLowMax; // verschobene linie25 definieren
-
-						Values[1][0] = linie75v;
-						Values[2][0] = linie25v;
-//						Values[6][0] = linie75;
-//						Values[7][0] = linie25;
-
-						//						for (int i = lastMaxBar; i >= 0; i--)
-						//						{
-						//							Values[1][i] = linie75v;
-						//							Values[2][i] = linie25v;
-						//						}								
-					}
-					#endregion LinienSchieben
-					else
-					{
-						Values[1][0] = linie75;
-						Values[2][0] = linie25;
-					}
-
-
-
-
-					if (ShowMaxMin)
-					{
-						Values[3][0] = lastMin;
-						Values[4][0] = lastMax;
-					}
-					#endregion LineType.Dynamic
-				}
-				else
-				{
-					#region LineType.Last
-
-					if (Linientyp == LineType.Last)
-					{
-						if (CurrentBar >= Count - 2)
-						{
-							//Max und Min finden
-							lastMax = cotReportCommShort.Calculate(Instrument.MasterInstrument.Name, Time[0]);
-							for (int i = CurrentBar; i >= CurrentBar - COT2Periode; i--)
-							{
-								double tempCommShort = cotReportCommShort.Calculate(Instrument.MasterInstrument.Name, Time[CurrentBar - i]);
-								if (tempCommShort > lastMax)
-								{
-									lastMax = tempCommShort;
-								}
-							}
-
-							lastMin = cotReportCommShort.Calculate(Instrument.MasterInstrument.Name, Time[0]);
-							for (int i = CurrentBar; i >= CurrentBar - COT2Periode; i--)
-							{
-								double tempCommShort = cotReportCommShort.Calculate(Instrument.MasterInstrument.Name, Time[CurrentBar - i]);
-								if (tempCommShort < lastMin)
-								{
-									lastMin = tempCommShort;
-								}
-							}
-
-							#region linienZeichnen25,50,75 
-							for (int i = CurrentBar; i >= 0; i--)
-							{
-								linie75 = (lastMax - lastMin) * 0.75 + lastMin;
-								Values[1][i] = linie75;
-								linie50 = (lastMax - lastMin) * 0.5 + lastMin;
-								Values[5][i] = linie50;
-								linie25 = (lastMax - lastMin) * 0.25 + lastMin;
-								Values[2][i] = linie25;
-								if (ShowMaxMin)
-								{
-									Values[3][i] = lastMin;
-									Values[4][i] = lastMax;
-								}
-
-							}
-							#endregion linienZeichnen25,50,75 
-
-
-							#region linienSchieben
-
-							if (COT2LinienSchieben)
-							{
-								double tempCommShortPre = cotReportCommShort.Calculate(Instrument.MasterInstrument.Name, Time[COT2Periode + 1]);
-								double xHighTemp = 0; // Extremwert-Hoch aktuellen "Berges"
-								double xHighMin = 0; // niedrigster Extremwert-Hoch
-								double xLowTemp = 0; // Extremwert-Tief aktuellen "Berges"
-								double xLowMax = 0; // höchster Extremwert-Tief
-								int xHighCount = 0; // Anzahl von Extremwert-Hoch
-								int xLowCount = 0; // Anzahl von Extremwert-Tief
-
-								for (int i = COT2Periode; i > 0; i--)
-								{
-									double tempCommShort = cotReportCommShort.Calculate(Instrument.MasterInstrument.Name, Time[i]);
-
-
-									#region linie75v
-									if (tempCommShort > linie75 && tempCommShortPre < linie75) //Punkt finden wo 75% Linie nach oben überschritten wird
-									{
-										xHighTemp = tempCommShort;
-									}
-									if (tempCommShort > linie75) //nach Max Wert Suchen solange über 75%
-									{
-										if (tempCommShort > xHighTemp)
-											xHighTemp = tempCommShort;
-									}
-									if (tempCommShort < linie75 && tempCommShortPre > linie75) //Punkt finden wo 75% Linie nach unten überschritten wird
-									{
-										if (xHighMin == 0) // wenn erster Wert dann abspeichern
-											xHighMin = xHighTemp;
-										else
-										{
-											if (xHighMin > xHighTemp)   // abspeichern wenn neuster niedrigster Extremwert-Hoch												
-												xHighMin = xHighTemp;
-										}
-										xHighCount++;
-									}
-									#endregion
-
-									#region linie25v
-									if (tempCommShort < linie25 && tempCommShortPre > linie25) //Punkt finden wo 25% Linie nach unten überschritten wird
-									{
-										xLowTemp = tempCommShort;
-									}
-									if (tempCommShort < linie25) //nach Min Wert Suchen solange unter 25%
-									{
-										if (tempCommShort < xLowTemp)
-											xLowTemp = tempCommShort;
-									}
-									if (tempCommShort > linie25 && tempCommShortPre < linie25) //Punkt finden wo 75% Linie nach unten überschritten wird
-									{
-										if (xLowMax == 0) // wenn erster Wert dann abspeichern
-											xLowMax = xLowTemp;
-										else
-										{
-											if (xLowMax < xLowTemp) // abspeichern wenn neuster höchster Extremwert-Tief												
-												xLowMax = xLowTemp;
-										}
-										xLowCount++;
-									}
-									#endregion
-									tempCommShortPre = tempCommShort;
-								}
-								double linie75v = linie75;
-								double linie25v = linie25;
-								if (xHighCount > 1) // nur schieben wenn mehr als ein Hoch gefunden
-									linie75v = xHighMin; // verschobene linie75 definieren
-								if (xLowCount > 1) // nur schieben wenn mehr als ein Tief gefunden
-									linie25v = xLowMax; // verschobene linie25 definieren
-
-								for (int i = CurrentBar; i >= 0; i--)
-								{
-									Values[1][i] = linie75v;
-									Values[2][i] = linie25v;
-								}
-							}
-
-							#endregion linienSchieben
-
-
-
-
-						}
-					}
-					#endregion LineType.Last
-				}
-			}
-
-
-		}
+namespace NinjaTrader.NinjaScript.Indicators.Suri {
+	public class Cot22 : StrategyIndicator {
+		private CotBase cotData;
+		private double min = double.MaxValue;
+		private double max = double.MinValue;
+		private int minIndex;
+		private int maxIndex;
 
 		#region Properties
 		[NinjaScriptProperty]
 		[Range(1, int.MaxValue)]
-		[Display(Name = "COT2Periode", Description = "Periode in Bars", Order = 1, GroupName = "Parameters")]
-		public int COT2Periode
-		{ get; set; }
-
-		[NinjaScriptProperty]
-		[Display(Name = "ShowMaxMin", Description = "Max Min Linien Zeigen", Order = 2, GroupName = "Parameters")]
-		public bool ShowMaxMin
-		{ get; set; }
-
-		[NinjaScriptProperty]
-		[Display(Name = "COT2LinienSchieben", Description = "COT2", Order = 3, GroupName = "Parameters")]
-		public bool COT2LinienSchieben
-		{ get; set; }
-
-		[NinjaScriptProperty]
-		[Display(Name = "Linientyp", Description = "Linien am letzen COT-Wert oder dynamisch in der Vergangenheit anzeigen", Order = 4, GroupName = "Parameters")]
-		public LineType Linientyp
-		{ get; set; }
-		
-		[NinjaScriptProperty]
-		[Display(Name = "Long-Bereich", Description = "Prozentwert unter dem der Long-Bereich liegt", Order = 4, GroupName = "Parameters")]
-		public int LongBereich
-		{ get; set; }
-		
-		[NinjaScriptProperty]
-		[Display(Name = "Short-Bereich", Description = "Prozentwert über dem der Short-Bereich liegt", Order = 4, GroupName = "Parameters")]
-		public int ShortBereich
-		{ get; set; }
-		
+		[Display(Name="Tage", Order=1, GroupName="Parameter")]
+		public int days { get; set; }
 		#endregion
 
+		protected override void OnStateChange() {
+			if (State == State.SetDefaults) {
+				Description									= @"CoT 2 Commercials Short";
+				Name										= "CoT 2";
+				Calculate									= Calculate.OnBarClose;
+				IsOverlay									= false;
+				DisplayInDataBox							= true;
+				DrawOnPricePanel							= true;
+				DrawHorizontalGridLines						= true;
+				DrawVerticalGridLines						= true;
+				PaintPriceMarkers							= true;
+				ScaleJustification							= ScaleJustification.Right;
+				IsSuspendedWhileInactive					= true;
+				BarsRequiredToPlot							= 0;
+				days										= 1000;
+				cotData = CotBase(SuriCotReportField.CommercialShort);
+				
+				AddPlot(new Stroke(Brushes.DarkGray, 3), PlotStyle.Line, "Com Short");
+				AddPlot(new Stroke(Brushes.Red, 3), PlotStyle.Line, "75%");
+				AddPlot(new Stroke(Brushes.DimGray, 1), PlotStyle.Line, "50%");
+				AddPlot(new Stroke(Brushes.Green, 3), PlotStyle.Line, "25%");
+			}
+		}
+		public override string DisplayName {
+			get { return Instrument == null ? "COT 2" : "COT 2 - " + SuriStrings.instrumentToName(Instrument.FullName); }
+		}
+		private double ValueOf(double percent) { return min + percent * (max - min); }
+
+		protected override void OnBarUpdate() {
+			Values[0][0] = cotData.Value[0];
+			SetMinMax();
+			Values[1][0] = ValueOf(0.75);
+			Values[2][0] = ValueOf(0.5);
+			Values[3][0] = ValueOf(0.25);
+			MoveLines();
+			Analyze();
+		}
+		
+		protected override void OnRender(ChartControl chartControl, ChartScale chartScale) {
+			base.OnRender(chartControl, chartScale);
+			chartScale.Properties.AutoScaleMarginType = AutoScaleMarginType.Percent;
+			chartScale.Properties.AutoScaleMarginUpper = 30;
+			chartScale.Properties.AutoScaleMarginLower = 30;
+		}
+
+		private void SetMinMax() {
+			if (min > cotData.Value[0]) { min = cotData.Value[0]; minIndex = CurrentBar; }
+			if (max < cotData.Value[0]) { max = cotData.Value[0]; maxIndex = CurrentBar; }
+			
+			if (CurrentBar - maxIndex > days || CurrentBar - minIndex > days) {
+				// the last max or min is too far away. Recalculate.
+				min = double.MaxValue;
+				max = double.MinValue;
+				for (int i = 0; i < days; i++) {
+					if (min > cotData.Value[i]) { min = cotData.Value[i]; minIndex = CurrentBar-i; }
+					if (max < cotData.Value[i]) { max = cotData.Value[i]; maxIndex = CurrentBar-i; }
+				}
+			}
+		}
+
+		private void MoveLines() {
+			if (CurrentBar <= days) return;
+			
+			double line25 = ValueOf(0.25);
+			double line75 = ValueOf(0.75);
+			double? localHigh = null;
+			double lowestHigh = double.MaxValue;
+			double? localLow = null;
+			double highestLow = double.MinValue;
+			int countHigh = 0;
+			int countLow = 0;
+
+			for (int i = days; i >= 0; i--) {
+				if (Value[i] > line75 && (Value[i+1] < line75 || Value[i] > localHigh)) localHigh = Value[i];
+				if (Value[i] < line25 && (Value[i+1] > line25 || Value[i] < localLow))  localLow  = Value[i];
+				
+				if (localHigh!=null && Value[i] < line75 && Value[i+1] > line75) {
+					if (localHigh < lowestHigh) lowestHigh = localHigh.Value;
+					countHigh++;
+				}
+				if (localLow!=null && Value[i] > line25 && Value[i+1] < line25) {
+					if (highestLow < localLow) highestLow = localLow.Value;
+					countLow++;
+				}
+			}
+			
+			Values[1][0] = countHigh > 1 ? lowestHigh : line75;
+			Values[3][0] = countLow  > 1 ? highestLow : line25;
+		}
+		
+		private void Analyze() {
+			if (CurrentBar <= days) {
+				PlotBrushes[1][0] = Brushes.DimGray;
+				PlotBrushes[2][0] = Brushes.DimGray;
+				PlotBrushes[3][0] = Brushes.DimGray;
+				return;
+			}
+			
+			if (Values[0][0] > Values[1][0]) {
+				PlotBrushes[0][0] = Brushes.Red;
+			}
+			if (Values[0][0] < Values[3][0]) {
+				PlotBrushes[0][0] = Brushes.Green;
+			}
+			
+		}
+		
+		[XmlIgnore]
+		[Browsable(false)]
+		public override TradePosition tradePosition {
+			get {
+				if (CurrentBar<=days) return TradePosition.Middle;
+				if (Values[0][0] > Values[2][0]) return TradePosition.Short;
+				if (Values[0][0] < Values[2][0]) return TradePosition.Long;
+				return TradePosition.Middle;
+			}
+		}
+
+		[XmlIgnore]
+		[Browsable(false)]
+		public override double? stop {
+			set { }
+			get {
+
+				return null;
+			}
+		}
+
+		[XmlIgnore]
+		[Browsable(false)]
+		public override bool? isSignal {
+			set { }
+			get { return Values[0][0] > Values[1][0] || Values[0][0] < Values[3][0]; }
+		}
+
+		/// Used to be called iff a mega bar / mega volume occured.
+		/// Calculations include gaps !
+		public SignalVariant? GetSignalVariant(bool useGap = false) {
+			TradePosition t = tradePosition;
+			if (t == TradePosition.Middle) return null;
+
+			double candleSize;
+			double upperBody;
+			double lowerBody;
+			if (useGap) {
+				candleSize = Math.Max(Close[1], High[0]) - Math.Min(Close[1], Low[0]);
+				upperBody = Math.Max(Close[1], Math.Max(Open[0], Close[0]));
+				lowerBody = Math.Min(Close[1], Math.Min(Open[0], Close[0]));
+			} else {
+				candleSize = High[0] - Low[0];
+				upperBody = Math.Max(Open[0], Close[0]);
+				lowerBody = Math.Min(Open[0], Close[0]);
+			}
+			double bodySizeWithGap = upperBody - lowerBody;
+			
+			if (bodySizeWithGap < candleSize * 0.10) {
+				double upperCandleWickSize = candleSize - upperBody;
+				double lowerCandleWickSize = candleSize - upperCandleWickSize - bodySizeWithGap;
+				Print(CurrentBar + " Found a reversal bar @ " + Time[0] + " " + candleSize + " " + upperBody + " " + lowerBody + " " + bodySizeWithGap + " " + upperCandleWickSize + " " + lowerCandleWickSize);
+
+				if (lowerCandleWickSize / candleSize > 0.6) return t == TradePosition.Long ? SignalVariant.V3 : SignalVariant.V4;
+				if (upperCandleWickSize / candleSize > 0.6) return t == TradePosition.Long ? SignalVariant.V4 : SignalVariant.V3;
+				Print(CurrentBar + " The reversal bar is positioned too much in the middle.");
+			}
+			Print(CurrentBar + " Found a mega bar @ " + Time[0] + " " + candleSize + " " + upperBody + " " + lowerBody + " " + bodySizeWithGap);
+			if (Open[0] > Close[0]) return t == TradePosition.Long ? SignalVariant.V1 : SignalVariant.V2;
+			if (Open[0] < Close[0]) return t == TradePosition.Long ? SignalVariant.V2 : SignalVariant.V1;
+			
+			Print(CurrentBar + " Did not found a variant! " + Time[0]);
+			return null;
+		}
+
+		
+        // German: "Markantes Tief / Hoch".
+        public Tuple<Tuple<int, double?>, Tuple<int, double?>> StrikingSpot(bool searchForHigh, int barsAgo = 0) {
+            int initialBarsAgo = barsAgo;
+			
+            // first we have to check if the bar was in an upward or downward trend.
+            Tuple<int, double?> t1 = SearchForLowHigh(!searchForHigh, barsAgo);
+            Tuple<int, double?> t2 = SearchForLowHigh(searchForHigh, barsAgo);
+            // iff inDirection = true and searchForHigh = true, then there was a high before there was a low.
+            bool inDirection = t1.Item1 > t2.Item1;
+			
+            while (barsAgo < CurrentBar && barsAgo - initialBarsAgo < 500) {
+                if (inDirection) {
+                    t1 = SearchForLowHigh(!searchForHigh, barsAgo);
+                    t2 = SearchForLowHigh(searchForHigh, t1.Item1);
+                } else {
+                    t1 = SearchForLowHigh(searchForHigh, barsAgo);
+                    t2 = SearchForLowHigh(!searchForHigh, t1.Item1);
+                }
+                if (t2.Item2 != null && (searchForHigh && t2.Item2 < High[barsAgo] || !searchForHigh && t2.Item2 > Low[barsAgo])) {
+                    return new Tuple<Tuple<int, double?>, Tuple<int, double?>>(t1, t2);
+                }
+                barsAgo = t2.Item1;
+            }
+            return null;
+        }
+        
+        /// Returns a Tuple of a high or low with index inclusive before the given barsAgo.
+        private Tuple<int, double?> SearchForLowHigh(bool searchForHigh, int barsAgo, int adjacentsToCheck = 4) {
+            double? value = null;
+            int adjacentsChecked = 0;
+            Tuple<int, double?> tuple = null;
+            while (barsAgo < CurrentBar && adjacentsChecked < adjacentsToCheck) {
+                if (value==null || searchForHigh && High[barsAgo] > value || !searchForHigh && Low[barsAgo] < value) {
+                    value = searchForHigh ? High[barsAgo] : Low[barsAgo];
+                    adjacentsChecked = 0;
+                    tuple = new Tuple<int, double?>(barsAgo, value);
+                } else {
+                    adjacentsChecked++;
+                }
+                barsAgo++;
+            }
+            return tuple;
+        }
+
+        
+        
 	}
+	public enum SignalVariant { V1, V2, V3, V4 }
 }
 
-public enum LineType
-{
-	Dynamic,
-	Last
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//
 
 #region NinjaScript generated code. Neither change nor remove.
 
@@ -473,19 +284,19 @@ namespace NinjaTrader.NinjaScript.Indicators
 {
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
-		private Suri.COT2[] cacheCOT2;
-		public Suri.COT2 COT2(int cOT2Periode, bool showMaxMin, bool cOT2LinienSchieben, LineType linientyp, int longBereich, int shortBereich)
+		private Suri.Cot22[] cacheCot22;
+		public Suri.Cot22 Cot22(int days)
 		{
-			return COT2(Input, cOT2Periode, showMaxMin, cOT2LinienSchieben, linientyp, longBereich, shortBereich);
+			return Cot22(Input, days);
 		}
 
-		public Suri.COT2 COT2(ISeries<double> input, int cOT2Periode, bool showMaxMin, bool cOT2LinienSchieben, LineType linientyp, int longBereich, int shortBereich)
+		public Suri.Cot22 Cot22(ISeries<double> input, int days)
 		{
-			if (cacheCOT2 != null)
-				for (int idx = 0; idx < cacheCOT2.Length; idx++)
-					if (cacheCOT2[idx] != null && cacheCOT2[idx].COT2Periode == cOT2Periode && cacheCOT2[idx].ShowMaxMin == showMaxMin && cacheCOT2[idx].COT2LinienSchieben == cOT2LinienSchieben && cacheCOT2[idx].Linientyp == linientyp && cacheCOT2[idx].LongBereich == longBereich && cacheCOT2[idx].ShortBereich == shortBereich && cacheCOT2[idx].EqualsInput(input))
-						return cacheCOT2[idx];
-			return CacheIndicator<Suri.COT2>(new Suri.COT2(){ COT2Periode = cOT2Periode, ShowMaxMin = showMaxMin, COT2LinienSchieben = cOT2LinienSchieben, Linientyp = linientyp, LongBereich = longBereich, ShortBereich = shortBereich }, input, ref cacheCOT2);
+			if (cacheCot22 != null)
+				for (int idx = 0; idx < cacheCot22.Length; idx++)
+					if (cacheCot22[idx] != null && cacheCot22[idx].days == days && cacheCot22[idx].EqualsInput(input))
+						return cacheCot22[idx];
+			return CacheIndicator<Suri.Cot22>(new Suri.Cot22(){ days = days }, input, ref cacheCot22);
 		}
 	}
 }
@@ -494,14 +305,14 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.COT2 COT2(int cOT2Periode, bool showMaxMin, bool cOT2LinienSchieben, LineType linientyp, int longBereich, int shortBereich)
+		public Indicators.Suri.Cot22 Cot22(int days)
 		{
-			return indicator.COT2(Input, cOT2Periode, showMaxMin, cOT2LinienSchieben, linientyp, longBereich, shortBereich);
+			return indicator.Cot22(Input, days);
 		}
 
-		public Indicators.Suri.COT2 COT2(ISeries<double> input , int cOT2Periode, bool showMaxMin, bool cOT2LinienSchieben, LineType linientyp, int longBereich, int shortBereich)
+		public Indicators.Suri.Cot22 Cot22(ISeries<double> input , int days)
 		{
-			return indicator.COT2(input, cOT2Periode, showMaxMin, cOT2LinienSchieben, linientyp, longBereich, shortBereich);
+			return indicator.Cot22(input, days);
 		}
 	}
 }
@@ -510,14 +321,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.COT2 COT2(int cOT2Periode, bool showMaxMin, bool cOT2LinienSchieben, LineType linientyp, int longBereich, int shortBereich)
+		public Indicators.Suri.Cot22 Cot22(int days)
 		{
-			return indicator.COT2(Input, cOT2Periode, showMaxMin, cOT2LinienSchieben, linientyp, longBereich, shortBereich);
+			return indicator.Cot22(Input, days);
 		}
 
-		public Indicators.Suri.COT2 COT2(ISeries<double> input , int cOT2Periode, bool showMaxMin, bool cOT2LinienSchieben, LineType linientyp, int longBereich, int shortBereich)
+		public Indicators.Suri.Cot22 Cot22(ISeries<double> input , int days)
 		{
-			return indicator.COT2(input, cOT2Periode, showMaxMin, cOT2LinienSchieben, linientyp, longBereich, shortBereich);
+			return indicator.Cot22(input, days);
 		}
 	}
 }

@@ -56,8 +56,8 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		{
 			if (State == State.SetDefaults)
 			{
-				Name							= Custom.Resource.DrawingToolIndicatorName;
-				Description						= Custom.Resource.DrawingToolIndicatorDescription;
+				Name							= "Zeichenwerkzeuge";
+				Description						= "Zeichenwerkzeuge Schnellmenü";
 				IsOverlay						= true;
 				IsChartOnly						= true;
 				DisplayInDataBox				= false;
@@ -95,6 +95,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				}
 			}
 		}
+		public override string DisplayName { get { return "Zeichenwerkzeuge"; } }
 
 		private FrameworkElement CreateControl()
 		{

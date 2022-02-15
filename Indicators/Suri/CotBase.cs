@@ -1,5 +1,4 @@
 #region Using declarations
-
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -9,40 +8,40 @@ using System.Windows.Media;
 using System.Xml.Serialization;
 using NinjaTrader.Core;
 using NinjaTrader.Gui;
+using NinjaTrader.Gui.Chart;
 using NinjaTrader.NinjaScript;
 using NinjaTrader.NinjaScript.DrawingTools;
-using NinjaTrader.NinjaScript.Indicators.Suri.dev;
-
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
-	public class CotBase : AbstractRange {
-
+	public class CotBase : Indicator {
 		private CotReport sCot;
 		
 		protected override void OnStateChange() {
 			if (State == State.SetDefaults) {
+				Name										= "CoT-Daten";
+				Description									= @"CoT-Daten";
+				Calculate									= Calculate.OnBarClose;
+				IsOverlay									= false;
+				DisplayInDataBox							= true;
+				DrawOnPricePanel							= true;
+				DrawHorizontalGridLines						= true;
+				DrawVerticalGridLines						= true;
+				PaintPriceMarkers							= true;
+				ScaleJustification							= ScaleJustification.Right;
+				IsSuspendedWhileInactive					= true;
+				BarsRequiredToPlot							= 0;
+				reportField									= SuriCotReportField.CommercialLong;
 				AddPlot(Brushes.CornflowerBlue, Custom.Resource.COT1);
-				base.OnStateChange();
-				//Plots[1].Brush = Brushes.Red; // 75%
-				//Plots[3].Brush = Brushes.Green; // 25%
-				Plots[1].Width = 1; // 75%
-				Plots[3].Width = 1; // 25%
-				Name						= "Cot";
-				Description					= @"Cot";
-				IsSuspendedWhileInactive	= true;
-				BarsRequiredToPlot			= 0;
-				DrawLinesPara				= false;
-				ReportField					= SuriCotReportField.CommercialLong;
 			} else if (State == State.Configure) {
-				sCot = new CotReport { ReportType = CotReportType.Futures, Field = CotReportMaper.SuriToCotReport(ReportField) };
+				sCot = new CotReport { ReportType = CotReportType.Futures, Field = CotReportMaper.SuriToCotReport(reportField) };
 			}
 		}
 		
         public override string DisplayName {
 			get {
 				if (sCot == null || Instrument == null) return "COT Daten";
-				return "COT " + CotReportMaper.ReportToString(ReportField) + " - " + SuriStrings.instrumentToName(Instrument.FullName);
+				return "COT " + CotReportMaper.ReportToString(reportField) + " - " + SuriStrings.instrumentToName(Instrument.FullName);
 			}
         }
 		
@@ -51,19 +50,16 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				Draw.TextFixed(this, "Error", Custom.Resource.CotDataError, TextPosition.BottomRight);
 				return;
 			}
-			if (!Globals.MarketDataOptions.DownloadCotData)
+			if (!Globals.MarketDataOptions.DownloadCotData) {
 				Draw.TextFixed(this, "Warning", Custom.Resource.CotDataWarning, TextPosition.BottomRight);
-
+			}
 			if (CotData.IsDownloadingData) {
 				Draw.TextFixed(this, "Warning", Custom.Resource.CotDataStillDownloading, TextPosition.BottomRight);
 				return;
 			}
 			
 			double value = sCot.Calculate(Instrument.MasterInstrument.Name, Time[0]);
-			if (!double.IsNaN(value))
-				Values[0][0] = value;
-			
-			CalcMinMax(value);
+			if (!double.IsNaN(value)) Values[0][0] = value;
 		}
 
 		#region Properties
@@ -72,12 +68,12 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		[NinjaScriptProperty]
 		[Display(Name = "COT Daten", GroupName = "Parameter")]
 		[XmlIgnore]
-		public SuriCotReportField ReportField { get; set; }
+		public SuriCotReportField reportField { get; set; }
 		
 		[Browsable(false)]
-		public int CotSerialize {
-			get { return (int) ReportField; }
-			set { ReportField = (SuriCotReportField) value; }
+		public int cotSerialize {
+			get { return (int) reportField; }
+			set { reportField = (SuriCotReportField) value; }
 		}
 		#endregion
 	}
@@ -265,9 +261,9 @@ namespace NinjaTrader.NinjaScript.Indicators
 		{
 			if (cacheCotBase != null)
 				for (int idx = 0; idx < cacheCotBase.Length; idx++)
-					if (cacheCotBase[idx] != null && cacheCotBase[idx].ReportField == reportField && cacheCotBase[idx].EqualsInput(input))
+					if (cacheCotBase[idx] != null && cacheCotBase[idx].reportField == reportField && cacheCotBase[idx].EqualsInput(input))
 						return cacheCotBase[idx];
-			return CacheIndicator<Suri.CotBase>(new Suri.CotBase(){ ReportField = reportField }, input, ref cacheCotBase);
+			return CacheIndicator<Suri.CotBase>(new Suri.CotBase(){ reportField = reportField }, input, ref cacheCotBase);
 		}
 	}
 }
