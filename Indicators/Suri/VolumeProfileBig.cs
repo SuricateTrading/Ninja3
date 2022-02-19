@@ -1,10 +1,14 @@
 #region Using declarations
+
+using System;
 using NinjaTrader.Gui.Chart;
 using System.Windows.Media;
 using NinjaTrader.Data;
 using NinjaTrader.Gui;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
+using System.Linq;
 using System.Xml.Serialization;
 using NinjaTrader.Gui.NinjaScript.Indicators;
 using NinjaTrader.Gui.Tools;
@@ -100,7 +104,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				textBrush									= Brushes.White;
 			} else if (State == State.Configure) {
 				if (Bars.IsTickReplay) {
-					AddDataSeries(null, new BarsPeriod { BarsPeriodType = BarsPeriodType.Day, Value = 1 }, 10, null, null);
+					AddDataSeries(null, new BarsPeriod { BarsPeriodType = BarsPeriodType.Day, Value = 1 }, 255, null, null);
 				} else {
 					AddDataSeries(null, new BarsPeriod { BarsPeriodType = BarsPeriodType.Minute, Value = 1 }, 150000, Instrument.MasterInstrument.TradingHours.Name, null);
 				}
@@ -110,16 +114,21 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 
 		protected override void OnBarUpdate() {
 			if (!Bars.IsTickReplay && Bars.BarsPeriod.BarsPeriodType == BarsPeriodType.Minute && Bars.BarsPeriod.Value == 1) {
-				vpBigData.AddMinuteVolume((long) Volumes[1][0], Lows[1][0], Highs[1][0], TickSize, Print);
+				vpBigData.AddMinuteVolume((long) Volumes[1][0], Opens[1][0], Highs[1][0], Lows[1][0], Closes[1][0], TickSize, Print);
 				//Print("OnBarUpdate\t" + Lows[0][0] + "\t" + Highs[0][0] + "\t" + Volumes[0][0] + "\t" + Times[0][0] + "\t" + Bars.BarsPeriod.BarsPeriodType + "\t" + Bars.BarsPeriod.Value);
-				Print(Times[1][0]);
+				//Print(Times[1][0]);
 			}
 		}
 
+		private bool test = false;
 		protected override void OnMarketData(MarketDataEventArgs e) {
 			if (Bars.Count > 0 && Bars.IsTickReplay && Bars.BarsPeriod.BarsPeriodType == BarsPeriodType.Day && Bars.BarsPeriod.Value == 1) {
+				if (!test) {
+					test = true;
+					Print("OnMarketData\t" + e.Price + "\t" + e.Volume + "\t" + e.Time + "\t" + Bars.BarsPeriod.BarsPeriodType);
+				}
 				vpBigData.AddTick(e);
-				Print("OnMarketData\t" + e.Price + "\t" + e.Volume + "\t" + e.Time + "\t" + Bars.BarsPeriod.BarsPeriodType);
+				
 			}
 		}
 
@@ -142,23 +151,32 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			
 			RectangleF rect = new RectangleF {
 				X = 0,
-				Height = chartScale.GetYByValue(highestValue) - chartScale.GetYByValue(highestValue + TickSize)
+				Height = (chartScale.GetYByValue(0) - chartScale.GetYByValue(1000 * TickSize)) / 1000f,
 			};
-			SimpleFont font = new SimpleFont { Size = rect.Height * 0.53 };
-			textFormat					= font.ToDirectWriteTextFormat();
-			textFormat.TextAlignment	= SharpDX.DirectWrite.TextAlignment.Leading;
-			textFormat.WordWrapping		= SharpDX.DirectWrite.WordWrapping.NoWrap;
+			if (highestValue > vpBigData.tickData.Last().Key) {
+				rect.Y = chartScale.GetYByValue(vpBigData.tickData.Last().Key + TickSize) - rect.Height / 2f;
+			} else {
+				rect.Y = chartScale.GetYByValue(highestValue + TickSize) - rect.Height / 2f;
+			}
+			
+			if (rect.Height > 13) {
+				SimpleFont font = new SimpleFont {Size = rect.Height * 0.53};
+				textFormat = font.ToDirectWriteTextFormat();
+				textFormat.TextAlignment = SharpDX.DirectWrite.TextAlignment.Leading;
+				textFormat.WordWrapping = SharpDX.DirectWrite.WordWrapping.NoWrap;
+			}
 
 			for (int i = 0; i < tickCount; i++) {
 				double price = highestValue - i * TickSize;
 				if (vpBigData.tickData.ContainsKey(price)) {
 					VpTickData tick = vpBigData.tickData[highestValue - i * TickSize];
+
+					rect.Y += rect.Height;
 					
-					rect.Y = chartScale.GetYByValue(price);
-					rect.Width = (float) ((maxWidth ?? ChartPanel.W * 0.7) * tick.volume / vpBigData.pocVolume);
+					rect.Width = (float) ((maxWidth ?? ChartPanel.W * 0.5) * tick.volume / vpBigData.pocVolume);
 
 					if (rect.Height > 13) {
-						SharpDX.DirectWrite.TextLayout textLayout = new SharpDX.DirectWrite.TextLayout(Core.Globals.DirectWriteFactory, tick.price + "\t" + tick.volume, textFormat, 250, textFormat.FontSize);
+						SharpDX.DirectWrite.TextLayout textLayout = new SharpDX.DirectWrite.TextLayout(Core.Globals.DirectWriteFactory, tick.volume.ToString("F0"), textFormat, 250, textFormat.FontSize);
 						RenderTarget.DrawTextLayout(new Vector2(0, rect.Y), textLayout, textFill, SharpDX.Direct2D1.DrawTextOptions.NoSnap);
 					}
 					RenderTarget.FillRectangle(rect, tick.isMainPoc ? pocFill : normalAreaFill);

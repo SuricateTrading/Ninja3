@@ -1,6 +1,7 @@
 #region Using declarations
 using System.Collections.Generic;
 using System.Windows.Media;
+using NinjaTrader.Custom.SuriCommon;
 using NinjaTrader.Gui;
 using NinjaTrader.Gui.Chart;
 using NinjaTrader.Gui.NinjaScript;
@@ -28,11 +29,11 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 				IsSuspendedWhileInactive					= true;
 				AddPlot(new Stroke(Brushes.DarkGray, 3), PlotStyle.Line, "Terminkurve");
 			} else if (State == State.DataLoaded) {
-				int id = SuriStrings.getId(Instrument.FullName);
-				if (id != -1) {
+				int? id = SuriStrings.GetId(Instrument);
+				if (id != null) {
 					string oldDate = From.Date.ToString("yyyy-MM-dd");
 					string newDate = To.Date.ToString("yyyy-MM-dd");
-					tkData = SuriServer.GetTkData(id, oldDate, newDate);
+					tkData = SuriServer.GetTkData(id.Value, oldDate, newDate);
 				}
 			}
 		}

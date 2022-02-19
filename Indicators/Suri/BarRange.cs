@@ -4,19 +4,20 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Windows.Media;
 using System.Xml.Serialization;
+using NinjaTrader.Custom.SuriCommon;
 using NinjaTrader.Gui;
 using NinjaTrader.Gui.Chart;
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
-	public class SuriRange : Indicator {
+	public class BarRange : Indicator {
 		private double max;
 		private int maxIndex;
 		
 		protected override void OnStateChange() {
 			if (State == State.SetDefaults) {
 				Description									= @"Zeigt die Range einer Bar plus Gap zum Vortag.";
-				Name										= "Bargröße (Megarange)";
+				Name										= "Bargröße";
 				Calculate									= Calculate.OnEachTick;
 				IsOverlay									= false;
 				DisplayInDataBox							= true;
@@ -24,25 +25,19 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				DrawHorizontalGridLines						= true;
 				DrawVerticalGridLines						= true;
 				PaintPriceMarkers							= true;
-				BarsRequiredToPlot							= 0;
-				days										= 125;
 				ScaleJustification							= ScaleJustification.Right;
 				IsSuspendedWhileInactive					= true;
+				BarsRequiredToPlot							= 0;
+				days										= 125;
 				signalBrush									= Brushes.Yellow;
 				maxBrush									= Brushes.DarkCyan;
-				volumeBrush									= Brushes.RoyalBlue;
+				barBrush									= Brushes.RoyalBlue;
 			} else if (State == State.Configure) {
-				AddPlot(new Stroke(volumeBrush, 2), PlotStyle.Bar, "Megarange");
+				AddPlot(new Stroke(barBrush, 2), PlotStyle.Bar, "Bargröße");
 				AddPlot(new Stroke(maxBrush, 1), PlotStyle.Line, "Max");
 			}
 		}
-
-        public override string DisplayName {
-			get {
-				if (Instrument == null) return "Bargröße";
-				return "Bargröße " + days + " Tage - " + SuriStrings.instrumentToName(Instrument.FullName);
-			}
-        }
+		public override string DisplayName { get { return SuriStrings.DisplayName(Name, Instrument); } }
         public double Percentage() { return 100 * Values[0][0] / Values[1][0]; }
         public bool IsMegaRange() { return CurrentBar > days && Math.Abs(Values[0][0] - Values[1][0]) < 0.001; }
 
@@ -80,7 +75,15 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		
 		#region Colors
 		[XmlIgnore]
-		[Display(Name = "Signal", Order = 2, GroupName = "Farben")]
+		[Display(Name = "Bargröße", Order = 0, GroupName = "Farben")]
+		public Brush barBrush { get; set; }
+		[Browsable(false)]
+		public string barBrushSerialize {
+			get { return Serialize.BrushToString(barBrush); }
+			set { barBrush = Serialize.StringToBrush(value); }
+		}
+		[XmlIgnore]
+		[Display(Name = "Megabar", Order = 1, GroupName = "Farben")]
 		public Brush signalBrush { get; set; }
 		[Browsable(false)]
 		public string signalBrushSerialize {
@@ -88,15 +91,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			set { signalBrush = Serialize.StringToBrush(value); }
 		}
 		[XmlIgnore]
-		[Display(Name = "Volumen", Order = 0, GroupName = "Farben")]
-		public Brush volumeBrush { get; set; }
-		[Browsable(false)]
-		public string volumeBrushSerialize {
-			get { return Serialize.BrushToString(volumeBrush); }
-			set { volumeBrush = Serialize.StringToBrush(value); }
-		}
-		[XmlIgnore]
-		[Display(Name = "Max", Order = 0, GroupName = "Farben")]
+		[Display(Name = "Max", Order = 2, GroupName = "Farben")]
 		public Brush maxBrush { get; set; }
 		[Browsable(false)]
 		public string maxBrushSerialize {
@@ -146,19 +141,19 @@ namespace NinjaTrader.NinjaScript.Indicators
 {
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
-		private Suri.SuriRange[] cacheSuriRange;
-		public Suri.SuriRange SuriRange(int days)
+		private Suri.BarRange[] cacheBarRange;
+		public Suri.BarRange BarRange(int days)
 		{
-			return SuriRange(Input, days);
+			return BarRange(Input, days);
 		}
 
-		public Suri.SuriRange SuriRange(ISeries<double> input, int days)
+		public Suri.BarRange BarRange(ISeries<double> input, int days)
 		{
-			if (cacheSuriRange != null)
-				for (int idx = 0; idx < cacheSuriRange.Length; idx++)
-					if (cacheSuriRange[idx] != null && cacheSuriRange[idx].days == days && cacheSuriRange[idx].EqualsInput(input))
-						return cacheSuriRange[idx];
-			return CacheIndicator<Suri.SuriRange>(new Suri.SuriRange(){ days = days }, input, ref cacheSuriRange);
+			if (cacheBarRange != null)
+				for (int idx = 0; idx < cacheBarRange.Length; idx++)
+					if (cacheBarRange[idx] != null && cacheBarRange[idx].days == days && cacheBarRange[idx].EqualsInput(input))
+						return cacheBarRange[idx];
+			return CacheIndicator<Suri.BarRange>(new Suri.BarRange(){ days = days }, input, ref cacheBarRange);
 		}
 	}
 }
@@ -167,14 +162,14 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.SuriRange SuriRange(int days)
+		public Indicators.Suri.BarRange BarRange(int days)
 		{
-			return indicator.SuriRange(Input, days);
+			return indicator.BarRange(Input, days);
 		}
 
-		public Indicators.Suri.SuriRange SuriRange(ISeries<double> input , int days)
+		public Indicators.Suri.BarRange BarRange(ISeries<double> input , int days)
 		{
-			return indicator.SuriRange(input, days);
+			return indicator.BarRange(input, days);
 		}
 	}
 }
@@ -183,14 +178,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.SuriRange SuriRange(int days)
+		public Indicators.Suri.BarRange BarRange(int days)
 		{
-			return indicator.SuriRange(Input, days);
+			return indicator.BarRange(Input, days);
 		}
 
-		public Indicators.Suri.SuriRange SuriRange(ISeries<double> input , int days)
+		public Indicators.Suri.BarRange BarRange(ISeries<double> input , int days)
 		{
-			return indicator.SuriRange(input, days);
+			return indicator.BarRange(input, days);
 		}
 	}
 }

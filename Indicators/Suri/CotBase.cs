@@ -4,13 +4,17 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
+using System.Windows;
 using System.Windows.Media;
 using System.Xml.Serialization;
 using NinjaTrader.Core;
+using NinjaTrader.Custom.SuriCommon;
 using NinjaTrader.Gui;
 using NinjaTrader.Gui.Chart;
 using NinjaTrader.NinjaScript;
 using NinjaTrader.NinjaScript.DrawingTools;
+using SharpDX;
+
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
@@ -31,19 +35,17 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				ScaleJustification							= ScaleJustification.Right;
 				IsSuspendedWhileInactive					= true;
 				BarsRequiredToPlot							= 0;
+				lineWidth									= 2;
+				lineBrush									= Brushes.DarkGray;
+				straightenLines								= false;
 				reportField									= SuriCotReportField.CommercialLong;
-				AddPlot(Brushes.CornflowerBlue, Custom.Resource.COT1);
 			} else if (State == State.Configure) {
 				sCot = new CotReport { ReportType = CotReportType.Futures, Field = CotReportMaper.SuriToCotReport(reportField) };
+				AddPlot(new Stroke(straightenLines ? Brushes.Transparent : lineBrush, lineWidth), PlotStyle.Line, "CoT-Daten In");
+				AddPlot(new Stroke(!straightenLines ? Brushes.Transparent : lineBrush, lineWidth), PlotStyle.Line, "CoT-Daten");
 			}
 		}
-		
-        public override string DisplayName {
-			get {
-				if (sCot == null || Instrument == null) return "COT Daten";
-				return "COT " + CotReportMaper.ReportToString(reportField) + " - " + SuriStrings.instrumentToName(Instrument.FullName);
-			}
-        }
+		public override string DisplayName { get { return SuriStrings.DisplayName(Name, Instrument); } }
 		
 		protected override void OnBarUpdate() {
 			if (CotData.GetCotReportNames(Instrument.MasterInstrument.Name).Count == 0) {
@@ -59,14 +61,45 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			}
 			
 			double value = sCot.Calculate(Instrument.MasterInstrument.Name, Time[0]);
-			if (!double.IsNaN(value)) Values[0][0] = value;
+			if (!double.IsNaN(value)) {
+				Value[0] = value;
+				if (!straightenLines) return;
+				try {
+					int startIndex = -1;
+					if (Math.Abs(Value[0] - Value[1]) > 0.0000001) {
+						for (int i = 1; i < 100; i++) {
+							if (Math.Abs(Value[i] - Value[i+1]) > 0.0000001) {
+								startIndex = i;
+								break;
+							}
+						}
+					}
+					if (startIndex != -1) {
+						Vector2 v1 = new Vector2(startIndex, (float) Value[startIndex]);
+						Vector2 v2 = new Vector2(0, (float) Value[0]);
+						for (int i = startIndex; i >= 0; i--) {
+							Values[1][i] = GetY(v1, v2, i);
+						}
+					}
+				} catch (Exception) {
+					// ignored
+				}
+			}
+		}
+		
+		public static float GetY(Vector2 point1, Vector2 point2, float x) {
+			var dx = point2.X - point1.X;
+			if (dx == 0) return float.NaN;
+			var m = (point2.Y - point1.Y) / dx;
+			var b = point1.Y - (m * point1.X);
+			return m*x + b;
 		}
 
 		#region Properties
         [TypeConverter(typeof(FriendlyEnumConverter))]
         [PropertyEditor("NinjaTrader.Gui.Tools.StringStandardValuesEditorKey")]
 		[NinjaScriptProperty]
-		[Display(Name = "COT Daten", GroupName = "Parameter")]
+		[Display(Name = "COT Daten", Order=0, GroupName = "Parameter")]
 		[XmlIgnore]
 		public SuriCotReportField reportField { get; set; }
 		
@@ -75,6 +108,26 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			get { return (int) reportField; }
 			set { reportField = (SuriCotReportField) value; }
 		}
+		
+		[XmlIgnore]
+		[Range(1, int.MaxValue)]
+		[Display(Name="Breite der Linie", Order=1, GroupName="Parameter")]
+		public int lineWidth
+		{ get; set; }
+		
+		[XmlIgnore]
+		[Display(Name = "Farbe", Order = 2, GroupName = "Parameter")]
+		public Brush lineBrush { get; set; }
+		[Browsable(false)]
+		public string lineBrushSerialize {
+			get { return Serialize.BrushToString(lineBrush); }
+			set { lineBrush = Serialize.StringToBrush(value); }
+		}
+		
+		[XmlIgnore]
+		[Display(Name="Begradige Linien", Order=3, GroupName="Parameter")]
+		public bool straightenLines
+		{ get; set; }
 		#endregion
 	}
 	

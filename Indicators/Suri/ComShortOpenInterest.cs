@@ -1,4 +1,6 @@
 #region Using declarations
+
+using System;
 using System.ComponentModel;
 using System.Windows.Media;
 using NinjaTrader.Gui;
@@ -18,7 +20,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		protected override void OnStateChange() {
 			if (State == State.SetDefaults) {
 				Description									= @"Commercials Short geteilt durch Open Interest";
-				Name										= "Com Short / OI in %";
+				Name										= "Com Short / OI";
 				Calculate									= Calculate.OnBarClose;
 				IsOverlay									= false;
 				DisplayInDataBox							= true;
@@ -29,16 +31,18 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				ScaleJustification							= ScaleJustification.Right;
 				IsSuspendedWhileInactive					= true;
 				drawLines									= true;
-				brush25										= Brushes.Yellow;
-				brush75										= Brushes.Yellow;
+				brush25										= Brushes.RoyalBlue;
+				brush75										= Brushes.RoyalBlue;
+				regularLineBrush							= Brushes.DarkGray;
+				lineWidth									= 2;
 				comShort									= CotBase(SuriCotReportField.CommercialShort);
 				openInterest								= CotBase(SuriCotReportField.OpenInterest);
-				AddPlot(new Stroke(Brushes.DarkGray, 3), PlotStyle.Line, "Com Short / OI in %");
 			} else if (State == State.Configure) {
 				if (drawLines) {
-					AddLine(brush25, 1, "25%");
-					AddLine(brush75, 1, "75%");
+					AddLine(new Stroke(brush25, Math.Max(lineWidth-2, 1)), 0, "25%");
+					AddLine(new Stroke(brush75, Math.Max(lineWidth-2, 1)), 0, "75%");
 				}
+				AddPlot(new Stroke(regularLineBrush, lineWidth), PlotStyle.Line, "Com Short / OI in %");
 			}
 		}
 
@@ -53,13 +57,28 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		}
 		private double ValueOf(double percent) { return min + percent * (max - min); }
 		
+		
 		#region Properties
 		[NinjaScriptProperty]
-		[Display(Name="Zeichne 25 - 75% Linien", Order=0, GroupName="Parameter")]
+		[Display(Name="Zeichne 25 und 75% Linien", Order=0, GroupName="Parameter")]
 		public bool drawLines { get; set; }
-		
+
 		[XmlIgnore]
-		[Display(Name = "Farbe der 25% Linie", Order = 1, GroupName = "Parameter")]
+		[Range(1, int.MaxValue)]
+		[Display(Name="Breite der Linien", Order=2, GroupName="Parameter")]
+		public int lineWidth
+		{ get; set; }
+
+		[XmlIgnore]
+		[Display(Name = "Normale Linie", Order = 0, GroupName = "Farben")]
+		public Brush regularLineBrush { get; set; }
+		[Browsable(false)]
+		public string regularLineBrushSerialize {
+			get { return Serialize.BrushToString(regularLineBrush); }
+			set { regularLineBrush = Serialize.StringToBrush(value); }
+		}
+		[XmlIgnore]
+		[Display(Name = "Farbe der 25% Linie", Order = 1, GroupName = "Farben")]
 		public Brush brush25 { get; set; }
 		[Browsable(false)]
 		public string brushSerialize25 {
@@ -68,7 +87,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		}
 		
 		[XmlIgnore]
-		[Display(Name = "Farbe der 75% Linie", Order = 2, GroupName = "Parameter")]
+		[Display(Name = "Farbe der 75% Linie", Order = 2, GroupName = "Farben")]
 		public Brush brush75 { get; set; }
 		[Browsable(false)]
 		public string brushSerialize75 {

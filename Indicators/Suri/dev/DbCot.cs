@@ -1,6 +1,7 @@
 #region Using declarations
 using System.Collections.Generic;
 using System.Windows.Media;
+using NinjaTrader.Custom.SuriCommon;
 using NinjaTrader.Gui;
 using NinjaTrader.Gui.Chart;
 using NinjaTrader.Gui.NinjaScript;
@@ -27,11 +28,11 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 				BarsRequiredToPlot							= 0;
 				AddPlot(new Stroke(Brushes.DarkGray, 3), PlotStyle.Line, "DbCot");
 			} else if (State == State.DataLoaded) {
-				int id = SuriStrings.getId(Instrument.FullName);
-				if (id != -1) {
+				int? id = SuriStrings.GetId(Instrument);
+				if (id != null) {
 					string oldDate = From.Date.ToString("yyyy-MM-dd");
 					string newDate = To.Date.ToString("yyyy-MM-dd");
-					dbCotData = SuriServer.GetCotData(id, oldDate, newDate, 0);
+					dbCotData = SuriServer.GetCotData(id.Value, oldDate, newDate, 0);
 				}
 			}
 		}

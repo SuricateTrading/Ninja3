@@ -64,10 +64,10 @@ namespace NinjaTrader.Gui.NinjaScript.Indicators {
 				}
 			}
 		}
-
-		public void AddMinuteVolume(long volume, double low, double high, double tickSize, Action<object> print) {
+		
+		public void AddMinuteVolume(long volume, double open, double high, double low, double close, double tickSize, Action<object> print) {
 			isPrepared = false;
-			double volumePerTick = volume / ((high - low) / tickSize + 1);
+			double volumePerTick = volume / (Math.Abs(high - low) / tickSize + 1);
 			for (double price = low; price <= high; price = Math.Round(price+tickSize, 7)) {
 				if (!tickData.ContainsKey(price)) {
 					tickData.Add(price, new VpTickData());
@@ -77,7 +77,7 @@ namespace NinjaTrader.Gui.NinjaScript.Indicators {
 				totalVolume += volumePerTick;
 			}
 		}
-		
+
 		public void CalculateVaueArea(bool checkPairs = false) {
 			PocTickData().isInValueArea = true;
 			double vaVolume = totalVolume * 0.682 - pocVolume;
@@ -206,6 +206,8 @@ namespace NinjaTrader.Gui.NinjaScript.Indicators {
 			}
 			
 			CalculateVaueArea();
+			
+			
 		}
 	}
 

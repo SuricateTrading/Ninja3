@@ -3,8 +3,12 @@ using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Windows.Media;
+using System.Xml.Serialization;
+using NinjaTrader.Custom.SuriCommon;
+using NinjaTrader.Data;
 using NinjaTrader.Gui;
 using NinjaTrader.Gui.Chart;
+using NinjaTrader.NinjaScript.DrawingTools;
 
 #endregion
 
@@ -41,12 +45,60 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		public double? LastEntryValue() { return lastEntryValue; }
 
 		#region Indicator
-		
 		[NinjaScriptProperty]
 		[Range(1, int.MaxValue)]
 		[Display(Name="Tage", Order=1, GroupName="Parameter")]
 		public int days
 		{ get; set; }
+		
+		[XmlIgnore]
+		[Range(1, int.MaxValue)]
+		[Display(Name="Breite der Linien", Order=2, GroupName="Parameter")]
+		public int lineWidth
+		{ get; set; }
+		
+		#region Colors
+		[XmlIgnore]
+		[Display(Name = "Long", Order = 0, GroupName = "Farben")]
+		public Brush longBrush { get; set; }
+		[Browsable(false)]
+		public string longBrushSerialize {
+			get { return Serialize.BrushToString(longBrush); }
+			set { longBrush = Serialize.StringToBrush(value); }
+		}
+		[XmlIgnore]
+		[Display(Name = "Short", Order = 1, GroupName = "Farben")]
+		public Brush shortBrush { get; set; }
+		[Browsable(false)]
+		public string shortBrushSerialize {
+			get { return Serialize.BrushToString(shortBrush); }
+			set { shortBrush = Serialize.StringToBrush(value); }
+		}
+		[XmlIgnore]
+		[Display(Name = "Normale Linie", Order = 2, GroupName = "Farben")]
+		public Brush regularLineBrush { get; set; }
+		[Browsable(false)]
+		public string regularLineBrushSerialize {
+			get { return Serialize.BrushToString(regularLineBrush); }
+			set { regularLineBrush = Serialize.StringToBrush(value); }
+		}
+		[XmlIgnore]
+		[Display(Name = "50% Linie", Order = 3, GroupName = "Farben")]
+		public Brush brush50Percent { get; set; }
+		[Browsable(false)]
+		public string brush50PercentSerialize {
+			get { return Serialize.BrushToString(brush50Percent); }
+			set { brush50Percent = Serialize.StringToBrush(value); }
+		}
+		[XmlIgnore]
+		[Display(Name = "SMA passt nicht", Order = 4, GroupName = "Farben")]
+		public Brush noSignalBrush { get; set; }
+		[Browsable(false)]
+		public string noSignalBrushSerialize {
+			get { return Serialize.BrushToString(noSignalBrush); }
+			set { noSignalBrush = Serialize.StringToBrush(value); }
+		}
+		#endregion
 
 		/*public Cot1() {
 			VendorLicense("SuricateTradingGmbH", "Basis", "https://www.suricate-trading.de/", "info@suricate-trading.de",null);
@@ -66,23 +118,23 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				ScaleJustification							= ScaleJustification.Right;
 				IsSuspendedWhileInactive					= true;
 				BarsRequiredToPlot							= 0;
+				longBrush									= Brushes.Green;
+				shortBrush									= Brushes.Red;
+				brush50Percent								= Brushes.DimGray;
+				noSignalBrush								= Brushes.Yellow;
+				regularLineBrush							= Brushes.DarkGray;
+				lineWidth									= 3;
 				days										= 125;
 				cotData = CotBase(SuriCotReportField.CommercialNet);
-				
-				AddPlot(new Stroke(Brushes.DarkGray, 3), PlotStyle.Line, "COT1");
-				AddLine(new Stroke(Brushes.Red, 3), 10.0, "10%");
-				AddLine(Brushes.DimGray, 50.0, "50%");
-				AddLine(new Stroke(Brushes.Green, 3), 90.0, "90%");
 			} else if (State == State.Configure) {
 				sma = Sma(days);
+				AddPlot(new Stroke(regularLineBrush, lineWidth), PlotStyle.Line, "COT1");
+				AddLine(new Stroke(shortBrush, lineWidth), 10.0, "10%");
+				AddLine(new Stroke(brush50Percent, 1), 50.0, "50%");
+				AddLine(new Stroke(longBrush, lineWidth), 90.0, "90%");
 			}
 		}
-        public override string DisplayName {
-			get {
-				if (Instrument == null) return "COT 1";
-				return "COT 1 - " + SuriStrings.instrumentToName(Instrument.FullName);
-			}
-        }
+        public override string DisplayName { get { return SuriStrings.DisplayName(Name, Instrument); } }
         public override void OnCalculateMinMax() {
 	        MinValue = 0;
 	        MaxValue = 100;
@@ -98,7 +150,11 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
         #endregion
         
 		protected override void OnBarUpdate() {
-			if (CurrentBar < days) return;
+			if (CurrentBar <= days) return;
+			if (!(Bars.BarsPeriod.BarsPeriodType == BarsPeriodType.Day && Bars.BarsPeriod.Value == 1 || Bars.BarsPeriod.BarsPeriodType == BarsPeriodType.Minute && Bars.BarsPeriod.Value == 1440)) {
+				Draw.TextFixed(this, "Warning", "CoT 1 ist nur für ein 1-Tages Chart oder 1440-Minuten Chart verfügbar.", TextPosition.Center);
+				return;
+			}
 
 			if (Math.Abs(cotData[0] - cotData[1]) > 0.0001) {
 				double min = double.MaxValue;
@@ -117,11 +173,13 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				isCurrentlyASignal = IsSignal();
 			}
 			if (isCurrentlyASignal) {
-				if      (sma[0] > sma[1] && IsLong())  PlotBrushes[0][0] = Brushes.Green;
-				else if (sma[0] < sma[1] && IsShort()) PlotBrushes[0][0] = Brushes.Red;
-				else PlotBrushes[0][0] = Brushes.Yellow;
+				if      (sma[0] > sma[1] && IsLong())  PlotBrushes[0][0] = longBrush;
+				else if (sma[0] < sma[1] && IsShort()) PlotBrushes[0][0] = shortBrush;
+				else PlotBrushes[0][0] = noSignalBrush;
 			}
 		}
+		
+		
 
 		public override bool IsLong()  { return Value[0] >= 90; }
 		public override bool IsShort() { return Value[0] <= 10; }
@@ -228,7 +286,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		
     }
 }
-
 
 
 

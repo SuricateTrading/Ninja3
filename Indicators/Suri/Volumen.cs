@@ -1,7 +1,12 @@
 #region Using declarations
+
+using System;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Windows.Media;
+using System.Xml.Serialization;
 using NinjaTrader.Cbi;
+using NinjaTrader.Custom.SuriCommon;
 using NinjaTrader.Gui;
 #endregion
 
@@ -13,9 +18,35 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		#region Properties
 		[NinjaScriptProperty]
 		[Range(1, int.MaxValue)]
-		[Display(Name="Tage", Order=1, GroupName="Parameter")]
-		public int days
-		{ get; set; }
+		[Display(Name = "Tage", Description = "Periode in Bars", GroupName = "Parameter")]
+		public int days { get; set; }
+		
+		#region Colors
+		[XmlIgnore]
+		[Display(Name = "Volumen", Order = 0, GroupName = "Farben")]
+		public Brush volumeBrush { get; set; }
+		[Browsable(false)]
+		public string volumeBrushSerialize {
+			get { return Serialize.BrushToString(volumeBrush); }
+			set { volumeBrush = Serialize.StringToBrush(value); }
+		}
+		[XmlIgnore]
+		[Display(Name = "Megavolumen", Order = 1, GroupName = "Farben")]
+		public Brush signalBrush { get; set; }
+		[Browsable(false)]
+		public string signalBrushSerialize {
+			get { return Serialize.BrushToString(signalBrush); }
+			set { signalBrush = Serialize.StringToBrush(value); }
+		}
+		[XmlIgnore]
+		[Display(Name = "Max", Order = 2, GroupName = "Farben")]
+		public Brush maxBrush { get; set; }
+		[Browsable(false)]
+		public string maxBrushSerialize {
+			get { return Serialize.BrushToString(maxBrush); }
+			set { maxBrush = Serialize.StringToBrush(value); }
+		}
+		#endregion
 		#endregion
 		
 		protected override void OnStateChange() {
@@ -32,22 +63,19 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				ScaleJustification							= Gui.Chart.ScaleJustification.Right;
 				IsSuspendedWhileInactive					= true;
 				Calculate									= Calculate.OnEachTick;
-				days										= 125;
 				BarsRequiredToPlot							= 0;
-				
-				AddPlot(new Stroke(Brushes.RoyalBlue, 2), PlotStyle.Bar, "Volumen");
-				AddPlot(new Stroke(Brushes.DarkCyan, 1), PlotStyle.Line, "Max Volumen");
+				signalBrush									= Brushes.Yellow;
+				maxBrush									= Brushes.DarkCyan;
+				volumeBrush									= Brushes.RoyalBlue;
+				days										= 125;
+			} else if (State == State.Configure) {
+				AddPlot(new Stroke(volumeBrush, 2), PlotStyle.Bar, "Volumen");
+				AddPlot(new Stroke(maxBrush, 1), PlotStyle.Line, "Max Volumen");
 			}
 		}
-
-        public override string DisplayName {
-			get {
-				if (Instrument == null) return "Volumen";
-				return "Volumen " + days + " Tage - " + SuriStrings.instrumentToName(Instrument.FullName);
-			}
-        }
+		public override string DisplayName { get { return SuriStrings.DisplayName(Name, Instrument); } }
         public double Percentage() { return 100 * Values[0][0] / Values[1][0]; }
-        public bool IsMegaVolume() { return Values[0][0] == Values[1][0]; }
+        public bool IsMegaVolume() { return Math.Abs(Values[0][0] - Values[1][0]) < 0.00001; }
 		
 		protected override void OnBarUpdate() {
 			if (Instrument.MasterInstrument.InstrumentType == InstrumentType.CryptoCurrency) {
@@ -72,7 +100,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				}
 			}
 			Values[1][0] = max;
-			if(IsMegaVolume()) PlotBrushes[0][0] = Brushes.Yellow;
+			if(IsMegaVolume()) PlotBrushes[0][0] = signalBrush;
 		}
 		
 	}

@@ -1,8 +1,11 @@
 #region Using declarations
 
 using System;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Windows.Media;
+using System.Xml.Serialization;
+using NinjaTrader.Custom.SuriCommon;
 using NinjaTrader.Gui;
 #endregion
 
@@ -24,20 +27,17 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				PaintPriceMarkers							= true;
 				ScaleJustification							= Gui.Chart.ScaleJustification.Right;
 				IsSuspendedWhileInactive					= true;
+				lineWidth									= 2;
+				longBrush									= Brushes.Green;
+				shortBrush									= Brushes.Red;
 				days										= 125;
-				AddPlot(new Stroke(Brushes.DarkOrange, 2), PlotStyle.Line, "SMA");
 			} else if (State == State.Configure) {
 				priorSum	= 0;
 				sum			= 0;
+				AddPlot(new Stroke(Brushes.Yellow, lineWidth), PlotStyle.Line, "SMA");
 			}
 		}
-		
-        public override string DisplayName {
-          get {
-				if (Instrument == null) return "SMA";
-				return "SMA " + days + " - " + SuriStrings.instrumentToName(Instrument.FullName);
-			}
-        }
+		public override string DisplayName { get { return SuriStrings.DisplayName(Name, Instrument); } }
 		
 		protected override void OnBarUpdate() {
 			if (BarsArray[0].BarsType.IsRemoveLastBarSupported) {
@@ -48,7 +48,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 					if (CurrentBar >= days) {
 						Value[0] = (last + Input[0] - Input[days]) / Math.Min(CurrentBar, days);
 					} else {
-						Value[0] = ((last + Input[0]) / (Math.Min(CurrentBar, days) + 1));
+						Value[0] = (last + Input[0]) / (Math.Min(CurrentBar, days) + 1);
 					}
 				}
 			} else {
@@ -59,9 +59,11 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			
 			if (CurrentBar > 0) {
 				if (Value[0] > Value[1]) {
-					PlotBrushes[0][0] = Brushes.Green;
+					PlotBrushes[0][0] = longBrush;
+				} else if (Value[0] < Value[1]) {
+					PlotBrushes[0][0] = shortBrush;
 				} else {
-					PlotBrushes[0][0] = Brushes.Red;
+					 PlotBrushes[0][0] = PlotBrushes[0][1];
 				}
 			}
 		}
@@ -69,9 +71,33 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		#region Properties
 		[NinjaScriptProperty]
 		[Range(1, int.MaxValue)]
-		[Display(Name="Tage", Order=1, GroupName="Parameter")]
+		[Display(Name="Tage", Order=0, GroupName="Parameter")]
 		public int days
 		{ get; set; }
+		
+		[XmlIgnore]
+		[Range(1, int.MaxValue)]
+		[Display(Name="Breite der Linien", Order=1, GroupName="Parameter")]
+		public int lineWidth
+		{ get; set; }
+		
+		[XmlIgnore]
+		[Display(Name = "Farbe wenn steigend", Order = 2, GroupName = "Parameter")]
+		public Brush longBrush { get; set; }
+		[Browsable(false)]
+		public string longBrushSerialize {
+			get { return Serialize.BrushToString(longBrush); }
+			set { longBrush = Serialize.StringToBrush(value); }
+		}
+		
+		[XmlIgnore]
+		[Display(Name = "Farbe wenn fallend", Order = 3, GroupName = "Parameter")]
+		public Brush shortBrush { get; set; }
+		[Browsable(false)]
+		public string shortBrushSerialize {
+			get { return Serialize.BrushToString(shortBrush); }
+			set { shortBrush = Serialize.StringToBrush(value); }
+		}
 		#endregion
 
 	}

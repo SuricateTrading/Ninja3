@@ -103,7 +103,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AddOns\SuriServer.cs" />
     <Compile Include="BarsTypes\%40DayBarsType.cs" />
     <Compile Include="BarsTypes\%40HeikenAshiBarsType.cs" />
     <Compile Include="BarsTypes\%40KagiBarsType.cs" />
@@ -149,7 +148,6 @@
     <Compile Include="DrawingTools\%40TrendChannel.cs" />
     <Compile Include="DrawingTools\BarInfo.cs" />
     <Compile Include="DrawingTools\StrikingSpot.cs" />
-    <Compile Include="DrawingTools\Tester.cs" />
     <Compile Include="ImportTypes\%40TickDataImportType.cs" />
     <Compile Include="Indicators\%40BarTimer.cs" />
     <Compile Include="Indicators\%40Correlation.cs" />
@@ -187,6 +185,7 @@
     <Compile Include="Indicators\Suri\dev\SuriTester.cs" />
     <Compile Include="Indicators\Suri\dev\Terminkurve.cs" />
     <Compile Include="Indicators\Suri\dev\TkDelta.cs" />
+    <Compile Include="Indicators\Suri\Mega.cs" />
     <Compile Include="Indicators\Suri\SuriDrawingToolTile.cs" />
     <Compile Include="Indicators\Suri\VolumeProfileBig.cs" />
     <Compile Include="Indicators\Suri\VolumeProfileIntraday.cs" />
@@ -403,9 +402,6 @@
     <Compile Include="SuperDomColumns\%40Volume.cs" />
     <Compile Include="obj\Debug\.NETFramework,Version=v4.8.AssemblyAttributes.cs" />
     <Compile Include="AddOns\SuriAddOn.cs" />
-    <Compile Include="AddOns\Strings\SuriStrings.cs" />
-    <Compile Include="AddOns\Templates\Commodity.xaml.cs" />
-    <Compile Include="AddOns\AddOnFramework.cs" />
     <Compile Include="Indicators\Suri\Oscillator.cs" />
     <Compile Include="Indicators\Suri\ChartToolbar.cs" />
     <Compile Include="Indicators\Suri\Cot1.cs" />
@@ -414,8 +410,12 @@
     <Compile Include="Indicators\Suri\Sma.cs" />
     <Compile Include="Strategies\SuriStrategy.cs" />
     <Compile Include="Indicators\Suri\Volumen.cs" />
-    <Compile Include="SuriCommon\Indicators\VpIntraData.cs" />
+    <Compile Include="SuriCommon\StrikingCalculator.cs" />
+    <Compile Include="SuriCommon\SuriCommon.cs" />
     <Compile Include="SuriCommon\SuriHelper.cs" />
+    <Compile Include="SuriCommon\SuriServer.cs" />
+    <Compile Include="SuriCommon\SuriStrings.cs" />
+    <Compile Include="SuriCommon\VpData.cs" />
     <Compile Include="VendorLicensing.cs" />
     <Compile Include="Indicators\Suri\BarRange.cs" />
     <Compile Include="Strategies\StrategyCOT2.cs" />
@@ -471,10 +471,6 @@
   </ItemGroup>
   <ItemGroup>
     <Page Include="AddOns\SuriMain.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="AddOns\Templates\Commodity.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
