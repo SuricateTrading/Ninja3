@@ -4,18 +4,18 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Windows.Media;
 using System.Xml.Serialization;
-using NinjaTrader.Custom.SuriCommon;
+using NinjaTrader.Custom.AddOns.SuriCommon;
 using NinjaTrader.Data;
 using NinjaTrader.Gui;
 using NinjaTrader.Gui.Chart;
 using NinjaTrader.NinjaScript.DrawingTools;
-
+using Brush = System.Windows.Media.Brush;
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
 	public class Cot1 : StrategyIndicator2 {
-		private CotBase cotData;
-		private Sma sma;
+		private SuriCot suriCotData;
+		private SuriSma suriSma;
 		
 		private bool isCurrentlyASignal;
 		
@@ -53,8 +53,13 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		
 		[XmlIgnore]
 		[Range(1, int.MaxValue)]
-		[Display(Name="Breite der Linien", Order=2, GroupName="Parameter")]
+		[Display(Name="Breite der Hauptlinie", Order=2, GroupName="Parameter")]
 		public int lineWidth
+		{ get; set; }
+		[XmlIgnore]
+		[Range(1, int.MaxValue)]
+		[Display(Name="Breite der sekundären Linien", Order=3, GroupName="Parameter")]
+		public int lineWidthSecondary
 		{ get; set; }
 		
 		#region Colors
@@ -123,15 +128,16 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				brush50Percent								= Brushes.DimGray;
 				noSignalBrush								= Brushes.Yellow;
 				regularLineBrush							= Brushes.DarkGray;
-				lineWidth									= 3;
+				lineWidth									= 4;
+				lineWidthSecondary							= 2;
 				days										= 125;
-				cotData = CotBase(SuriCotReportField.CommercialNet);
+				suriCotData = SuriCot(SuriCotReportField.CommercialNet);
 			} else if (State == State.Configure) {
-				sma = Sma(days);
+				suriSma = SuriSma(days);
 				AddPlot(new Stroke(regularLineBrush, lineWidth), PlotStyle.Line, "COT1");
-				AddLine(new Stroke(shortBrush, lineWidth), 10.0, "10%");
-				AddLine(new Stroke(brush50Percent, 1), 50.0, "50%");
-				AddLine(new Stroke(longBrush, lineWidth), 90.0, "90%");
+				AddPlot(new Stroke(shortBrush, lineWidthSecondary), PlotStyle.Line, "10%");
+				AddPlot(new Stroke(brush50Percent, lineWidthSecondary), PlotStyle.Line, "50%");
+				AddPlot(new Stroke(longBrush, lineWidthSecondary), PlotStyle.Line, "90%");
 			}
 		}
         public override string DisplayName { get { return SuriStrings.DisplayName(Name, Instrument); } }
@@ -156,15 +162,15 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				return;
 			}
 
-			if (Math.Abs(cotData[0] - cotData[1]) > 0.0001) {
+			if (Math.Abs(suriCotData[0] - suriCotData[1]) > 0.0001) {
 				double min = double.MaxValue;
 				double max = double.MinValue;
 				for (int barsAgo = 0; barsAgo < days; barsAgo++) {
-					double v = cotData.Value[barsAgo];
+					double v = suriCotData.Value[barsAgo];
 					if (min > v) min = v;
 					if (max < v) max = v;
 				}
-				Value[0] = 100.0 * (cotData.Value[0] - min) / (max - min);
+				Value[0] = 100.0 * (suriCotData.Value[0] - min) / (max - min);
 			} else {
 				Value[0] = Value[1];
 			}
@@ -173,10 +179,14 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				isCurrentlyASignal = IsSignal();
 			}
 			if (isCurrentlyASignal) {
-				if      (sma[0] > sma[1] && IsLong())  PlotBrushes[0][0] = longBrush;
-				else if (sma[0] < sma[1] && IsShort()) PlotBrushes[0][0] = shortBrush;
+				if      (suriSma[0] > suriSma[1] && IsLong())  PlotBrushes[0][0] = longBrush;
+				else if (suriSma[0] < suriSma[1] && IsShort()) PlotBrushes[0][0] = shortBrush;
 				else PlotBrushes[0][0] = noSignalBrush;
 			}
+			
+			Values[1][0] = 10;
+			Values[2][0] = 50;
+			Values[3][0] = 90;
 		}
 		
 		
@@ -214,8 +224,8 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 
 		public override bool? IsEntry() {
 			if (IsSignal() && (
-				    sma[0] > sma[1] && IsLong() ||
-				    sma[0] < sma[1] && IsShort()
+				    suriSma[0] > suriSma[1] && IsLong() ||
+				    suriSma[0] < suriSma[1] && IsShort()
 			)) {
 				SetEntryValue();
 				return true;

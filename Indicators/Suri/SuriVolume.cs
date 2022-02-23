@@ -1,17 +1,16 @@
 #region Using declarations
-
 using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Windows.Media;
 using System.Xml.Serialization;
 using NinjaTrader.Cbi;
-using NinjaTrader.Custom.SuriCommon;
+using NinjaTrader.Custom.AddOns.SuriCommon;
 using NinjaTrader.Gui;
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
-	public class Volumen : Indicator {
+	public class SuriVolume : Indicator {
 		private double max;
 		private int maxIndex;
 		
@@ -156,19 +155,19 @@ namespace NinjaTrader.NinjaScript.Indicators
 {
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
-		private Suri.Volumen[] cacheVolumen;
-		public Suri.Volumen Volumen(int days)
+		private Suri.SuriVolume[] cacheSuriVolume;
+		public Suri.SuriVolume SuriVolume(int days)
 		{
-			return Volumen(Input, days);
+			return SuriVolume(Input, days);
 		}
 
-		public Suri.Volumen Volumen(ISeries<double> input, int days)
+		public Suri.SuriVolume SuriVolume(ISeries<double> input, int days)
 		{
-			if (cacheVolumen != null)
-				for (int idx = 0; idx < cacheVolumen.Length; idx++)
-					if (cacheVolumen[idx] != null && cacheVolumen[idx].days == days && cacheVolumen[idx].EqualsInput(input))
-						return cacheVolumen[idx];
-			return CacheIndicator<Suri.Volumen>(new Suri.Volumen(){ days = days }, input, ref cacheVolumen);
+			if (cacheSuriVolume != null)
+				for (int idx = 0; idx < cacheSuriVolume.Length; idx++)
+					if (cacheSuriVolume[idx] != null && cacheSuriVolume[idx].days == days && cacheSuriVolume[idx].EqualsInput(input))
+						return cacheSuriVolume[idx];
+			return CacheIndicator<Suri.SuriVolume>(new Suri.SuriVolume(){ days = days }, input, ref cacheSuriVolume);
 		}
 	}
 }
@@ -177,14 +176,14 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.Volumen Volumen(int days)
+		public Indicators.Suri.SuriVolume SuriVolume(int days)
 		{
-			return indicator.Volumen(Input, days);
+			return indicator.SuriVolume(Input, days);
 		}
 
-		public Indicators.Suri.Volumen Volumen(ISeries<double> input , int days)
+		public Indicators.Suri.SuriVolume SuriVolume(ISeries<double> input , int days)
 		{
-			return indicator.Volumen(input, days);
+			return indicator.SuriVolume(input, days);
 		}
 	}
 }
@@ -193,14 +192,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.Volumen Volumen(int days)
+		public Indicators.Suri.SuriVolume SuriVolume(int days)
 		{
-			return indicator.Volumen(Input, days);
+			return indicator.SuriVolume(Input, days);
 		}
 
-		public Indicators.Suri.Volumen Volumen(ISeries<double> input , int days)
+		public Indicators.Suri.SuriVolume SuriVolume(ISeries<double> input , int days)
 		{
-			return indicator.Volumen(input, days);
+			return indicator.SuriVolume(input, days);
 		}
 	}
 }

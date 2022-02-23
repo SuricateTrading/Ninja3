@@ -4,15 +4,14 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Windows.Media;
 using System.Xml.Serialization;
-using NinjaTrader.Custom.SuriCommon;
+using NinjaTrader.Custom.AddOns.SuriCommon;
 using NinjaTrader.Gui;
 using NinjaTrader.Gui.Chart;
-
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
-	public class Cot22 : StrategyIndicator {
-		private CotBase cotData;
+	public class Cot2 : StrategyIndicator {
+		private SuriCot suriCotData;
 		private double min = double.MaxValue;
 		private double max = double.MinValue;
 		private int minIndex;
@@ -26,8 +25,13 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		
 		[XmlIgnore]
 		[Range(1, int.MaxValue)]
-		[Display(Name="Breite der Linien", Order=2, GroupName="Parameter")]
+		[Display(Name="Breite der Hauptlinie", Order=2, GroupName="Parameter")]
 		public int lineWidth
+		{ get; set; }
+		[XmlIgnore]
+		[Range(1, int.MaxValue)]
+		[Display(Name="Breite der sekundären Linien", Order=3, GroupName="Parameter")]
+		public int lineWidthSecondary
 		{ get; set; }
 		
 		#region Colors
@@ -91,30 +95,21 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				longBrush									= Brushes.Green;
 				shortBrush									= Brushes.Red;
 				brush50Percent								= Brushes.DimGray;
-				notReadyBrush								= Brushes.DimGray;
 				regularLineBrush							= Brushes.DarkGray;
-				lineWidth									= 3;
+				notReadyBrush								= Brushes.Transparent;
+				lineWidth									= 4;
+				lineWidthSecondary							= 2;
 				days										= 1000;
-				cotData = CotBase(SuriCotReportField.CommercialShort);
-			} else if (State == State.Configure) {;
-				AddPlot(new Stroke(shortBrush, lineWidth), PlotStyle.Line, "75%");
-				AddPlot(new Stroke(brush50Percent, 1), PlotStyle.Line, "50%");
-				AddPlot(new Stroke(longBrush, lineWidth), PlotStyle.Line, "25%");
+				suriCotData = SuriCot(SuriCotReportField.CommercialShort);
+			} else if (State == State.Configure) {
+				AddPlot(new Stroke(shortBrush, lineWidthSecondary), PlotStyle.Line, "75%");
+				AddPlot(new Stroke(brush50Percent, lineWidthSecondary), PlotStyle.Line, "50%");
+				AddPlot(new Stroke(longBrush, lineWidthSecondary), PlotStyle.Line, "25%");
 				AddPlot(new Stroke(regularLineBrush, lineWidth), PlotStyle.Line, "Com Short");
 			}
 		}
 		public override string DisplayName { get { return SuriStrings.DisplayName(Name, Instrument); } }
 		private double ValueOf(double percent) { return min + percent * (max - min); }
-
-		protected override void OnBarUpdate() {
-			Values[3][0] = cotData.Value[0];
-			SetMinMax();
-			Values[0][0] = ValueOf(0.75);
-			Values[1][0] = ValueOf(0.5);
-			Values[2][0] = ValueOf(0.25);
-			MoveLines();
-			Analyze();
-		}
 		
 		protected override void OnRender(ChartControl chartControl, ChartScale chartScale) {
 			base.OnRender(chartControl, chartScale);
@@ -122,18 +117,28 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			chartScale.Properties.AutoScaleMarginUpper = 30;
 			chartScale.Properties.AutoScaleMarginLower = 30;
 		}
+		
+		protected override void OnBarUpdate() {
+			Values[3][0] = suriCotData.Value[0];
+			SetMinMax();
+			Values[0][0] = ValueOf(0.75);
+			Values[1][0] = ValueOf(0.5);
+			Values[2][0] = ValueOf(0.25);
+			MoveLines();
+			Analyze();
+		}
 
 		private void SetMinMax() {
-			if (min > cotData.Value[0]) { min = cotData.Value[0]; minIndex = CurrentBar; }
-			if (max < cotData.Value[0]) { max = cotData.Value[0]; maxIndex = CurrentBar; }
+			if (min > suriCotData.Value[0]) { min = suriCotData.Value[0]; minIndex = CurrentBar; }
+			if (max < suriCotData.Value[0]) { max = suriCotData.Value[0]; maxIndex = CurrentBar; }
 			
 			if (CurrentBar - maxIndex > days || CurrentBar - minIndex > days) {
 				// the last max or min is too far away. Recalculate.
 				min = double.MaxValue;
 				max = double.MinValue;
 				for (int i = 0; i < days; i++) {
-					if (min > cotData.Value[i]) { min = cotData.Value[i]; minIndex = CurrentBar-i; }
-					if (max < cotData.Value[i]) { max = cotData.Value[i]; maxIndex = CurrentBar-i; }
+					if (min > suriCotData.Value[i]) { min = suriCotData.Value[i]; minIndex = CurrentBar-i; }
+					if (max < suriCotData.Value[i]) { max = suriCotData.Value[i]; maxIndex = CurrentBar-i; }
 				}
 			}
 		}
@@ -175,16 +180,17 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				PlotBrushes[2][0] = notReadyBrush;
 				return;
 			}
-			
 			if (Values[3][0] > Values[0][0]) {
 				PlotBrushes[3][0] = shortBrush;
 			}
 			if (Values[3][0] < Values[2][0]) {
 				PlotBrushes[3][0] = longBrush;
 			}
-			
 		}
 		
+		
+		
+		#region Strategy
 		[XmlIgnore]
 		[Browsable(false)]
 		public override TradePosition tradePosition {
@@ -294,9 +300,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
             }
             return tuple;
         }
-
-        
-        
+        #endregion
 	}
 	public enum SignalVariant { V1, V2, V3, V4 }
 }
@@ -338,19 +342,19 @@ namespace NinjaTrader.NinjaScript.Indicators
 {
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
-		private Suri.Cot22[] cacheCot22;
-		public Suri.Cot22 Cot22(int days)
+		private Suri.Cot2[] cacheCot2;
+		public Suri.Cot2 Cot2(int days)
 		{
-			return Cot22(Input, days);
+			return Cot2(Input, days);
 		}
 
-		public Suri.Cot22 Cot22(ISeries<double> input, int days)
+		public Suri.Cot2 Cot2(ISeries<double> input, int days)
 		{
-			if (cacheCot22 != null)
-				for (int idx = 0; idx < cacheCot22.Length; idx++)
-					if (cacheCot22[idx] != null && cacheCot22[idx].days == days && cacheCot22[idx].EqualsInput(input))
-						return cacheCot22[idx];
-			return CacheIndicator<Suri.Cot22>(new Suri.Cot22(){ days = days }, input, ref cacheCot22);
+			if (cacheCot2 != null)
+				for (int idx = 0; idx < cacheCot2.Length; idx++)
+					if (cacheCot2[idx] != null && cacheCot2[idx].days == days && cacheCot2[idx].EqualsInput(input))
+						return cacheCot2[idx];
+			return CacheIndicator<Suri.Cot2>(new Suri.Cot2(){ days = days }, input, ref cacheCot2);
 		}
 	}
 }
@@ -359,14 +363,14 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.Cot22 Cot22(int days)
+		public Indicators.Suri.Cot2 Cot2(int days)
 		{
-			return indicator.Cot22(Input, days);
+			return indicator.Cot2(Input, days);
 		}
 
-		public Indicators.Suri.Cot22 Cot22(ISeries<double> input , int days)
+		public Indicators.Suri.Cot2 Cot2(ISeries<double> input , int days)
 		{
-			return indicator.Cot22(input, days);
+			return indicator.Cot2(input, days);
 		}
 	}
 }
@@ -375,14 +379,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.Cot22 Cot22(int days)
+		public Indicators.Suri.Cot2 Cot2(int days)
 		{
-			return indicator.Cot22(Input, days);
+			return indicator.Cot2(Input, days);
 		}
 
-		public Indicators.Suri.Cot22 Cot22(ISeries<double> input , int days)
+		public Indicators.Suri.Cot2 Cot2(ISeries<double> input , int days)
 		{
-			return indicator.Cot22(input, days);
+			return indicator.Cot2(input, days);
 		}
 	}
 }

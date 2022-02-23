@@ -5,7 +5,7 @@ using NinjaTrader.Cbi;
 using NinjaTrader.Data;
 using NinjaTrader.Gui.Chart;
 
-namespace NinjaTrader.Gui.NinjaScript.Indicators {
+namespace NinjaTrader.Custom.AddOns.SuriCommon {
 	public class VpIntraData {
 		public List<VpBarData> barData = new List<VpBarData>();
 		public bool isPrepared;

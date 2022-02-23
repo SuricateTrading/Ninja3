@@ -1,16 +1,13 @@
 #region Using declarations
-
-using System;
 using NinjaTrader.Gui.Chart;
 using System.Windows.Media;
 using NinjaTrader.Data;
 using NinjaTrader.Gui;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using System.Globalization;
 using System.Linq;
 using System.Xml.Serialization;
-using NinjaTrader.Gui.NinjaScript.Indicators;
+using NinjaTrader.Custom.AddOns.SuriCommon;
 using NinjaTrader.Gui.Tools;
 using SharpDX;
 #endregion
@@ -27,28 +24,23 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		private SharpDX.Direct2D1.Brush textFill;
 		private SharpDX.DirectWrite.TextFormat textFormat;
 		
-		[Display(Name = "Breite", Order = 0, GroupName = "Parameter", Description = "Wenn leer, dann wird die Breite automatisch berechnet. Ansonsten wird es maximal so breit.")]
+		[Display(Name = "Benutze Tickdaten", Order = 0, GroupName = "Parameter", Description = "Tickdaten dauern länger zu laden, sind aber genauer. 'Tick Replay' muss dafür aktiviert sein.")]
+		public bool useTicks { get; set; }
+		
+		[Display(Name = "Jahre zu laden", Order = 1, GroupName = "Parameter", Description = "Wie viele Jahre an Daten geladen werden sollen.")]
+		public int years { get; set; }
+		
+		[Display(Name = "Breite", Order = 2, GroupName = "Parameter", Description = "Wenn leer, dann wird die Breite automatisch berechnet. Ansonsten wird es maximal so breit wie hier angegeben.")]
 		public int? maxWidth { get; set; }
 		
-		[Display(Name = "Entfernung zur Bar", Order = 0, GroupName = "Parameter", Description = "Wie weit es von der Mitte der Bar entfernt sein soll.")]
-		public int offset { get; set; }
-		
-		[Display(Name = "Zeige Text", Order = 1, GroupName = "Parameter")]
+		[Display(Name = "Zeige Text", Order = 4, GroupName = "Parameter")]
 		public bool drawText { get; set; }
-		[Display(Name = "Zeige 'Naked PoC'", Order = 2, GroupName = "Parameter")]
+		[Display(Name = "Zeige 'Naked PoC'", Order = 5, GroupName = "Parameter")]
 		public bool drawNakedPoc { get; set; }
 		
 		#region Colors
 		[XmlIgnore]
-		[Display(Name = "Value Area", Order = 0, GroupName = "Farben")]
-		public Brush valueAreaBrush { get; set; }
-		[Browsable(false)]
-		public string valueAreaBrushSerialize {
-			get { return Serialize.BrushToString(valueAreaBrush); }
-			set { valueAreaBrush = Serialize.StringToBrush(value); }
-		}
-		[XmlIgnore]
-		[Display(Name = "Normal Area", Order = 1, GroupName = "Farben")]
+		[Display(Name = "Volumen", Order = 1, GroupName = "Farben")]
 		public Brush normalAreaBrush { get; set; }
 		[Browsable(false)]
 		public string normalAreaBrushSerialize {
@@ -74,6 +66,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		#endregion
 		#endregion
 		
+		
 		protected override void OnStateChange() {
 			if (State == State.SetDefaults) {
 				Description									= @"";
@@ -90,39 +83,42 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				IsSuspendedWhileInactive					= true;
 				BarsRequiredToPlot							= 0;
 				ZOrder										= 0;
-				
-				offset										= 0;
+
+				useTicks									= false;
+				years										= 1;
 				maxWidth									= null;
 				drawText									= true;
 				drawNakedPoc								= true;
-				valueAreaBrush								= Brushes.CornflowerBlue.Clone();
-				valueAreaBrush.Opacity						= 0.5;
 				normalAreaBrush								= Brushes.Gray.Clone();
 				normalAreaBrush.Opacity						= 0.5;
 				pocBrush									= Brushes.Orange.Clone();
 				pocBrush.Opacity							= 0.5;
 				textBrush									= Brushes.White;
 			} else if (State == State.Configure) {
-				if (Bars.IsTickReplay) {
-					AddDataSeries(null, new BarsPeriod { BarsPeriodType = BarsPeriodType.Day, Value = 1 }, 255, null, null);
+				if (Bars.IsTickReplay && useTicks) {
+					AddDataSeries(null, new BarsPeriod { BarsPeriodType = BarsPeriodType.Minute, Value = 1440 }, years * 250, null, null);
 				} else {
-					AddDataSeries(null, new BarsPeriod { BarsPeriodType = BarsPeriodType.Minute, Value = 1 }, 150000, Instrument.MasterInstrument.TradingHours.Name, null);
+					AddDataSeries(null, new BarsPeriod { BarsPeriodType = BarsPeriodType.Minute, Value = 1 }, 800000, Instrument.MasterInstrument.TradingHours.Name, null);
 				}
 				prepared = false;
 			}
 		}
+		private bool test;
 
 		protected override void OnBarUpdate() {
-			if (!Bars.IsTickReplay && Bars.BarsPeriod.BarsPeriodType == BarsPeriodType.Minute && Bars.BarsPeriod.Value == 1) {
+			if ((Bars.IsTickReplay==false || useTicks==false) && Bars.BarsPeriod.BarsPeriodType == BarsPeriodType.Minute && Bars.BarsPeriod.Value == 1) {
 				vpBigData.AddMinuteVolume((long) Volumes[1][0], Opens[1][0], Highs[1][0], Lows[1][0], Closes[1][0], TickSize, Print);
 				//Print("OnBarUpdate\t" + Lows[0][0] + "\t" + Highs[0][0] + "\t" + Volumes[0][0] + "\t" + Times[0][0] + "\t" + Bars.BarsPeriod.BarsPeriodType + "\t" + Bars.BarsPeriod.Value);
 				//Print(Times[1][0]);
+				if (!test) {
+					test = true;
+					Print("OnBarUpdate\t" + Time[0] + "\t" + Bars.BarsPeriod.BarsPeriodType);
+				}
 			}
 		}
 
-		private bool test = false;
 		protected override void OnMarketData(MarketDataEventArgs e) {
-			if (Bars.Count > 0 && Bars.IsTickReplay && Bars.BarsPeriod.BarsPeriodType == BarsPeriodType.Day && Bars.BarsPeriod.Value == 1) {
+			if (Bars.Count > 0 && Bars.IsTickReplay && useTicks && Bars.BarsPeriod.BarsPeriodType == BarsPeriodType.Minute && Bars.BarsPeriod.Value == 1440) {
 				if (!test) {
 					test = true;
 					Print("OnMarketData\t" + e.Price + "\t" + e.Volume + "\t" + e.Time + "\t" + Bars.BarsPeriod.BarsPeriodType);
@@ -141,7 +137,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				prepared = true;
 				normalAreaFill = normalAreaBrush.ToDxBrush(RenderTarget);
 				pocFill = pocBrush.ToDxBrush(RenderTarget);
-				vaFill = valueAreaBrush.ToDxBrush(RenderTarget);
 				textFill = textBrush.ToDxBrush(RenderTarget);
 			}
 			

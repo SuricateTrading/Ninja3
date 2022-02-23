@@ -1,17 +1,16 @@
 #region Using declarations
-
 using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Windows.Media;
 using System.Xml.Serialization;
-using NinjaTrader.Custom.SuriCommon;
+using NinjaTrader.Custom.AddOns.SuriCommon;
 using NinjaTrader.Gui;
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
-	public class Mega : Indicator {
-		private Volumen volume;
+	public class SuriMega : Indicator {
+		private SuriVolume volume;
 		private BarRange range;
 		
 		#region Properties
@@ -57,7 +56,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				signalBrush									= Brushes.Yellow;
 				days										= 125;
 			} else if (State == State.Configure) {
-				volume = Volumen(days);
+				volume = SuriVolume(days);
 				range = BarRange(days);
 				AddPlot(new Stroke(barBrush, 2), PlotStyle.Bar, "Mega");
 				AddPlot(new Stroke(barBrush, 0), PlotStyle.Bar, "Range");
@@ -131,19 +130,19 @@ namespace NinjaTrader.NinjaScript.Indicators
 {
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
-		private Suri.Mega[] cacheMega;
-		public Suri.Mega Mega(int days)
+		private Suri.SuriMega[] cacheSuriMega;
+		public Suri.SuriMega SuriMega(int days)
 		{
-			return Mega(Input, days);
+			return SuriMega(Input, days);
 		}
 
-		public Suri.Mega Mega(ISeries<double> input, int days)
+		public Suri.SuriMega SuriMega(ISeries<double> input, int days)
 		{
-			if (cacheMega != null)
-				for (int idx = 0; idx < cacheMega.Length; idx++)
-					if (cacheMega[idx] != null && cacheMega[idx].days == days && cacheMega[idx].EqualsInput(input))
-						return cacheMega[idx];
-			return CacheIndicator<Suri.Mega>(new Suri.Mega(){ days = days }, input, ref cacheMega);
+			if (cacheSuriMega != null)
+				for (int idx = 0; idx < cacheSuriMega.Length; idx++)
+					if (cacheSuriMega[idx] != null && cacheSuriMega[idx].days == days && cacheSuriMega[idx].EqualsInput(input))
+						return cacheSuriMega[idx];
+			return CacheIndicator<Suri.SuriMega>(new Suri.SuriMega(){ days = days }, input, ref cacheSuriMega);
 		}
 	}
 }
@@ -152,14 +151,14 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.Mega Mega(int days)
+		public Indicators.Suri.SuriMega SuriMega(int days)
 		{
-			return indicator.Mega(Input, days);
+			return indicator.SuriMega(Input, days);
 		}
 
-		public Indicators.Suri.Mega Mega(ISeries<double> input , int days)
+		public Indicators.Suri.SuriMega SuriMega(ISeries<double> input , int days)
 		{
-			return indicator.Mega(input, days);
+			return indicator.SuriMega(input, days);
 		}
 	}
 }
@@ -168,14 +167,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.Mega Mega(int days)
+		public Indicators.Suri.SuriMega SuriMega(int days)
 		{
-			return indicator.Mega(Input, days);
+			return indicator.SuriMega(Input, days);
 		}
 
-		public Indicators.Suri.Mega Mega(ISeries<double> input , int days)
+		public Indicators.Suri.SuriMega SuriMega(ISeries<double> input , int days)
 		{
-			return indicator.Mega(input, days);
+			return indicator.SuriMega(input, days);
 		}
 	}
 }

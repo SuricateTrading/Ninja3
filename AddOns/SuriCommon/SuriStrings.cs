@@ -5,7 +5,7 @@ using System.Linq;
 using NinjaTrader.Cbi;
 #endregion
 
-namespace NinjaTrader.Custom.SuriCommon {
+namespace NinjaTrader.Custom.AddOns.SuriCommon {
 	public static class SuriStrings {
 	
 		public static string DisplayName(string prefix, Instrument instrument) {
@@ -47,8 +47,8 @@ namespace NinjaTrader.Custom.SuriCommon {
 		public static readonly Dictionary<Commodity, CommodityData> data = new Dictionary<Commodity, CommodityData> {
 			{Commodity.Gold,		new CommodityData(0,  "GC", "", "Gold")},
 			{Commodity.Silver,		new CommodityData(1,  "SI", "", "Silber")},
-			{Commodity.Platinum,	new CommodityData(2,  "PA", "", "Platin")},
-			{Commodity.Palladium,	new CommodityData(3,  "PL", "", "Palladium")},
+			{Commodity.Platinum,	new CommodityData(2,  "PL", "", "Platin")},
+			{Commodity.Palladium,	new CommodityData(3,  "PA", "", "Palladium")},
 			{Commodity.Copper,		new CommodityData(4,  "HG", "", "Kupfer")},
 
 			{Commodity.CrudeOil,	new CommodityData(7,  "CL", "", "Rohöl")},

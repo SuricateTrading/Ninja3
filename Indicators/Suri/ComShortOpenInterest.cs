@@ -1,6 +1,4 @@
 #region Using declarations
-
-using System;
 using System.ComponentModel;
 using System.Windows.Media;
 using NinjaTrader.Gui;
@@ -11,12 +9,62 @@ using System.Xml.Serialization;
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
 	public class ComShortOpenInterest : Indicator {
-		private CotBase comShort;
-		private CotBase openInterest;
+		private SuriCot comShort;
+		private SuriCot openInterest;
 		
 		private double min = double.MaxValue;
 		private double max = double.MinValue;
+		private int minIndex;
+		private int maxIndex;
 		
+		#region Properties
+		[NinjaScriptProperty]
+		[Display(Name="Zeichne 20 und 80% Linien", Order=0, GroupName="Parameter")]
+		public bool drawLines { get; set; }
+
+		[NinjaScriptProperty]
+		[Range(1, int.MaxValue)]
+		[Display(Name="Tage der 20% und 80% Linien", Order=1, GroupName="Parameter")]
+		public int days { get; set; }
+
+		[XmlIgnore]
+		[Range(1, int.MaxValue)]
+		[Display(Name="Breite der Hauptlinie", Order=2, GroupName="Parameter")]
+		public int lineWidth
+		{ get; set; }
+		[XmlIgnore]
+		[Range(1, int.MaxValue)]
+		[Display(Name="Breite der sekundären Linien", Order=3, GroupName="Parameter")]
+		public int lineWidthSecondary
+		{ get; set; }
+
+		[XmlIgnore]
+		[Display(Name = "Normale Linie", Order = 0, GroupName = "Farben")]
+		public Brush regularLineBrush { get; set; }
+		[Browsable(false)]
+		public string regularLineBrushSerialize {
+			get { return Serialize.BrushToString(regularLineBrush); }
+			set { regularLineBrush = Serialize.StringToBrush(value); }
+		}
+		[XmlIgnore]
+		[Display(Name = "20% Linie", Order = 1, GroupName = "Farben")]
+		public Brush brush20 { get; set; }
+		[Browsable(false)]
+		public string brushSerialize20 {
+			get { return Serialize.BrushToString(brush20); }
+			set { brush20 = Serialize.StringToBrush(value); }
+		}
+		
+		[XmlIgnore]
+		[Display(Name = "80% Linie", Order = 2, GroupName = "Farben")]
+		public Brush brush80 { get; set; }
+		[Browsable(false)]
+		public string brushSerialize80 {
+			get { return Serialize.BrushToString(brush80); }
+			set { brush80 = Serialize.StringToBrush(value); }
+		}
+		#endregion
+
 		protected override void OnStateChange() {
 			if (State == State.SetDefaults) {
 				Description									= @"Commercials Short geteilt durch Open Interest";
@@ -30,71 +78,53 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				PaintPriceMarkers							= true;
 				ScaleJustification							= ScaleJustification.Right;
 				IsSuspendedWhileInactive					= true;
+				BarsRequiredToPlot							= 0;
+				
 				drawLines									= true;
-				brush25										= Brushes.RoyalBlue;
-				brush75										= Brushes.RoyalBlue;
+				brush20										= Brushes.RoyalBlue;
+				brush80										= Brushes.RoyalBlue;
 				regularLineBrush							= Brushes.DarkGray;
 				lineWidth									= 2;
-				comShort									= CotBase(SuriCotReportField.CommercialShort);
-				openInterest								= CotBase(SuriCotReportField.OpenInterest);
+				lineWidthSecondary							= 1;
+				days										= 1000;
+				comShort									= SuriCot(SuriCotReportField.CommercialShort);
+				openInterest								= SuriCot(SuriCotReportField.OpenInterest);
 			} else if (State == State.Configure) {
-				if (drawLines) {
-					AddLine(new Stroke(brush25, Math.Max(lineWidth-2, 1)), 0, "25%");
-					AddLine(new Stroke(brush75, Math.Max(lineWidth-2, 1)), 0, "75%");
-				}
 				AddPlot(new Stroke(regularLineBrush, lineWidth), PlotStyle.Line, "Com Short / OI in %");
+				if (drawLines) {
+					AddPlot(new Stroke(brush20, lineWidthSecondary), PlotStyle.Line, "20%");
+					AddPlot(new Stroke(brush80, lineWidthSecondary), PlotStyle.Line, "80%");
+				}
 			}
 		}
 
 		protected override void OnBarUpdate() {
 			Values[0][0] = 100 * comShort.Value[0] / openInterest.Value[0];
-			if (min > Values[0][0]) min = Values[0][0];
-			if (max < Values[0][0]) max = Values[0][0];
 			if (drawLines) {
-				Lines[0].Value = ValueOf(0.25);
-				Lines[1].Value = ValueOf(0.75);
+				SetMinMax();
+				if (CurrentBar < days) return;
+				Values[1][0] = ValueOf(0.2);
+				Values[2][0] = ValueOf(0.8);
 			}
 		}
 		private double ValueOf(double percent) { return min + percent * (max - min); }
 		
 		
-		#region Properties
-		[NinjaScriptProperty]
-		[Display(Name="Zeichne 25 und 75% Linien", Order=0, GroupName="Parameter")]
-		public bool drawLines { get; set; }
-
-		[XmlIgnore]
-		[Range(1, int.MaxValue)]
-		[Display(Name="Breite der Linien", Order=2, GroupName="Parameter")]
-		public int lineWidth
-		{ get; set; }
-
-		[XmlIgnore]
-		[Display(Name = "Normale Linie", Order = 0, GroupName = "Farben")]
-		public Brush regularLineBrush { get; set; }
-		[Browsable(false)]
-		public string regularLineBrushSerialize {
-			get { return Serialize.BrushToString(regularLineBrush); }
-			set { regularLineBrush = Serialize.StringToBrush(value); }
+		private void SetMinMax() {
+			if (min > Value[0]) { min = Value[0]; minIndex = CurrentBar; }
+			if (max < Value[0]) { max = Value[0]; maxIndex = CurrentBar; }
+			
+			if (CurrentBar < days) return;
+			if (CurrentBar - maxIndex > days || CurrentBar - minIndex > days) {
+				// the last max or min is too far away. Recalculate.
+				min = double.MaxValue;
+				max = double.MinValue;
+				for (int i = 0; i < days; i++) {
+					if (min > Value[i]) { min = Value[i]; minIndex = CurrentBar-i; }
+					if (max < Value[i]) { max = Value[i]; maxIndex = CurrentBar-i; }
+				}
+			}
 		}
-		[XmlIgnore]
-		[Display(Name = "Farbe der 25% Linie", Order = 1, GroupName = "Farben")]
-		public Brush brush25 { get; set; }
-		[Browsable(false)]
-		public string brushSerialize25 {
-			get { return Serialize.BrushToString(brush25); }
-			set { brush25 = Serialize.StringToBrush(value); }
-		}
-		
-		[XmlIgnore]
-		[Display(Name = "Farbe der 75% Linie", Order = 2, GroupName = "Farben")]
-		public Brush brush75 { get; set; }
-		[Browsable(false)]
-		public string brushSerialize75 {
-			get { return Serialize.BrushToString(brush75); }
-			set { brush75 = Serialize.StringToBrush(value); }
-		}
-		#endregion
 		
 	}
 }
@@ -141,18 +171,18 @@ namespace NinjaTrader.NinjaScript.Indicators
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
 		private Suri.ComShortOpenInterest[] cacheComShortOpenInterest;
-		public Suri.ComShortOpenInterest ComShortOpenInterest(bool drawLines)
+		public Suri.ComShortOpenInterest ComShortOpenInterest(bool drawLines, int days)
 		{
-			return ComShortOpenInterest(Input, drawLines);
+			return ComShortOpenInterest(Input, drawLines, days);
 		}
 
-		public Suri.ComShortOpenInterest ComShortOpenInterest(ISeries<double> input, bool drawLines)
+		public Suri.ComShortOpenInterest ComShortOpenInterest(ISeries<double> input, bool drawLines, int days)
 		{
 			if (cacheComShortOpenInterest != null)
 				for (int idx = 0; idx < cacheComShortOpenInterest.Length; idx++)
-					if (cacheComShortOpenInterest[idx] != null && cacheComShortOpenInterest[idx].drawLines == drawLines && cacheComShortOpenInterest[idx].EqualsInput(input))
+					if (cacheComShortOpenInterest[idx] != null && cacheComShortOpenInterest[idx].drawLines == drawLines && cacheComShortOpenInterest[idx].days == days && cacheComShortOpenInterest[idx].EqualsInput(input))
 						return cacheComShortOpenInterest[idx];
-			return CacheIndicator<Suri.ComShortOpenInterest>(new Suri.ComShortOpenInterest(){ drawLines = drawLines }, input, ref cacheComShortOpenInterest);
+			return CacheIndicator<Suri.ComShortOpenInterest>(new Suri.ComShortOpenInterest(){ drawLines = drawLines, days = days }, input, ref cacheComShortOpenInterest);
 		}
 	}
 }
@@ -161,14 +191,14 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.ComShortOpenInterest ComShortOpenInterest(bool drawLines)
+		public Indicators.Suri.ComShortOpenInterest ComShortOpenInterest(bool drawLines, int days)
 		{
-			return indicator.ComShortOpenInterest(Input, drawLines);
+			return indicator.ComShortOpenInterest(Input, drawLines, days);
 		}
 
-		public Indicators.Suri.ComShortOpenInterest ComShortOpenInterest(ISeries<double> input , bool drawLines)
+		public Indicators.Suri.ComShortOpenInterest ComShortOpenInterest(ISeries<double> input , bool drawLines, int days)
 		{
-			return indicator.ComShortOpenInterest(input, drawLines);
+			return indicator.ComShortOpenInterest(input, drawLines, days);
 		}
 	}
 }
@@ -177,14 +207,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.ComShortOpenInterest ComShortOpenInterest(bool drawLines)
+		public Indicators.Suri.ComShortOpenInterest ComShortOpenInterest(bool drawLines, int days)
 		{
-			return indicator.ComShortOpenInterest(Input, drawLines);
+			return indicator.ComShortOpenInterest(Input, drawLines, days);
 		}
 
-		public Indicators.Suri.ComShortOpenInterest ComShortOpenInterest(ISeries<double> input , bool drawLines)
+		public Indicators.Suri.ComShortOpenInterest ComShortOpenInterest(ISeries<double> input , bool drawLines, int days)
 		{
-			return indicator.ComShortOpenInterest(input, drawLines);
+			return indicator.ComShortOpenInterest(input, drawLines, days);
 		}
 	}
 }

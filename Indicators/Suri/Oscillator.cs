@@ -1,6 +1,7 @@
 #region Using declarations
 using System.ComponentModel.DataAnnotations;
 using System.Windows.Media;
+using NinjaTrader.Gui.Chart;
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
@@ -16,7 +17,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				DrawHorizontalGridLines						= true;
 				DrawVerticalGridLines						= true;
 				PaintPriceMarkers							= true;
-				ScaleJustification							= Gui.Chart.ScaleJustification.Right;
+				ScaleJustification							= ScaleJustification.Right;
 				IsSuspendedWhileInactive					= true;
 				Days										= 125;
 				AddPlot(Brushes.Orange, "Oszillator");

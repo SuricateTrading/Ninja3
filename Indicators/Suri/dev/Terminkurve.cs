@@ -1,10 +1,9 @@
 #region Using declarations
 using System.Collections.Generic;
 using System.Windows.Media;
-using NinjaTrader.Custom.SuriCommon;
+using NinjaTrader.Custom.AddOns.SuriCommon;
 using NinjaTrader.Gui;
 using NinjaTrader.Gui.Chart;
-using NinjaTrader.Gui.NinjaScript;
 #endregion
 
 

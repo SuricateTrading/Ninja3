@@ -6,7 +6,7 @@ using System.Text;
 using System.Web.Script.Serialization;
 #endregion
 
-namespace NinjaTrader.Gui.NinjaScript {
+namespace NinjaTrader.Custom.AddOns.SuriCommon {
     public class SuriServer {
 		
         public static List<TkData> GetTkData(int id, string oldDate, string newDate) {
@@ -48,16 +48,16 @@ namespace NinjaTrader.Gui.NinjaScript {
         }
 		
     }
-}
+    public class TkData {
+        public string Date {get; set;}	
+        public int TkState {get; set;}
+        public double Delta {get; set;}
+        public double DeltaPercent {get; set;}
+    }
 
-public class TkData {
-    public string Date {get; set;}	
-    public int TkState {get; set;}
-    public double Delta {get; set;}
-    public double DeltaPercent {get; set;}
-}
+    public class DbCotData {
+        public string Date {get; set;}	
+        public int OpenInterest {get; set;}
+    }
 
-public class DbCotData {
-    public string Date {get; set;}	
-    public int OpenInterest {get; set;}
 }

@@ -7,7 +7,7 @@ using NinjaTrader.Gui.Chart;
 using System.Windows.Controls;
 using System.Windows.Input;
 using NinjaTrader.Cbi;
-using NinjaTrader.Custom.SuriCommon;
+using NinjaTrader.Custom.AddOns.SuriCommon;
 using VerticalAlignment = System.Windows.VerticalAlignment;
 #endregion
 
@@ -18,10 +18,11 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		private TabItem		tabItem;
 		private ChartTab	chartTab;
 		private Grid		menu;
+		private bool		isPanelActive;
 		
 		public override string DisplayName { get { return "Toolbar"; } }
 		protected override void OnBarUpdate() {}
-
+		
 		protected override void OnStateChange() {
 			if (State == State.SetDefaults) {
 				Name								= "Toolbar";
@@ -42,10 +43,10 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			foreach (var indicator in ChartControl.Indicators) {
 				foreach (Type type in types) {
 					if (indicator.GetType() == type) {
-						if (type != typeof(CotBase)) return indicator.IsVisible;
+						if (type != typeof(SuriCot)) return indicator.IsVisible;
 						// for CotBase the report field must match too:
 						foreach (SuriCotReportField field in cotFields) {
-							if (((CotBase)indicator).reportField == field) return indicator.IsVisible;
+							if (((SuriCot)indicator).reportField == field) return indicator.IsVisible;
 						}
 					}
 				}
@@ -58,12 +59,12 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				foreach (var indicator in ChartControl.Indicators) {
 					foreach (Type type in types) {
 						if (indicator.GetType() == type) {
-							if (type != typeof(CotBase)) {
+							if (type != typeof(SuriCot)) {
 								indicator.IsVisible = !indicator.IsVisible;
 								update = true;
 							} else {
 								foreach (SuriCotReportField field in cotFields) {
-									if (((CotBase) indicator).reportField == field) {
+									if (((SuriCot) indicator).reportField == field) {
 										indicator.IsVisible = !indicator.IsVisible;
 										update = true;
 									}
@@ -94,7 +95,8 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				VerticalAlignment = VerticalAlignment.Top,
 				ColumnDefinitions = {
 					new ColumnDefinition(), new ColumnDefinition(), new ColumnDefinition(), new ColumnDefinition(),
-					new ColumnDefinition(), new ColumnDefinition(), new ColumnDefinition(), new ColumnDefinition()
+					new ColumnDefinition(), new ColumnDefinition(), new ColumnDefinition(), new ColumnDefinition(),
+					new ColumnDefinition(),
 				},
 				RowDefinitions = { new RowDefinition() },
 			};
@@ -121,13 +123,13 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 
 		private void InitIndicatorSettings() {
 			AddCheckBox("COT 1", IsIndicatorVisible(new[] {typeof(Cot1)}), 0, 0, (sender, args) => OnCheckBoxClick(new[] {typeof(Cot1)}));
-			AddCheckBox("COT 2", IsIndicatorVisible(new[] {typeof(Cot22)}), 0, 1, (sender, args) => OnCheckBoxClick(new[] {typeof(Cot22)}));
-			AddCheckBox("Comm Netto", IsIndicatorVisible(new[] {typeof(CotBase)}, SuriCotReportField.CommercialNet), 0, 2, (sender, args) => OnCheckBoxClick(new[] {typeof(CotBase)}, SuriCotReportField.CommercialNet));
-			AddCheckBox("SMA", IsIndicatorVisible(new[] {typeof(Sma)}), 0, 3, (sender, args) => OnCheckBoxClick(new[] {typeof(Sma)}));
-			AddCheckBox("Volumen", IsIndicatorVisible(new[] {typeof(Volumen)}), 0, 4, (sender, args) => OnCheckBoxClick(new[] {typeof(Volumen)}));
+			AddCheckBox("COT 2", IsIndicatorVisible(new[] {typeof(Cot2)}), 0, 1, (sender, args) => OnCheckBoxClick(new[] {typeof(Cot2)}));
+			AddCheckBox("Comm Netto", IsIndicatorVisible(new[] {typeof(SuriCot)}, SuriCotReportField.CommercialNet), 0, 2, (sender, args) => OnCheckBoxClick(new[] {typeof(SuriCot)}, SuriCotReportField.CommercialNet));
+			AddCheckBox("SMA", IsIndicatorVisible(new[] {typeof(SuriSma)}), 0, 3, (sender, args) => OnCheckBoxClick(new[] {typeof(SuriSma)}));
+			AddCheckBox("Volumen", IsIndicatorVisible(new[] {typeof(SuriVolume)}), 0, 4, (sender, args) => OnCheckBoxClick(new[] {typeof(SuriVolume)}));
 			AddCheckBox("Preis Range", IsIndicatorVisible(new[] {typeof(BarRange)}), 0, 5, (sender, args) => OnCheckBoxClick(new[] {typeof(BarRange)}));
-			AddCheckBox("Trend Trader", IsIndicatorVisible(new []{typeof(CotBase)}, SuriCotReportField.NoncommercialLong, SuriCotReportField.NoncommercialShort), 0, 6, (sender, args) => OnCheckBoxClick(new []{typeof(ComShortOpenInterest), typeof(CotBase)}, SuriCotReportField.OpenInterest));
-			AddCheckBox("Open Interest", IsIndicatorVisible(new []{typeof(ComShortOpenInterest), typeof(CotBase)}, SuriCotReportField.OpenInterest), 0, 7, (sender, args) => OnCheckBoxClick(new []{typeof(ComShortOpenInterest), typeof(CotBase)}, SuriCotReportField.OpenInterest));
+			AddCheckBox("Trend Trader", IsIndicatorVisible(new []{typeof(SuriCot)}, SuriCotReportField.NoncommercialLong, SuriCotReportField.NoncommercialShort), 0, 6, (sender, args) => OnCheckBoxClick(new []{typeof(SuriCot)}, SuriCotReportField.NoncommercialLong, SuriCotReportField.NoncommercialShort));
+			AddCheckBox("Open Interest", IsIndicatorVisible(new []{typeof(ComShortOpenInterest), typeof(SuriCot)}, SuriCotReportField.OpenInterest), 0, 7, (sender, args) => OnCheckBoxClick(new []{typeof(ComShortOpenInterest), typeof(SuriCot)}, SuriCotReportField.OpenInterest));
 
 			var comList = new ComboBox { Width = 150 };
 			foreach (KeyValuePair<Commodity,CommodityData> entry in SuriStrings.data) {
@@ -166,6 +168,8 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		
 		
 		private void InsertWpfControls() {
+			if (isPanelActive) return;
+			
 			if (chartGrid.RowDefinitions.Count == 0) chartGrid.RowDefinitions.Add(new RowDefinition());
 
 			var tabControlStartRow = Grid.GetRow(chartWindow.MainTabControl);
@@ -181,6 +185,8 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			Grid.SetColumn(menu, Grid.GetColumn(chartWindow.MainTabControl));
 			Grid.SetRow(menu, tabControlStartRow);
 			chartGrid.Children.Add(menu);
+			
+			isPanelActive = true;
 		}
 
 		private void DisposeWpfControls() {
@@ -188,6 +194,8 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			RemoveWpfControls();
 		}
 		private void RemoveWpfControls() {
+			if (!isPanelActive) return;
+			
 			if (menu != null) {
 				chartGrid.RowDefinitions.RemoveAt(Grid.GetRow(menu));
 				chartGrid.Children.Remove(menu);
@@ -197,9 +205,8 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 					Grid.SetRow(chartGrid.Children[i], Grid.GetRow(chartGrid.Children[i]) - 1);
 				}
 			}
+			isPanelActive = false;
 		}
-		
-		
 		
 		private bool TabSelected() {
 			// loop through each tab and see if the tab this indicator is added to is the selected item

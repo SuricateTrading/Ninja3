@@ -1,5 +1,6 @@
 #region Using declarations
 using System;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Xml.Linq;
@@ -11,9 +12,12 @@ using System.Text;
 using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Documents;
+using System.Windows.Forms;
 using System.Windows.Media.Imaging;
 using NinjaTrader.Core;
-using NinjaTrader.Custom.SuriCommon;
+using NinjaTrader.Custom.AddOns.SuriCommon;
+using Application = System.Windows.Application;
+using Button = System.Windows.Controls.Button;
 #endregion
 
 namespace NinjaTrader.Gui.NinjaScript {
@@ -33,16 +37,27 @@ namespace NinjaTrader.Gui.NinjaScript {
 			if (cc == null) return;
 
 			path = Globals.UserDataDir + @"suri\";
-			Directory.CreateDirectory(path);
+			Directory.CreateDirectory(path + @"\downloads");
 			
 			using (WebClient webClient = new WebClient()) {
+				bool isFirstInstall = false;
+				string previouslyDownloadedVersion = "";
+				try {
+					previouslyDownloadedVersion = File.ReadAllText(path + "version.suri");
+				} catch (Exception) {
+					isFirstInstall = true;
+				}
 				webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/version.suri", path + "version.suri");
-				if (!File.Exists(path + "version.suri") || !File.ReadAllText(path + "version.suri").Equals(SuriCommon.version)) {
+				SuriCommon.mostRecentVersion = File.ReadAllText(path + "version.suri");
+				bool versionHasChanged = !previouslyDownloadedVersion.Equals(SuriCommon.mostRecentVersion);
+				
+				if (isFirstInstall || versionHasChanged) {
 					webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/ninjat.jpg", path + "ninjat.jpg");
 					webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/barinfo.png", path + "barinfo.png");
 					webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/rectanglePlus.png", path + "rectanglePlus.png");
 					webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/strikingHigh.png", path + "strikingHigh.png");
 					webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/strikingLow.png", path + "strikingLow.png");
+					webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/ruler.png", path + "ruler.png");
 				}
 				webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/SuriMain.xaml", path + "SuriMain.xaml");
 			}
@@ -78,8 +93,6 @@ namespace NinjaTrader.Gui.NinjaScript {
 		public SuriAddOnWindow() {
 			Caption = "Suricate Trading";
 			Content = LoadXaml();
-			//AllowsTransparency = false; // Used for web browser.
-			// todo: Im Fehlerfall, lade Fehlermeldung.
 		}
 
 		private DependencyObject LoadXaml() {
@@ -92,48 +105,69 @@ namespace NinjaTrader.Gui.NinjaScript {
 		}
 		
 		private void LoadControlEvents(Page page) {
-			Button start = LogicalTreeHelper.FindLogicalNode(page, "Start") as Button;
-			if (start != null) {
-				start.Click += ExportHistoricalData;
-			}
-
 			Image ninjatImage = LogicalTreeHelper.FindLogicalNode(page, "NinjatImage") as Image;
 			if (ninjatImage != null) {
 				ninjatImage.Source = new BitmapImage(new Uri(SuriAddOn.path + "ninjat.jpg", UriKind.Absolute));;
 			}
-				
-			TextBlock suricateTextBlock = LogicalTreeHelper.FindLogicalNode(page, "SuricateTextBlock") as TextBlock;
+			
+			Hyperlink website		= LogicalTreeHelper.FindLogicalNode(page, "website")		as Hyperlink;
+			Hyperlink terminkurven	= LogicalTreeHelper.FindLogicalNode(page, "terminkurven")	as Hyperlink;
+			Hyperlink seasonals		= LogicalTreeHelper.FindLogicalNode(page, "seasonals")	as Hyperlink;
+			Hyperlink contact		= LogicalTreeHelper.FindLogicalNode(page, "contact")		as Hyperlink;
+			if (website			!= null) { website.RequestNavigate		+= (sender, e) => { Process.Start(e.Uri.ToString()); }; }
+			if (terminkurven	!= null) { terminkurven.RequestNavigate	+= (sender, e) => { Process.Start(e.Uri.ToString()); }; }
+			if (seasonals		!= null) { seasonals.RequestNavigate	+= (sender, e) => { Process.Start(e.Uri.ToString()); }; }
+			if (contact			!= null) { contact.RequestNavigate		+= (sender, e) => { Process.Start(e.Uri.ToString()); }; }
+			
+			TextBlock suricateTextBlock = LogicalTreeHelper.FindLogicalNode(page, "Version") as TextBlock;
 			if (suricateTextBlock != null) {
-				suricateTextBlock.Text = "öäü";
+				suricateTextBlock.Text += " " + SuriCommon.version + " \n" + (SuriCommon.isUpToDate
+					? "Du bist auf dem neusten Stand."
+					: "Die neuste Version ist " + SuriCommon.mostRecentVersion);
 			}
 			
-			Hyperlink website = LogicalTreeHelper.FindLogicalNode(page, "website") as Hyperlink;
-			if (website != null) {
-				website.RequestNavigate += (sender, e) => {
-				    System.Diagnostics.Process.Start(e.Uri.ToString());
-				};
-			}
-			Hyperlink terminkurven = LogicalTreeHelper.FindLogicalNode(page, "terminkurven") as Hyperlink;
-			if (terminkurven != null) {
-				terminkurven.RequestNavigate += (sender, e) => {
-				    System.Diagnostics.Process.Start(e.Uri.ToString());
-				};
-			}
-			Hyperlink seasonals = LogicalTreeHelper.FindLogicalNode(page, "seasonals") as Hyperlink;
-			if (seasonals != null) {
-				seasonals.RequestNavigate += (sender, e) => {
-				    System.Diagnostics.Process.Start(e.Uri.ToString());
+			Button downloadTool = LogicalTreeHelper.FindLogicalNode(page, "DownloadTool") as Button;
+			if (downloadTool != null) {
+				downloadTool.Click += (sender, args) => {
+					using (WebClient webClient = new WebClient()) {
+						string fileName = "Suri_plugin_" + SuriCommon.mostRecentVersion + ".zip";
+						webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/" + fileName, SuriAddOn.path + @"downloads\" + fileName);
+					}
+					Process.Start(SuriAddOn.path + @"downloads\");
 				};
 			}
 			
-		}
-		
-		private void ExportHistoricalData(object sender, RoutedEventArgs r) {
-			
-		}
-		
-		
+			Button downloadWorkspace = LogicalTreeHelper.FindLogicalNode(page, "DownloadWorkspace") as Button;
+			if (downloadWorkspace != null) {
+				downloadWorkspace.Click += (sender, args) => {
+					using (WebClient webClient = new WebClient()) {
+						SaveFileDialog saveFileDialog = new SaveFileDialog {
+							Title = @"Workspace speichern",
+							Filter = @"Workspace (*.xml)|*.xml",
+							InitialDirectory = Globals.UserDataDir + @"workspaces\",
+							FileName = "Suri_Workspace.xml",
+						};
+						if (saveFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK) {
+							webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/Suri_Workspace.xml", saveFileDialog.FileName);
+						}
+					}
+				};
+			}
 
+			
+			TextBlock licenseUntil = LogicalTreeHelper.FindLogicalNode(page, "LicenseUntil") as TextBlock;
+			if (licenseUntil != null) {
+				licenseUntil.Text += ""; // todo
+			}
+			Button extendLicense = LogicalTreeHelper.FindLogicalNode(page, "ExtendLicense") as Button;
+			if (extendLicense != null) {
+				extendLicense.Click += (sender, args) => {
+					Process.Start("mailto:tools@suricate-trading.de?subject=Lizenz verlängern"); 
+				};
+			}
+
+		}
+		
 		public void Restore(XDocument document, XElement element) { }
 		public void Save(XDocument document, XElement element) { }
 		public WorkspaceOptions WorkspaceOptions { get; set; }

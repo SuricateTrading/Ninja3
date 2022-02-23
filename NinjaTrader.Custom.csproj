@@ -103,6 +103,13 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AddOns\SuriCommon\IStrategyInterface.cs" />
+    <Compile Include="AddOns\SuriCommon\StrikingCalculator.cs" />
+    <Compile Include="AddOns\SuriCommon\SuriCommon.cs" />
+    <Compile Include="AddOns\SuriCommon\SuriHelper.cs" />
+    <Compile Include="AddOns\SuriCommon\SuriServer.cs" />
+    <Compile Include="AddOns\SuriCommon\SuriStrings.cs" />
+    <Compile Include="AddOns\SuriCommon\VpData.cs" />
     <Compile Include="BarsTypes\%40DayBarsType.cs" />
     <Compile Include="BarsTypes\%40HeikenAshiBarsType.cs" />
     <Compile Include="BarsTypes\%40KagiBarsType.cs" />
@@ -148,6 +155,7 @@
     <Compile Include="DrawingTools\%40TrendChannel.cs" />
     <Compile Include="DrawingTools\BarInfo.cs" />
     <Compile Include="DrawingTools\StrikingSpot.cs" />
+    <Compile Include="DrawingTools\SuriRuler.cs" />
     <Compile Include="ImportTypes\%40TickDataImportType.cs" />
     <Compile Include="Indicators\%40BarTimer.cs" />
     <Compile Include="Indicators\%40Correlation.cs" />
@@ -181,11 +189,11 @@
     <Compile Include="Indicators\Suri\dev\BarInfo.cs" />
     <Compile Include="Indicators\Suri\dev\COTm.cs" />
     <Compile Include="Indicators\Suri\dev\DbCot.cs" />
-    <Compile Include="Indicators\Suri\dev\IStrategyInterface.cs" />
     <Compile Include="Indicators\Suri\dev\SuriTester.cs" />
     <Compile Include="Indicators\Suri\dev\Terminkurve.cs" />
     <Compile Include="Indicators\Suri\dev\TkDelta.cs" />
-    <Compile Include="Indicators\Suri\Mega.cs" />
+    <Compile Include="Indicators\Suri\SuriSettings.cs" />
+    <Compile Include="Indicators\Suri\SuriMega.cs" />
     <Compile Include="Indicators\Suri\SuriDrawingToolTile.cs" />
     <Compile Include="Indicators\Suri\VolumeProfileBig.cs" />
     <Compile Include="Indicators\Suri\VolumeProfileIntraday.cs" />
@@ -406,16 +414,10 @@
     <Compile Include="Indicators\Suri\ChartToolbar.cs" />
     <Compile Include="Indicators\Suri\Cot1.cs" />
     <Compile Include="Indicators\Suri\Cot2.cs" />
-    <Compile Include="Indicators\Suri\CotBase.cs" />
-    <Compile Include="Indicators\Suri\Sma.cs" />
+    <Compile Include="Indicators\Suri\SuriCot.cs" />
+    <Compile Include="Indicators\Suri\SuriSma.cs" />
     <Compile Include="Strategies\SuriStrategy.cs" />
-    <Compile Include="Indicators\Suri\Volumen.cs" />
-    <Compile Include="SuriCommon\StrikingCalculator.cs" />
-    <Compile Include="SuriCommon\SuriCommon.cs" />
-    <Compile Include="SuriCommon\SuriHelper.cs" />
-    <Compile Include="SuriCommon\SuriServer.cs" />
-    <Compile Include="SuriCommon\SuriStrings.cs" />
-    <Compile Include="SuriCommon\VpData.cs" />
+    <Compile Include="Indicators\Suri\SuriVolume.cs" />
     <Compile Include="VendorLicensing.cs" />
     <Compile Include="Indicators\Suri\BarRange.cs" />
     <Compile Include="Strategies\StrategyCOT2.cs" />

@@ -1,16 +1,15 @@
 #region Using declarations
-
 using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Windows.Media;
 using System.Xml.Serialization;
-using NinjaTrader.Custom.SuriCommon;
+using NinjaTrader.Custom.AddOns.SuriCommon;
 using NinjaTrader.Gui;
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
-	public class Sma : Indicator {
+	public class SuriSma : Indicator {
 		private double priorSum;
 		private double sum;
 		
@@ -151,19 +150,19 @@ namespace NinjaTrader.NinjaScript.Indicators
 {
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
-		private Suri.Sma[] cacheSma;
-		public Suri.Sma Sma(int days)
+		private Suri.SuriSma[] cacheSuriSma;
+		public Suri.SuriSma SuriSma(int days)
 		{
-			return Sma(Input, days);
+			return SuriSma(Input, days);
 		}
 
-		public Suri.Sma Sma(ISeries<double> input, int days)
+		public Suri.SuriSma SuriSma(ISeries<double> input, int days)
 		{
-			if (cacheSma != null)
-				for (int idx = 0; idx < cacheSma.Length; idx++)
-					if (cacheSma[idx] != null && cacheSma[idx].days == days && cacheSma[idx].EqualsInput(input))
-						return cacheSma[idx];
-			return CacheIndicator<Suri.Sma>(new Suri.Sma(){ days = days }, input, ref cacheSma);
+			if (cacheSuriSma != null)
+				for (int idx = 0; idx < cacheSuriSma.Length; idx++)
+					if (cacheSuriSma[idx] != null && cacheSuriSma[idx].days == days && cacheSuriSma[idx].EqualsInput(input))
+						return cacheSuriSma[idx];
+			return CacheIndicator<Suri.SuriSma>(new Suri.SuriSma(){ days = days }, input, ref cacheSuriSma);
 		}
 	}
 }
@@ -172,14 +171,14 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.Sma Sma(int days)
+		public Indicators.Suri.SuriSma SuriSma(int days)
 		{
-			return indicator.Sma(Input, days);
+			return indicator.SuriSma(Input, days);
 		}
 
-		public Indicators.Suri.Sma Sma(ISeries<double> input , int days)
+		public Indicators.Suri.SuriSma SuriSma(ISeries<double> input , int days)
 		{
-			return indicator.Sma(input, days);
+			return indicator.SuriSma(input, days);
 		}
 	}
 }
@@ -188,14 +187,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.Sma Sma(int days)
+		public Indicators.Suri.SuriSma SuriSma(int days)
 		{
-			return indicator.Sma(Input, days);
+			return indicator.SuriSma(Input, days);
 		}
 
-		public Indicators.Suri.Sma Sma(ISeries<double> input , int days)
+		public Indicators.Suri.SuriSma SuriSma(ISeries<double> input , int days)
 		{
-			return indicator.Sma(input, days);
+			return indicator.SuriSma(input, days);
 		}
 	}
 }

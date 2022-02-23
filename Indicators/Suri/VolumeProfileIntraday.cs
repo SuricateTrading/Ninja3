@@ -11,8 +11,7 @@ using NinjaTrader.Gui.Tools;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Xml.Serialization;
-using NinjaTrader.Gui.NinjaScript.Indicators;
-
+using NinjaTrader.Custom.AddOns.SuriCommon;
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
