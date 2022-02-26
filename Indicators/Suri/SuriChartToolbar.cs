@@ -12,7 +12,7 @@ using VerticalAlignment = System.Windows.VerticalAlignment;
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
-	public class ChartToolbar : Indicator {
+	public sealed class SuriChartToolbar : Indicator {
 		private Chart		chartWindow;
 		private Grid		chartGrid;
 		private TabItem		tabItem;
@@ -90,7 +90,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			chartWindow = Window.GetWindow(ChartControl.Parent) as Chart;
 			if (chartWindow == null) return;
 			chartGrid = chartWindow.MainTabControl.Parent as Grid;
-			menu = new Grid() {
+			menu = new Grid {
 				HorizontalAlignment = HorizontalAlignment.Left,
 				VerticalAlignment = VerticalAlignment.Top,
 				ColumnDefinitions = {
@@ -122,15 +122,15 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		}
 
 		private void InitIndicatorSettings() {
-			AddCheckBox("COT 1", IsIndicatorVisible(new[] {typeof(Cot1)}), 0, 0, (sender, args) => OnCheckBoxClick(new[] {typeof(Cot1)}));
-			AddCheckBox("COT 2", IsIndicatorVisible(new[] {typeof(Cot2)}), 0, 1, (sender, args) => OnCheckBoxClick(new[] {typeof(Cot2)}));
+			AddCheckBox("COT 1", IsIndicatorVisible(new[] {typeof(SuriCot1)}), 0, 0, (sender, args) => OnCheckBoxClick(new[] {typeof(SuriCot1)}));
+			AddCheckBox("COT 2", IsIndicatorVisible(new[] {typeof(SuriCot2)}), 0, 1, (sender, args) => OnCheckBoxClick(new[] {typeof(SuriCot2)}));
 			AddCheckBox("Comm Netto", IsIndicatorVisible(new[] {typeof(SuriCot)}, SuriCotReportField.CommercialNet), 0, 2, (sender, args) => OnCheckBoxClick(new[] {typeof(SuriCot)}, SuriCotReportField.CommercialNet));
 			AddCheckBox("SMA", IsIndicatorVisible(new[] {typeof(SuriSma)}), 0, 3, (sender, args) => OnCheckBoxClick(new[] {typeof(SuriSma)}));
 			AddCheckBox("Volumen", IsIndicatorVisible(new[] {typeof(SuriVolume)}), 0, 4, (sender, args) => OnCheckBoxClick(new[] {typeof(SuriVolume)}));
-			AddCheckBox("Preis Range", IsIndicatorVisible(new[] {typeof(BarRange)}), 0, 5, (sender, args) => OnCheckBoxClick(new[] {typeof(BarRange)}));
+			AddCheckBox("Preis Range", IsIndicatorVisible(new[] {typeof(SuriBarRange)}), 0, 5, (sender, args) => OnCheckBoxClick(new[] {typeof(SuriBarRange)}));
 			AddCheckBox("Trend Trader", IsIndicatorVisible(new []{typeof(SuriCot)}, SuriCotReportField.NoncommercialLong, SuriCotReportField.NoncommercialShort), 0, 6, (sender, args) => OnCheckBoxClick(new []{typeof(SuriCot)}, SuriCotReportField.NoncommercialLong, SuriCotReportField.NoncommercialShort));
 			AddCheckBox("Open Interest", IsIndicatorVisible(new []{typeof(ComShortOpenInterest), typeof(SuriCot)}, SuriCotReportField.OpenInterest), 0, 7, (sender, args) => OnCheckBoxClick(new []{typeof(ComShortOpenInterest), typeof(SuriCot)}, SuriCotReportField.OpenInterest));
-
+			
 			var comList = new ComboBox { Width = 150 };
 			foreach (KeyValuePair<Commodity,CommodityData> entry in SuriStrings.data) {
 				comList.Items.Add(entry.Value.longName);
@@ -265,19 +265,19 @@ namespace NinjaTrader.NinjaScript.Indicators
 {
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
-		private Suri.ChartToolbar[] cacheChartToolbar;
-		public Suri.ChartToolbar ChartToolbar()
+		private Suri.SuriChartToolbar[] cacheSuriChartToolbar;
+		public Suri.SuriChartToolbar SuriChartToolbar()
 		{
-			return ChartToolbar(Input);
+			return SuriChartToolbar(Input);
 		}
 
-		public Suri.ChartToolbar ChartToolbar(ISeries<double> input)
+		public Suri.SuriChartToolbar SuriChartToolbar(ISeries<double> input)
 		{
-			if (cacheChartToolbar != null)
-				for (int idx = 0; idx < cacheChartToolbar.Length; idx++)
-					if (cacheChartToolbar[idx] != null &&  cacheChartToolbar[idx].EqualsInput(input))
-						return cacheChartToolbar[idx];
-			return CacheIndicator<Suri.ChartToolbar>(new Suri.ChartToolbar(), input, ref cacheChartToolbar);
+			if (cacheSuriChartToolbar != null)
+				for (int idx = 0; idx < cacheSuriChartToolbar.Length; idx++)
+					if (cacheSuriChartToolbar[idx] != null &&  cacheSuriChartToolbar[idx].EqualsInput(input))
+						return cacheSuriChartToolbar[idx];
+			return CacheIndicator<Suri.SuriChartToolbar>(new Suri.SuriChartToolbar(), input, ref cacheSuriChartToolbar);
 		}
 	}
 }
@@ -286,14 +286,14 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.ChartToolbar ChartToolbar()
+		public Indicators.Suri.SuriChartToolbar SuriChartToolbar()
 		{
-			return indicator.ChartToolbar(Input);
+			return indicator.SuriChartToolbar(Input);
 		}
 
-		public Indicators.Suri.ChartToolbar ChartToolbar(ISeries<double> input )
+		public Indicators.Suri.SuriChartToolbar SuriChartToolbar(ISeries<double> input )
 		{
-			return indicator.ChartToolbar(input);
+			return indicator.SuriChartToolbar(input);
 		}
 	}
 }
@@ -302,14 +302,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.ChartToolbar ChartToolbar()
+		public Indicators.Suri.SuriChartToolbar SuriChartToolbar()
 		{
-			return indicator.ChartToolbar(Input);
+			return indicator.SuriChartToolbar(Input);
 		}
 
-		public Indicators.Suri.ChartToolbar ChartToolbar(ISeries<double> input )
+		public Indicators.Suri.SuriChartToolbar SuriChartToolbar(ISeries<double> input )
 		{
-			return indicator.ChartToolbar(input);
+			return indicator.SuriChartToolbar(input);
 		}
 	}
 }

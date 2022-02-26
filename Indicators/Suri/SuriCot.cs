@@ -10,13 +10,16 @@ using NinjaTrader.Core;
 using NinjaTrader.Custom.AddOns.SuriCommon;
 using NinjaTrader.Gui;
 using NinjaTrader.Gui.Chart;
+using NinjaTrader.Gui.NinjaScript;
 using NinjaTrader.NinjaScript;
 using NinjaTrader.NinjaScript.DrawingTools;
 using SharpDX;
+using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
+
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
-	public class SuriCot : Indicator {
+	public sealed class SuriCot : Indicator {
 		private CotReport sCot;
 		private double min = double.MaxValue;
 		private double max = double.MinValue;
@@ -43,6 +46,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 
 		[XmlIgnore]
 		[Range(1, int.MaxValue)]
+		[Browsable(false)]
 		[Display(Name="Tage der 20% und 80% Linien", Order=1, GroupName="Parameter")]
 		public int days { get; set; }
 
@@ -153,6 +157,8 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		}
 
 		protected override void OnBarUpdate() {
+			if (SuriAddOn.license == License.None) return;
+			
 			if (CotData.GetCotReportNames(Instrument.MasterInstrument.Name).Count == 0) {
 				Draw.TextFixed(this, "Error", Custom.Resource.CotDataError, TextPosition.BottomRight);
 				return;

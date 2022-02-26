@@ -6,10 +6,12 @@ using System.Windows.Media;
 using System.Xml.Serialization;
 using NinjaTrader.Custom.AddOns.SuriCommon;
 using NinjaTrader.Gui;
+using NinjaTrader.Gui.NinjaScript;
+using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
-	public class SuriSma : Indicator {
+	public sealed class SuriSma : Indicator {
 		private double priorSum;
 		private double sum;
 		
@@ -39,6 +41,8 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		public override string DisplayName { get { return SuriStrings.DisplayName(Name, Instrument); } }
 		
 		protected override void OnBarUpdate() {
+			if (SuriAddOn.license == License.None) return;
+			
 			if (BarsArray[0].BarsType.IsRemoveLastBarSupported) {
 				if (CurrentBar == 0) {
 					Value[0] = Input[0];
@@ -56,19 +60,18 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				Value[0] = sum / (CurrentBar < days ? CurrentBar + 1 : days);
 			}
 			
-			if (CurrentBar > 0) {
+			if (CurrentBar > 0 && SuriAddOn.license != License.Basic) {
 				if (Value[0] > Value[1]) {
 					PlotBrushes[0][0] = longBrush;
 				} else if (Value[0] < Value[1]) {
 					PlotBrushes[0][0] = shortBrush;
-				} else {
-					 PlotBrushes[0][0] = PlotBrushes[0][1];
 				}
 			}
 		}
 
 		#region Properties
 		[NinjaScriptProperty]
+		[Browsable(false)]
 		[Range(1, int.MaxValue)]
 		[Display(Name="Tage", Order=0, GroupName="Parameter")]
 		public int days

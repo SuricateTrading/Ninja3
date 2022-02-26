@@ -86,6 +86,11 @@
                 </Grid>
             </TabItem>
 
+            <TabItem Header="Manage" Padding="10,5">
+                <StackPanel x:Name="ManageGrid" VerticalAlignment="Top" >
+                </StackPanel>
+            </TabItem>
+
             <TabItem Header="Inhalte" Padding="10,5">
                 <ScrollViewer>
                     <Grid VerticalAlignment="Top">

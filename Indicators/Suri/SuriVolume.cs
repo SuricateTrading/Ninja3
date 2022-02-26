@@ -7,15 +7,19 @@ using System.Xml.Serialization;
 using NinjaTrader.Cbi;
 using NinjaTrader.Custom.AddOns.SuriCommon;
 using NinjaTrader.Gui;
+using NinjaTrader.Gui.NinjaScript;
+using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
+
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
-	public class SuriVolume : Indicator {
+	public sealed class SuriVolume : Indicator {
 		private double max;
 		private int maxIndex;
 		
 		#region Properties
 		[NinjaScriptProperty]
+		[Browsable(false)]
 		[Range(1, int.MaxValue)]
 		[Display(Name = "Tage", Description = "Periode in Bars", GroupName = "Parameter")]
 		public int days { get; set; }
@@ -77,6 +81,8 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
         public bool IsMegaVolume() { return Math.Abs(Values[0][0] - Values[1][0]) < 0.00001; }
 		
 		protected override void OnBarUpdate() {
+			if (SuriAddOn.license == License.None) return;
+			
 			if (Instrument.MasterInstrument.InstrumentType == InstrumentType.CryptoCurrency) {
 				Values[0][0] = Core.Globals.ToCryptocurrencyVolume((long)Volume[0]);
 			} else {
@@ -99,9 +105,8 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				}
 			}
 			Values[1][0] = max;
-			if(IsMegaVolume()) PlotBrushes[0][0] = signalBrush;
+			if (SuriAddOn.license != License.Basic && IsMegaVolume()) PlotBrushes[0][0] = signalBrush;
 		}
-		
 	}
 }
 

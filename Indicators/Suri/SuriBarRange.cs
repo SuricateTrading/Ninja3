@@ -10,7 +10,7 @@ using NinjaTrader.Gui.Chart;
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
-	public class BarRange : Indicator {
+	public sealed class SuriBarRange : Indicator {
 		private double max;
 		private int maxIndex;
 		
@@ -69,6 +69,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		
 		#region Properties
 		[NinjaScriptProperty]
+		[Browsable(false)]
 		[Range(1, int.MaxValue)]
 		[Display(Name = "Tage", Description = "Periode in Bars", GroupName = "Parameter")]
 		public int days { get; set; }
@@ -141,19 +142,19 @@ namespace NinjaTrader.NinjaScript.Indicators
 {
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
-		private Suri.BarRange[] cacheBarRange;
-		public Suri.BarRange BarRange(int days)
+		private Suri.SuriBarRange[] cacheSuriBarRange;
+		public Suri.SuriBarRange SuriBarRange(int days)
 		{
-			return BarRange(Input, days);
+			return SuriBarRange(Input, days);
 		}
 
-		public Suri.BarRange BarRange(ISeries<double> input, int days)
+		public Suri.SuriBarRange SuriBarRange(ISeries<double> input, int days)
 		{
-			if (cacheBarRange != null)
-				for (int idx = 0; idx < cacheBarRange.Length; idx++)
-					if (cacheBarRange[idx] != null && cacheBarRange[idx].days == days && cacheBarRange[idx].EqualsInput(input))
-						return cacheBarRange[idx];
-			return CacheIndicator<Suri.BarRange>(new Suri.BarRange(){ days = days }, input, ref cacheBarRange);
+			if (cacheSuriBarRange != null)
+				for (int idx = 0; idx < cacheSuriBarRange.Length; idx++)
+					if (cacheSuriBarRange[idx] != null && cacheSuriBarRange[idx].days == days && cacheSuriBarRange[idx].EqualsInput(input))
+						return cacheSuriBarRange[idx];
+			return CacheIndicator<Suri.SuriBarRange>(new Suri.SuriBarRange(){ days = days }, input, ref cacheSuriBarRange);
 		}
 	}
 }
@@ -162,14 +163,14 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.BarRange BarRange(int days)
+		public Indicators.Suri.SuriBarRange SuriBarRange(int days)
 		{
-			return indicator.BarRange(Input, days);
+			return indicator.SuriBarRange(Input, days);
 		}
 
-		public Indicators.Suri.BarRange BarRange(ISeries<double> input , int days)
+		public Indicators.Suri.SuriBarRange SuriBarRange(ISeries<double> input , int days)
 		{
-			return indicator.BarRange(input, days);
+			return indicator.SuriBarRange(input, days);
 		}
 	}
 }
@@ -178,14 +179,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.BarRange BarRange(int days)
+		public Indicators.Suri.SuriBarRange SuriBarRange(int days)
 		{
-			return indicator.BarRange(Input, days);
+			return indicator.SuriBarRange(Input, days);
 		}
 
-		public Indicators.Suri.BarRange BarRange(ISeries<double> input , int days)
+		public Indicators.Suri.SuriBarRange SuriBarRange(ISeries<double> input , int days)
 		{
-			return indicator.BarRange(input, days);
+			return indicator.SuriBarRange(input, days);
 		}
 	}
 }

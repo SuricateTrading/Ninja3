@@ -175,7 +175,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 		BitcoinMicro,
 	};
 
-	public class CommodityData {
+	public sealed class CommodityData {
 		public readonly int id;
 		public readonly string shortName;
 		public readonly string suriShortName;

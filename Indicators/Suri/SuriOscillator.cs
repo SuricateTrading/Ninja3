@@ -1,11 +1,16 @@
 #region Using declarations
+
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Windows.Media;
 using NinjaTrader.Gui.Chart;
+using NinjaTrader.Gui.NinjaScript;
+using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
+
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
-	public class Oscillator : Indicator {
+	public sealed class SuriOscillator : Indicator {
 		protected override void OnStateChange() {
 			if (State == State.SetDefaults) {
 				Description									= @"";
@@ -25,7 +30,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		}
 		
 		protected override void OnBarUpdate() {
-			if (CurrentBar < Days) return;
+			if (CurrentBar < Days || SuriAddOn.license == License.None) return;
 			
 			double min = double.MaxValue;
 			double max = double.MinValue;
@@ -39,6 +44,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 
 		#region Properties
 		[NinjaScriptProperty]
+		[Browsable(false)]
 		[Range(1, int.MaxValue)]
 		[Display(Name="Tage", Order=1, GroupName="Parameter")]
 		public int Days
@@ -78,19 +84,19 @@ namespace NinjaTrader.NinjaScript.Indicators
 {
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
-		private Suri.Oscillator[] cacheOscillator;
-		public Suri.Oscillator Oscillator(int days)
+		private Suri.SuriOscillator[] cacheSuriOscillator;
+		public Suri.SuriOscillator SuriOscillator(int days)
 		{
-			return Oscillator(Input, days);
+			return SuriOscillator(Input, days);
 		}
 
-		public Suri.Oscillator Oscillator(ISeries<double> input, int days)
+		public Suri.SuriOscillator SuriOscillator(ISeries<double> input, int days)
 		{
-			if (cacheOscillator != null)
-				for (int idx = 0; idx < cacheOscillator.Length; idx++)
-					if (cacheOscillator[idx] != null && cacheOscillator[idx].Days == days && cacheOscillator[idx].EqualsInput(input))
-						return cacheOscillator[idx];
-			return CacheIndicator<Suri.Oscillator>(new Suri.Oscillator(){ Days = days }, input, ref cacheOscillator);
+			if (cacheSuriOscillator != null)
+				for (int idx = 0; idx < cacheSuriOscillator.Length; idx++)
+					if (cacheSuriOscillator[idx] != null && cacheSuriOscillator[idx].Days == days && cacheSuriOscillator[idx].EqualsInput(input))
+						return cacheSuriOscillator[idx];
+			return CacheIndicator<Suri.SuriOscillator>(new Suri.SuriOscillator(){ Days = days }, input, ref cacheSuriOscillator);
 		}
 	}
 }
@@ -99,14 +105,14 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.Oscillator Oscillator(int days)
+		public Indicators.Suri.SuriOscillator SuriOscillator(int days)
 		{
-			return indicator.Oscillator(Input, days);
+			return indicator.SuriOscillator(Input, days);
 		}
 
-		public Indicators.Suri.Oscillator Oscillator(ISeries<double> input , int days)
+		public Indicators.Suri.SuriOscillator SuriOscillator(ISeries<double> input , int days)
 		{
-			return indicator.Oscillator(input, days);
+			return indicator.SuriOscillator(input, days);
 		}
 	}
 }
@@ -115,14 +121,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.Oscillator Oscillator(int days)
+		public Indicators.Suri.SuriOscillator SuriOscillator(int days)
 		{
-			return indicator.Oscillator(Input, days);
+			return indicator.SuriOscillator(Input, days);
 		}
 
-		public Indicators.Suri.Oscillator Oscillator(ISeries<double> input , int days)
+		public Indicators.Suri.SuriOscillator SuriOscillator(ISeries<double> input , int days)
 		{
-			return indicator.Oscillator(input, days);
+			return indicator.SuriOscillator(input, days);
 		}
 	}
 }

@@ -28,7 +28,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 	[CategoryOrder(typeof(Custom.Resource), "NinjaScriptDrawingTools", 4)]
 	[CategoryOrder(typeof(Custom.Resource), "NinjaScriptIndicatorVisualGroup", 5)]
 	[CategoryExpanded(typeof(Custom.Resource), "NinjaScriptDrawingTools", false)]
-	public class SuriDrawingToolTile : Indicator
+	public sealed class SuriDrawingToolTile : Indicator
 	{
 		private		Border		b;
 		private		Grid		grid;
@@ -350,7 +350,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		#endregion
 	}
 
-	public class DrawingToolPropertyDescriptor : PropertyDescriptor
+	public sealed class DrawingToolPropertyDescriptor : PropertyDescriptor
 	{
 		private readonly string		displayName;
 		private readonly string		name;
@@ -412,7 +412,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		}
 	}
 
-	public class DrawingToolIndicatorTypeConverter : TypeConverter
+	public sealed class DrawingToolIndicatorTypeConverter : TypeConverter
 	{
 		public override bool GetPropertiesSupported(ITypeDescriptorContext context) { return true; }
 

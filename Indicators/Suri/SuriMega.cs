@@ -6,19 +6,23 @@ using System.Windows.Media;
 using System.Xml.Serialization;
 using NinjaTrader.Custom.AddOns.SuriCommon;
 using NinjaTrader.Gui;
+using NinjaTrader.Gui.NinjaScript;
+using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
+
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
-	public class SuriMega : Indicator {
+	public sealed class SuriMega : Indicator {
 		private SuriVolume volume;
-		private BarRange range;
+		private SuriBarRange range;
 		
 		#region Properties
 		[NinjaScriptProperty]
+		[Browsable(false)]
 		[Range(1, int.MaxValue)]
 		[Display(Name="Tage", Order=0, GroupName="Parameter")]
-		public int days
-		{ get; set; }
+		public int days { get; set; }
+		
 		[XmlIgnore]
 		[Display(Name = "Bar Farbe", Order = 1, GroupName = "Parameter")]
 		public Brush barBrush { get; set; }
@@ -57,7 +61,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				days										= 125;
 			} else if (State == State.Configure) {
 				volume = SuriVolume(days);
-				range = BarRange(days);
+				range = SuriBarRange(days);
 				AddPlot(new Stroke(barBrush, 2), PlotStyle.Bar, "Mega");
 				AddPlot(new Stroke(barBrush, 0), PlotStyle.Bar, "Range");
 				AddPlot(new Stroke(barBrush, 0), PlotStyle.Bar, "Volumen");
@@ -71,10 +75,13 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		public override string DisplayName { get { return SuriStrings.DisplayName(Name, Instrument); } }
 		
 		protected override void OnBarUpdate() {
+			if (SuriAddOn.license == License.None) return;
+			
 			Values[1][0] = 100 * range.Values[0][0] / range.Values[1][0];
 			Values[2][0] = 100 * volume.Values[0][0] / volume.Values[1][0];
 			Value[0] = Math.Max(Values[1][0], Values[2][0]);
-			if(Value[0] > 99.99) PlotBrushes[0][0] = signalBrush;
+			
+			if(SuriAddOn.license != License.Basic && Value[0] > 99.99) PlotBrushes[0][0] = signalBrush;
 		}
 		
 	}

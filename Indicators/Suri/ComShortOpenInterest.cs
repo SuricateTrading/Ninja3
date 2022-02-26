@@ -5,10 +5,13 @@ using NinjaTrader.Gui;
 using NinjaTrader.Gui.Chart;
 using System.ComponentModel.DataAnnotations;
 using System.Xml.Serialization;
+using NinjaTrader.Gui.NinjaScript;
+using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
+
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
-	public class ComShortOpenInterest : Indicator {
+	public sealed class ComShortOpenInterest : Indicator {
 		private SuriCot comShort;
 		private SuriCot openInterest;
 		
@@ -23,6 +26,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		public bool drawLines { get; set; }
 
 		[NinjaScriptProperty]
+		[Browsable(false)]
 		[Range(1, int.MaxValue)]
 		[Display(Name="Tage der 20% und 80% Linien", Order=1, GroupName="Parameter")]
 		public int days { get; set; }
@@ -67,8 +71,8 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 
 		protected override void OnStateChange() {
 			if (State == State.SetDefaults) {
-				Description									= @"Commercials Short geteilt durch Open Interest";
-				Name										= "Com Short / OI";
+				Description									= @"Commercials Short geteilt durch Open Interest in Prozent";
+				Name										= "ComShort / OI";
 				Calculate									= Calculate.OnBarClose;
 				IsOverlay									= false;
 				DisplayInDataBox							= true;
@@ -99,6 +103,8 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		}
 
 		protected override void OnBarUpdate() {
+			if (SuriAddOn.license == License.None) return;
+			
 			Values[0][0] = 100 * comShort.Value[0] / openInterest.Value[0];
 			if (drawLines) {
 				SetMinMax();
