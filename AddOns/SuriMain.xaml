@@ -13,7 +13,7 @@
                     </Grid.ColumnDefinitions>
                     <StackPanel Grid.ColumnSpan="2" Margin="0,0,0.334,0.333">
                         <Image x:Name="NinjatImage" Height="270" Width="270" VerticalAlignment="Top" Margin="10" />
-                        <TextBlock TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Foreground="LightGray" FontSize="16" Margin="10,0" >
+                        <!--TextBlock TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Foreground="LightGray" FontSize="16" Margin="10,0" >
                             Hallo Trader<LineBreak/>
                             Es gibt Neuigkeiten:<LineBreak/>
                             <BulletDecorator  Margin="0,15,0,0" VerticalAlignment="Center">
@@ -24,7 +24,6 @@
                                     Sensationale Weltneuheit: die erste Version des Suri Tools ist erschienen!
                                 </TextBlock>
                             </BulletDecorator>
-                            <LineBreak/>
                             <BulletDecorator  Margin="0,5,0,0" VerticalAlignment="Center">
                                 <BulletDecorator.Bullet>
                                     <Ellipse Height="5" Width="5" Fill="#FF0096FF"/>
@@ -33,7 +32,7 @@
                                     Wir haben ein neues Video hochgeladen ...
                                 </TextBlock>
                             </BulletDecorator>
-                        </TextBlock>
+                        </TextBlock-->
                         <TextBlock TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Foreground="LightGray" FontSize="16" Margin="10,50,10,5" >
                             Termine
                             <LineBreak/>
@@ -86,10 +85,10 @@
                 </Grid>
             </TabItem>
 
-            <TabItem Header="Manage" Padding="10,5">
+            <!--TabItem Header="Manage" Padding="10,5">
                 <StackPanel x:Name="ManageGrid" VerticalAlignment="Top" >
                 </StackPanel>
-            </TabItem>
+            </TabItem-->
 
             <TabItem Header="Inhalte" Padding="10,5">
                 <ScrollViewer>
@@ -138,10 +137,7 @@
                             </Border>
                             <Border Grid.Column="1" Grid.Row="0" BorderBrush="#FF0096FF" BorderThickness="0.5">
                                 <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Margin="10">
-                                Der CoT 1 Indikator zeigt einen Oszillator von den Commercials Netto Daten.<LineBreak/>
-                                Als Periode ist standardmäßig 125 Tage eingestellt.<LineBreak/>
-                                Der Indikator ist grün bei einem Long Signal und rot bei einem Short Signal.<LineBreak/>
-                                Eine gelbe Farbe bedeutet, dass der SMA nicht gepasst hat.
+                                    Der CoT 1 Indikator nach Regelwerk.
                                 </TextBlock>
                             </Border>
                             <Border Grid.Column="0" Grid.Row="1" BorderBrush="#FF0096FF" BorderThickness="0.5">
@@ -151,9 +147,7 @@
                             </Border>
                             <Border Grid.Column="1" Grid.Row="1" BorderBrush="#FF0096FF" BorderThickness="0.5">
                                 <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Margin="10">
-                                Der CoT 2 Indikator zeigt die Commercials Short Daten mit den 75% (rot) und 25% (grün) Linien. Die Linie bleibt grau, solange noch nicht genügend Daten berechnet wurden.<LineBreak/>
-                                Solange die CoT Daten oberhalb der 75% oder unterhalb der 25 Linie ist, wird die Farbe entsprechend rot oder grün gezeichnet.<LineBreak/>
-                                Die 75% und 25% Linien sind automatisch verschoben.
+                                    Der CoT 2 Indikator nach Regelwerk.
                                 </TextBlock>
                             </Border>
                             <Border Grid.Column="0" Grid.Row="2" BorderBrush="#FF0096FF" BorderThickness="0.5">
@@ -183,7 +177,7 @@
                             </Border>
                             <Border Grid.Column="1" Grid.Row="4" BorderBrush="#FF0096FF" BorderThickness="0.5">
                                 <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Margin="10">
-                                Der Oszillator, der normalerweise für CoT 1 benutzt wird. Du kannst hiermit auch einen Oszillator für andere CoT-Daten einstellen.
+                                    Ein Oszillator, der einen Wert in Bezug zu den letzten 125 Bars berechnet.
                                 </TextBlock>
                             </Border>
                             <Border Grid.Column="0" Grid.Row="5" BorderBrush="#FF0096FF" BorderThickness="0.5">
@@ -193,7 +187,7 @@
                             </Border>
                             <Border Grid.Column="1" Grid.Row="5" BorderBrush="#FF0096FF" BorderThickness="0.5">
                                 <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Margin="10">
-                                Zeigt das Commercials Short geteilt durch das Open Interest in Prozent.
+                                    Der Anteil der Commercials Short am Open Interest.
                                 </TextBlock>
                             </Border>
                             <Border Grid.Column="0" Grid.Row="6" BorderBrush="#FF0096FF" BorderThickness="0.5">
@@ -238,9 +232,7 @@
                             </Border>
                             <Border Grid.Column="1" Grid.Row="9" BorderBrush="#FF0096FF" BorderThickness="0.5">
                                 <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Margin="10">
-                                    VP Gross kann entweder mit Minuten- oder Tickdaten geladen werden.<LineBreak/>
-                                    Tickdaten sind exakt und spiegeln die Vergangenheit 1 zu 1 wider. Allerdings brauchen Tickdaten teils lange zu laden.<LineBreak/>
-                                    Minutendaten sind wesentlich schneller geladen. Die Genauigkeit ist geringer, aber meistens vollkommen ausreichend.
+                                    
                                 </TextBlock>
                             </Border>
                             <Border Grid.Column="0" Grid.Row="10" BorderBrush="#FF0096FF" BorderThickness="0.5">
@@ -312,16 +304,6 @@
                                     Zeichnet Informationen zu einer einzelnen Bar an, wie die Anzahl an Ticks der Bar, des Körpers oder der Dochte.
                                 </TextBlock>
                             </Border>
-                            <Border Grid.Column="0" Grid.Row="2" BorderBrush="#FF0096FF" BorderThickness="0.5">
-                                <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Center">
-                                    Letztes markantes Hoch / Tief
-                                </TextBlock>
-                            </Border>
-                            <Border Grid.Column="1" Grid.Row="2" BorderBrush="#FF0096FF" BorderThickness="0.5">
-                                <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Margin="10">
-                                    Zeigt das letzte markante Hoch oder Tief an.
-                                </TextBlock>
-                            </Border>
                         </Grid>
 
 
@@ -347,34 +329,6 @@
                                 <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Margin="10">
                                     Für unser Regelwerk spielen Gaps eine wichtige Rolle. Für uns gehört das Gap zu einer Bar dazu.<LineBreak/>
                                     Mit diesem Chart Style kannst Du Dir das Gap zu einer Bar anzeigen lassen.
-                                </TextBlock>
-                            </Border>
-                        </Grid>
-
-
-                        <Border Grid.Column="0" Grid.Row="3" BorderBrush="#FF0096FF" BorderThickness="0.5">
-                            <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Center">
-                                Strategien
-                            </TextBlock>
-                        </Border>
-                        <Grid Grid.Column="1" Grid.Row="3" VerticalAlignment="Top">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="14*" />
-                                <ColumnDefinition Width="50*" />
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-                            <Border Grid.Column="0" Grid.Row="0" BorderBrush="#FF0096FF" BorderThickness="0.5">
-                                <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Center">
-                                    Suri Strategie
-                                </TextBlock>
-                            </Border>
-                            <Border Grid.Column="1" Grid.Row="0" BorderBrush="#FF0096FF" BorderThickness="0.5">
-                                <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Margin="10">
-                                    In NinjaTrader bezeichnet man als "Strategie" eine Funktion, die selbstständig tradet. 
-                                    Die Suri Strategie tradet mit historischen Daten, nicht in Echtzeit und nicht mit Echtgeld. 
-                                    Sie zeigt an, wo man in den Markt ein- und ausgestiegen wäre und was der Gewinn oder Verlust war.
                                 </TextBlock>
                             </Border>
                         </Grid>
@@ -406,10 +360,10 @@
                             Du musst NinjaTrader neu starten um das Workspace benutzen zu können.
                         </TextBlock>
                         
-                        <TextBlock x:Name="LicenseUntil" TextAlignment="Center" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" VerticalAlignment="Top" Foreground="LightGray" FontSize="16" Margin="20,70,20,0">
+                        <!--TextBlock x:Name="LicenseUntil" TextAlignment="Center" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" VerticalAlignment="Top" Foreground="LightGray" FontSize="16" Margin="20,70,20,0">
                             Deine Lizenz läuft bis zum
                         </TextBlock>
-                        <Button x:Name="ExtendLicense" Content="Lizenz verlängern" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,5" Padding="10" BorderBrush="#FF0B76C4" />
+                        <Button x:Name="ExtendLicense" Content="Lizenz verlängern" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,5" Padding="10" BorderBrush="#FF0B76C4" /-->
                     </StackPanel>
                     <TextBlock TextAlignment="Center" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" VerticalAlignment="Bottom" Foreground="LightGray" FontSize="16" Margin="20,50,20,20">
                         Falls Du eine Frage oder Verbesserungswünsche hast, schreibe uns bitte eine Mail an<LineBreak/>

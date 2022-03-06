@@ -231,7 +231,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		}
 
 	}
-	
 }
 
 

@@ -64,7 +64,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		        }
 	        }
 	        Values[1][0] = max;
-	        if(IsMegaRange()) PlotBrushes[0][0] = Brushes.Yellow;
+	        if(IsMegaRange()) PlotBrushes[0][0] = signalBrush;
         }
 		
 		#region Properties

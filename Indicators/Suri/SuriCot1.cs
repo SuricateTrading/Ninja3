@@ -11,6 +11,8 @@ using NinjaTrader.Gui.Chart;
 using NinjaTrader.Gui.NinjaScript;
 using NinjaTrader.NinjaScript.DrawingTools;
 using NinjaTrader.NinjaScript.Indicators.Suri;
+using NinjaTrader.NinjaScript.Indicators.Suri.dev;
+using SharpDX;
 using Brush = System.Windows.Media.Brush;
 using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
 
@@ -150,15 +152,29 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
         }
         
         protected override void OnRender(ChartControl chartControl, ChartScale chartScale) {
+	        /*Print(IsInHitTest + " " + IsSelected);
+	        if (IsInHitTest && IsSelected) return;*/
 	        base.OnRender(chartControl, chartScale);
+	        //if (IsInHitTest && !IsSelected) return;
+	        
 	        chartScale.Properties.AutoScaleMarginType = AutoScaleMarginType.Percent;
 	        chartScale.Properties.AutoScaleMarginUpper = 30;
 	        chartScale.Properties.AutoScaleMarginLower = 30;
+	        
+	        /*RectangleF rect = new RectangleF {
+		        X = 0,
+		        Y = ChartPanel.Y,
+		        Width = 10000f,
+		        Height = 10000f,
+	        };
+	        Brush b = Brushes.Black.Clone();
+	        b.Opacity = 0.1;
+	        RenderTarget.FillRectangle(rect, b.ToDxBrush(RenderTarget));*/
         }
         
         #endregion
 
-        private bool hasStarted = false;
+        private bool hasStarted;
 		protected override void OnBarUpdate() {
 			if (SuriAddOn.license == License.None) return;
 			

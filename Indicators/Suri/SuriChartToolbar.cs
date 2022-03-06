@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows;
 using NinjaTrader.Gui.Chart;
 using System.Windows.Controls;
@@ -26,7 +27,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		protected override void OnStateChange() {
 			if (State == State.SetDefaults) {
 				Name								= "Toolbar";
-				Description							= @"Zeigt eine Toolbar an, mit der Indikatoren ein- und ausgeschaltet werden können.";
+				Description							= "Zeigt eine Toolbar an, mit der Indikatoren ein- und ausgeschaltet werden können.";
 				Calculate							= Calculate.OnBarClose;
 				IsOverlay							= true;
 				DisplayInDataBox					= false;
@@ -109,10 +110,10 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 
 
 		private void AddCheckBox(string name, bool? visible, int x, int y, RoutedEventHandler onClick) {
+			if (visible == null) return;
 			CheckBox checkBox = new CheckBox() {
 				Content = name,
-				IsChecked = visible ?? false,
-				IsEnabled = visible != null,
+				IsChecked = visible,
 				Margin = new Thickness(0, 0, 15, 0),
 			};
 			checkBox.Click += onClick;
@@ -131,14 +132,15 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			AddCheckBox("Trend Trader", IsIndicatorVisible(new []{typeof(SuriCot)}, SuriCotReportField.NoncommercialLong, SuriCotReportField.NoncommercialShort), 0, 6, (sender, args) => OnCheckBoxClick(new []{typeof(SuriCot)}, SuriCotReportField.NoncommercialLong, SuriCotReportField.NoncommercialShort));
 			AddCheckBox("Open Interest", IsIndicatorVisible(new []{typeof(ComShortOpenInterest), typeof(SuriCot)}, SuriCotReportField.OpenInterest), 0, 7, (sender, args) => OnCheckBoxClick(new []{typeof(ComShortOpenInterest), typeof(SuriCot)}, SuriCotReportField.OpenInterest));
 			
-			var comList = new ComboBox { Width = 150 };
+			var comList = new ComboBox { Width = 180, };
 			foreach (KeyValuePair<Commodity,CommodityData> entry in SuriStrings.data) {
-				comList.Items.Add(entry.Value.longName);
+				comList.Items.Add(entry.Value.shortName + "\t" + entry.Value.longName);
 			}
-
+			
 			Commodity? currentComm = SuriStrings.GetComm(Instrument.MasterInstrument.Name);
 			if (currentComm != null) {
-				comList.SelectedItem = SuriStrings.data[currentComm.Value].longName;
+				var c = SuriStrings.data[currentComm.Value];
+				comList.SelectedItem = c.shortName + "\t" + c.longName;
 			}
 			
 			comList.SelectionChanged += (sender, args) => {
@@ -146,8 +148,8 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				ChartControl.OwnerChart.Focus();
 
 				string change = ((ComboBox) sender).SelectedItem as string;
-				string shortName = SuriStrings.LongNameToShortName(change);
-				if (shortName == null) return;
+				if (change == null) return;
+				string shortName = Regex.Replace(change, "\t.*", "");
 			
 				Instrument ins = Instrument.All.Where(x => x.MasterInstrument.Name == shortName && x.MasterInstrument.InstrumentType == InstrumentType.Future && x.Expiry.Date > DateTime.Now)
 					.OrderBy(o => o.Expiry.Date).First();

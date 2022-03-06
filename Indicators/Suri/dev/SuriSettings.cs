@@ -9,7 +9,7 @@ using SharpDX.Direct2D1;
 using Brush = SharpDX.Direct2D1.Brush;
 #endregion
 
-namespace NinjaTrader.NinjaScript.Indicators.Suri {
+namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 	public class SuriSettings : Indicator {
 		private Brush backgroundBrush;
 		private bool isPrepared;

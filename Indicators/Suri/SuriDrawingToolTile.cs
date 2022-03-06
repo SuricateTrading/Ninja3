@@ -77,7 +77,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 					typeof(HorizontalLine), typeof(VerticalLine), 
 					typeof(Rectangle), typeof(Text), typeof(Ruler),
 					typeof(RectangleS), typeof(RectangleBarInfo),
-					typeof(StrikingHighRectangle), typeof(StrikingLowRectangle),
+					//typeof(StrikingHighRectangle), typeof(StrikingLowRectangle),
 				})
 				{
 					XElement	el				= new XElement(type.FullName);

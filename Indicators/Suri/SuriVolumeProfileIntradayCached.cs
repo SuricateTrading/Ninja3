@@ -10,7 +10,10 @@ using NinjaTrader.Gui;
 using NinjaTrader.Gui.Tools;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.IO;
 using System.Xml.Serialization;
+using NinjaTrader.Cbi;
+using NinjaTrader.Core;
 using NinjaTrader.Custom.AddOns.SuriCommon;
 using NinjaTrader.Gui.NinjaScript;
 using Brush = System.Windows.Media.Brush;
@@ -18,9 +21,10 @@ using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
-	public sealed class SuriVolumeProfileIntraday : Indicator {
+	public sealed class SuriVolumeProfileIntradayCached : Indicator {
 		private readonly VpIntraData vpIntraData = new VpIntraData();
-		private int? lastBar;
+		private static readonly string dbPath = Globals.UserDataDir + @"db\suri\";
+		private bool ready;
 		
 		#region Properties
 		private bool prepared;
@@ -95,7 +99,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		protected override void OnStateChange() {
 			if (State == State.SetDefaults) {
 				Description									= @"";
-				Name										= "Volume Profile - Intraday";
+				Name										= "Volume Profile - Intraday Cached";
 				Calculate									= Calculate.OnBarClose;
 				IsOverlay									= true;
 				DisplayInDataBox							= true;
@@ -124,20 +128,50 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				textFormat					= font.ToDirectWriteTextFormat();
 				textFormat.TextAlignment	= SharpDX.DirectWrite.TextAlignment.Leading;
 				textFormat.WordWrapping		= SharpDX.DirectWrite.WordWrapping.NoWrap;
+				ready = false;
+			} else if (State == State.DataLoaded) {
+				Load();
 			}
 		}
 
-		protected override void OnMarketData(MarketDataEventArgs e) {
-			if (SuriAddOn.license == License.None || Bars.Count <= 0 || !Bars.IsTickReplay) return;
-			if (lastBar != CurrentBar) {
-				lastBar = CurrentBar;
-				vpIntraData.barData.Add(new VpBarData(TickSize, e.Time));
+		private void Load() {
+			ready = false;
+			try {
+				string[] lines = File.ReadAllLines(dbPath + @"\" + Instrument.MasterInstrument.Name + ".vpintra");
+
+				DateTime firstBarDate = ChartBars.Bars.GetTime(0).Date;
+				int startIndex = -1;
+				for (int i = 0; i < lines.Length; i++) {
+					string line = lines[i];
+					if (line.IsNullOrEmpty()) continue;
+					DateTime date = DateTime.Parse(line.Substring(0, 10)).Date;
+					if (startIndex == -1) {
+						if (date != firstBarDate) continue;
+						startIndex = i;
+					}
+
+					int index = i - startIndex;
+					if (index < 0) break;
+					double low  = ChartBars.Bars.GetLow (index);
+					vpIntraData.barData.Add(new VpBarData(TickSize, date.Date));
+					string[] tabs = line.Split('\t');
+					for (int j = 1; j < tabs.Length; j++) {
+						if (tabs[j].IsNullOrEmpty()) continue;
+						vpIntraData.barData.Last().AddCached(low + TickSize * (j-1), long.Parse(tabs[j]));
+					}
+					vpIntraData.barData.Last().Prepare();
+					if (i-startIndex+1 >= ChartBars.Bars.Count) break;
+				}
+				vpIntraData.Prepare();
+				ready = true;
+			} catch (Exception e) {
+				Print(e);
 			}
-			vpIntraData.barData.Last().AddTick(e);
 		}
 
+		
 		protected override void OnRender(ChartControl chartControl, ChartScale chartScale) {
-			if (SuriAddOn.license == License.None || Bars == null || Bars.Instrument == null || IsInHitTest || !Bars.IsTickReplay) {
+			if (!ready || SuriAddOn.license == License.None || Bars == null || Bars.Instrument == null || IsInHitTest) {
 				return;
 			}
 			if (!vpIntraData.isPrepared) vpIntraData.Prepare();
@@ -170,32 +204,33 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 					rect.Height = (float) height;
 
 					SharpDX.Direct2D1.Brush b;
-					/*if (entry.Value.isLvn)				b = testing1Fill;
+					if (entry.Value.isLvn)				b = testing1Fill;
 					else if (entry.Value.isHigh)		b = testing2Fill;
-					else */if (entry.Value.isMainPoc)		b = pocFill;
+					else if (entry.Value.isMainPoc)		b = pocFill;
 					else if (entry.Value.isInValueArea)	b = vaFill;
 					else								b = normalAreaFill;
 					RenderTarget.FillRectangle(rect, b);
 
-					/*if (entry.Value.isLvn) {
+					if (entry.Value.isLvn) {
 						RenderTarget.DrawLine(
 							new Vector2(rect.X + rect.Width + 10 + 100, rect.Y + rect.Height/2.0f),
 							new Vector2(rect.X + rect.Width + 10 + 200, rect.Y + rect.Height/2.0f),
 							testing1Fill, 1.5f
 						);
-					}*/
+					}
 
-					/*if (previousDistVolWidth != null) {
-						
-						float distVolWidth = (float) ((maxWidth ?? barWidth) * entry.Value.distributedVolume / vpIntraData.barData[idx].pocVolume);
+					// Draw SMA
+					float distVolWidth = (float) ((maxWidth ?? barWidth) * entry.Value.distributedVolume / vpIntraData.barData[idx].pocVolume);
+					Print(entry.Value.distributedVolume + "\t\t" + entry.Value.volume);
+					if (previousDistVolWidth != null) {
 						RenderTarget.DrawLine(
 							new Vector2(rect.X + previousDistVolWidth.Value, rect.Y + rect.Height + rect.Height / 2f),
 							new Vector2(rect.X + distVolWidth, rect.Y + rect.Height / 2f),
 							smaFill
 						);
 					}
-					previousDistVolWidth = (float) ((maxWidth ?? barWidth) * entry.Value.distributedVolume / vpIntraData.barData[idx].pocVolume);
-					*/
+					previousDistVolWidth = distVolWidth;
+					
 					
 					if (drawNakedPoc && entry.Value.isNakedPoc) {
 						float pocX1 = rect.X + rect.Width + 10;
@@ -207,7 +242,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 								pocFill, 1.5f
 							);
 							string vpocText = "< VPOC";
-							textLayout  = new SharpDX.DirectWrite.TextLayout(Core.Globals.DirectWriteFactory, vpocText, textFormat, 250, textFormat.FontSize);
+							textLayout  = new SharpDX.DirectWrite.TextLayout(Globals.DirectWriteFactory, vpocText, textFormat, 250, textFormat.FontSize);
 							RenderTarget.DrawTextLayout(
 								new Vector2(ChartPanel.W - 190, rect.Y + rect.Height/2.0f - textSize + 2f),
 								textLayout, pocFill, SharpDX.Direct2D1.DrawTextOptions.NoSnap
@@ -223,7 +258,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 					                "Ticks " + (vpIntraData.barData[idx].tickData.Count - 1) + "\n" +
 					                "VA " + vpIntraData.barData[idx].vaPercentage + "%"
 					;
-					textLayout  = new SharpDX.DirectWrite.TextLayout(Core.Globals.DirectWriteFactory, str, textFormat, 250, textFormat.FontSize);
+					textLayout  = new SharpDX.DirectWrite.TextLayout(Globals.DirectWriteFactory, str, textFormat, 250, textFormat.FontSize);
 					y = chartScale.GetYByValue(ChartBars.Bars.GetLow(idx)) + 10f;
 					RenderTarget.DrawTextLayout(new Vector2(rect.X, (float) y + rect.Height/2.0f), textLayout, textFill, SharpDX.Direct2D1.DrawTextOptions.NoSnap);
 				}
@@ -263,19 +298,19 @@ namespace NinjaTrader.NinjaScript.Indicators
 {
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
-		private Suri.SuriVolumeProfileIntraday[] cacheSuriVolumeProfileIntraday;
-		public Suri.SuriVolumeProfileIntraday SuriVolumeProfileIntraday()
+		private Suri.SuriVolumeProfileIntradayCached[] cacheSuriVolumeProfileIntradayCached;
+		public Suri.SuriVolumeProfileIntradayCached SuriVolumeProfileIntradayCached()
 		{
-			return SuriVolumeProfileIntraday(Input);
+			return SuriVolumeProfileIntradayCached(Input);
 		}
 
-		public Suri.SuriVolumeProfileIntraday SuriVolumeProfileIntraday(ISeries<double> input)
+		public Suri.SuriVolumeProfileIntradayCached SuriVolumeProfileIntradayCached(ISeries<double> input)
 		{
-			if (cacheSuriVolumeProfileIntraday != null)
-				for (int idx = 0; idx < cacheSuriVolumeProfileIntraday.Length; idx++)
-					if (cacheSuriVolumeProfileIntraday[idx] != null &&  cacheSuriVolumeProfileIntraday[idx].EqualsInput(input))
-						return cacheSuriVolumeProfileIntraday[idx];
-			return CacheIndicator<Suri.SuriVolumeProfileIntraday>(new Suri.SuriVolumeProfileIntraday(), input, ref cacheSuriVolumeProfileIntraday);
+			if (cacheSuriVolumeProfileIntradayCached != null)
+				for (int idx = 0; idx < cacheSuriVolumeProfileIntradayCached.Length; idx++)
+					if (cacheSuriVolumeProfileIntradayCached[idx] != null &&  cacheSuriVolumeProfileIntradayCached[idx].EqualsInput(input))
+						return cacheSuriVolumeProfileIntradayCached[idx];
+			return CacheIndicator<Suri.SuriVolumeProfileIntradayCached>(new Suri.SuriVolumeProfileIntradayCached(), input, ref cacheSuriVolumeProfileIntradayCached);
 		}
 	}
 }
@@ -284,14 +319,14 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.SuriVolumeProfileIntraday SuriVolumeProfileIntraday()
+		public Indicators.Suri.SuriVolumeProfileIntradayCached SuriVolumeProfileIntradayCached()
 		{
-			return indicator.SuriVolumeProfileIntraday(Input);
+			return indicator.SuriVolumeProfileIntradayCached(Input);
 		}
 
-		public Indicators.Suri.SuriVolumeProfileIntraday SuriVolumeProfileIntraday(ISeries<double> input )
+		public Indicators.Suri.SuriVolumeProfileIntradayCached SuriVolumeProfileIntradayCached(ISeries<double> input )
 		{
-			return indicator.SuriVolumeProfileIntraday(input);
+			return indicator.SuriVolumeProfileIntradayCached(input);
 		}
 	}
 }
@@ -300,14 +335,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.SuriVolumeProfileIntraday SuriVolumeProfileIntraday()
+		public Indicators.Suri.SuriVolumeProfileIntradayCached SuriVolumeProfileIntradayCached()
 		{
-			return indicator.SuriVolumeProfileIntraday(Input);
+			return indicator.SuriVolumeProfileIntradayCached(Input);
 		}
 
-		public Indicators.Suri.SuriVolumeProfileIntraday SuriVolumeProfileIntraday(ISeries<double> input )
+		public Indicators.Suri.SuriVolumeProfileIntradayCached SuriVolumeProfileIntradayCached(ISeries<double> input )
 		{
-			return indicator.SuriVolumeProfileIntraday(input);
+			return indicator.SuriVolumeProfileIntradayCached(input);
 		}
 	}
 }

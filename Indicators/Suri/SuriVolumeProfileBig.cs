@@ -48,11 +48,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		[Display(Name = "Breite", Order = 2, GroupName = "Parameter", Description = "Wenn leer, dann wird die Breite automatisch berechnet. Ansonsten werden die VP-Bars maximal so breit wie hier angegeben.")]
 		public int? maxWidth { get; set; }
 		
-		[Display(Name = "Zeige Text", Order = 4, GroupName = "Parameter")]
-		public bool drawText { get; set; }
-		[Display(Name = "Zeige 'Naked PoC'", Order = 5, GroupName = "Parameter")]
-		public bool drawNakedPoc { get; set; }
-		
 		#region Colors
 		[XmlIgnore]
 		[Display(Name = "Volumen", Order = 1, GroupName = "Farben")]
@@ -99,11 +94,9 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				ZOrder										= 0;
 
 				useTicks									= false;
-				dateFrom									= DateTime.Now.AddYears(-10);
+				dateFrom									= DateTime.Now.AddYears(-20);
 				dateTo										= DateTime.Now.AddDays(-1);
 				maxWidth									= null;
-				drawText									= true;
-				drawNakedPoc								= true;
 				normalAreaBrush								= Brushes.Gray.Clone();
 				normalAreaBrush.Opacity						= 0.5;
 				pocBrush									= Brushes.Red.Clone();
@@ -190,13 +183,15 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 					rect.Width = (float) ((maxWidth ?? ChartPanel.W * 0.5) * tickData.volume / vpBigData.pocVolume);
 					rect.Y += rect.Height;
 					
+					RenderTarget.FillRectangle(rect, tickData.isMainPoc ? pocFill : normalAreaFill);
 					if (rect.Height > 13) {
 						SharpDX.DirectWrite.TextLayout textLayout = new SharpDX.DirectWrite.TextLayout(Core.Globals.DirectWriteFactory, tickData.volume.ToString("F0"), textFormat, 250, textFormat.FontSize);
 						RenderTarget.DrawTextLayout(new Vector2(0, rect.Y), textLayout, textFill, SharpDX.Direct2D1.DrawTextOptions.NoSnap);
 					}
-					RenderTarget.FillRectangle(rect, tickData.isMainPoc ? pocFill : normalAreaFill);
 				}
 			}
+			
+			
 		}
 	}
 }

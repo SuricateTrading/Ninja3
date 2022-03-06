@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using NinjaTrader.Cbi;
 using NinjaTrader.Data;
-using NinjaTrader.Gui.Chart;
 
 namespace NinjaTrader.Custom.AddOns.SuriCommon {
 	public sealed class VpIntraData {
-		public List<VpBarData> barData = new List<VpBarData>();
+		public readonly List<VpBarData> barData = new List<VpBarData>();
 		public bool isPrepared;
 
 		public void Prepare() {
@@ -99,6 +97,21 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 				tickData[price].volume += volumePerTick;
 				totalVolume += volumePerTick;
 			}
+		}
+
+		public void AddCached(double price, long volume) {
+			isPrepared = false;
+			
+			int tick = PriceToTick(price);
+			
+			if (!tickData.ContainsKey(tick)) {
+				tickData.Add(tick, new VpTickData(tick));
+			}
+			tickData[tick].volume += volume;
+			totalVolume += volume;
+			
+			if (tick > high) high = tick;
+			if (tick < low)  low  = tick;
 		}
 
 		private void CalculateVaueArea(bool checkPairs = false) {
@@ -251,13 +264,13 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 				if (tick.Value.volume * 1.1 > pocVolume) tick.Value.isSubPoc = true;
 			}
 
-			//SetLvns();
+			SetLvns();
 		}
 
-		/*
+		
 		private void SetLvns(int start = 0) {
-			int? high1, high2, low1;
 			for (int i = start; i < tickData.Count; i++) {
+				int? high1, high2, low1;
 				high1 = GetHigh(i);
 				if (high1 == null) return;
 
@@ -345,11 +358,17 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			}
 			return value / count;
 		}
-		*/
+		
 	}
 
 	public sealed class VpBigData : SingleVp { public VpBigData(double tickSize) : base(tickSize) {} }
-	public sealed class VpBarData : SingleVp { public VpBarData(double tickSize) : base(tickSize) {} }
+
+	public sealed class VpBarData : SingleVp {
+		public DateTime dateTime;
+		public VpBarData(double tickSize, DateTime dateTime) : base(tickSize) {
+			this.dateTime = dateTime;
+		}
+	}
 	
 	public sealed class VpTickData {
 		public int tick;
