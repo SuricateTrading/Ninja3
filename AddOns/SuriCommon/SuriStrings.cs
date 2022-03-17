@@ -47,8 +47,8 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 		public static readonly Dictionary<Commodity, CommodityData> data = new Dictionary<Commodity, CommodityData> {
 			{Commodity.Gold,		new CommodityData(0,  "GC", "", "Gold")},
 			{Commodity.Silver,		new CommodityData(1,  "SI", "", "Silber")},
-			{Commodity.Platinum,	new CommodityData(2,  "PL", "", "Platin")},
-			{Commodity.Palladium,	new CommodityData(3,  "PA", "", "Palladium")},
+			{Commodity.Palladium,	new CommodityData(2,  "PA", "", "Palladium")},
+			{Commodity.Platinum,	new CommodityData(3,  "PL", "", "Platin")},
 			{Commodity.Copper,		new CommodityData(4,  "HG", "", "Kupfer")},
 
 			{Commodity.CrudeOil,	new CommodityData(7,  "CL", "", "Rohöl")},

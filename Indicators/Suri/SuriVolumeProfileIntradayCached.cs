@@ -5,14 +5,12 @@ using System.Linq;
 using NinjaTrader.Gui.Chart;
 using SharpDX;
 using System.Windows.Media;
-using NinjaTrader.Data;
 using NinjaTrader.Gui;
 using NinjaTrader.Gui.Tools;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Xml.Serialization;
-using NinjaTrader.Cbi;
 using NinjaTrader.Core;
 using NinjaTrader.Custom.AddOns.SuriCommon;
 using NinjaTrader.Gui.NinjaScript;
@@ -20,7 +18,7 @@ using Brush = System.Windows.Media.Brush;
 using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
 #endregion
 
-namespace NinjaTrader.NinjaScript.Indicators.Suri {
+namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 	public sealed class SuriVolumeProfileIntradayCached : Indicator {
 		private readonly VpIntraData vpIntraData = new VpIntraData();
 		private static readonly string dbPath = Globals.UserDataDir + @"db\suri\";
@@ -124,11 +122,11 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				smaBrush									= Brushes.Yellow;
 			} else if (State == State.Configure) {
 				prepared = false;
+				ready = false;
 				SimpleFont font = new SimpleFont { Size = textSize };
 				textFormat					= font.ToDirectWriteTextFormat();
 				textFormat.TextAlignment	= SharpDX.DirectWrite.TextAlignment.Leading;
 				textFormat.WordWrapping		= SharpDX.DirectWrite.WordWrapping.NoWrap;
-				ready = false;
 			} else if (State == State.DataLoaded) {
 				Load();
 			}
@@ -159,7 +157,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 						if (tabs[j].IsNullOrEmpty()) continue;
 						vpIntraData.barData.Last().AddCached(low + TickSize * (j-1), long.Parse(tabs[j]));
 					}
-					vpIntraData.barData.Last().Prepare();
 					if (i-startIndex+1 >= ChartBars.Bars.Count) break;
 				}
 				vpIntraData.Prepare();
@@ -174,7 +171,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			if (!ready || SuriAddOn.license == License.None || Bars == null || Bars.Instrument == null || IsInHitTest) {
 				return;
 			}
-			if (!vpIntraData.isPrepared) vpIntraData.Prepare();
 			if (!prepared) {
 				prepared = true;
 				normalAreaFill = normalAreaBrush.ToDxBrush(RenderTarget);
@@ -221,7 +217,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 
 					// Draw SMA
 					float distVolWidth = (float) ((maxWidth ?? barWidth) * entry.Value.distributedVolume / vpIntraData.barData[idx].pocVolume);
-					Print(entry.Value.distributedVolume + "\t\t" + entry.Value.volume);
 					if (previousDistVolWidth != null) {
 						RenderTarget.DrawLine(
 							new Vector2(rect.X + previousDistVolWidth.Value, rect.Y + rect.Height + rect.Height / 2f),
@@ -298,19 +293,19 @@ namespace NinjaTrader.NinjaScript.Indicators
 {
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
-		private Suri.SuriVolumeProfileIntradayCached[] cacheSuriVolumeProfileIntradayCached;
-		public Suri.SuriVolumeProfileIntradayCached SuriVolumeProfileIntradayCached()
+		private Suri.dev.SuriVolumeProfileIntradayCached[] cacheSuriVolumeProfileIntradayCached;
+		public Suri.dev.SuriVolumeProfileIntradayCached SuriVolumeProfileIntradayCached()
 		{
 			return SuriVolumeProfileIntradayCached(Input);
 		}
 
-		public Suri.SuriVolumeProfileIntradayCached SuriVolumeProfileIntradayCached(ISeries<double> input)
+		public Suri.dev.SuriVolumeProfileIntradayCached SuriVolumeProfileIntradayCached(ISeries<double> input)
 		{
 			if (cacheSuriVolumeProfileIntradayCached != null)
 				for (int idx = 0; idx < cacheSuriVolumeProfileIntradayCached.Length; idx++)
 					if (cacheSuriVolumeProfileIntradayCached[idx] != null &&  cacheSuriVolumeProfileIntradayCached[idx].EqualsInput(input))
 						return cacheSuriVolumeProfileIntradayCached[idx];
-			return CacheIndicator<Suri.SuriVolumeProfileIntradayCached>(new Suri.SuriVolumeProfileIntradayCached(), input, ref cacheSuriVolumeProfileIntradayCached);
+			return CacheIndicator<Suri.dev.SuriVolumeProfileIntradayCached>(new Suri.dev.SuriVolumeProfileIntradayCached(), input, ref cacheSuriVolumeProfileIntradayCached);
 		}
 	}
 }
@@ -319,12 +314,12 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.SuriVolumeProfileIntradayCached SuriVolumeProfileIntradayCached()
+		public Indicators.Suri.dev.SuriVolumeProfileIntradayCached SuriVolumeProfileIntradayCached()
 		{
 			return indicator.SuriVolumeProfileIntradayCached(Input);
 		}
 
-		public Indicators.Suri.SuriVolumeProfileIntradayCached SuriVolumeProfileIntradayCached(ISeries<double> input )
+		public Indicators.Suri.dev.SuriVolumeProfileIntradayCached SuriVolumeProfileIntradayCached(ISeries<double> input )
 		{
 			return indicator.SuriVolumeProfileIntradayCached(input);
 		}
@@ -335,12 +330,12 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.SuriVolumeProfileIntradayCached SuriVolumeProfileIntradayCached()
+		public Indicators.Suri.dev.SuriVolumeProfileIntradayCached SuriVolumeProfileIntradayCached()
 		{
 			return indicator.SuriVolumeProfileIntradayCached(Input);
 		}
 
-		public Indicators.Suri.SuriVolumeProfileIntradayCached SuriVolumeProfileIntradayCached(ISeries<double> input )
+		public Indicators.Suri.dev.SuriVolumeProfileIntradayCached SuriVolumeProfileIntradayCached(ISeries<double> input )
 		{
 			return indicator.SuriVolumeProfileIntradayCached(input);
 		}

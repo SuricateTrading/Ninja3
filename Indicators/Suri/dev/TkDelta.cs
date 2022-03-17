@@ -8,7 +8,7 @@ using NinjaTrader.Gui.Chart;
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 	public class TkDelta : Indicator {
-		private List<TkData> tkDeltaData;
+		private List<TkData> tkData;
 		private int nextIndex;
 		
 		protected override void OnStateChange() {
@@ -22,37 +22,35 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 				DrawHorizontalGridLines						= true;
 				DrawVerticalGridLines						= true;
 				PaintPriceMarkers							= true;
-				BarsRequiredToPlot							= 0;
 				ScaleJustification							= ScaleJustification.Right;
 				IsSuspendedWhileInactive					= true;
+				BarsRequiredToPlot							= 0;
 				AddPlot(new Stroke(Brushes.DarkGray, 3), PlotStyle.Line, "TK Delta");
 			} else if (State == State.DataLoaded) {
 				int? id = SuriStrings.GetId(Instrument);
 				if (id != null) {
-					string oldDate = From.Date.ToString("yyyy-MM-dd");
-					string newDate = To.Date.ToString("yyyy-MM-dd");
-					tkDeltaData = SuriServer.GetTkData(id.Value, oldDate, newDate);
+					string oldDate = From.AddDays(-5).Date.ToString("yyyy-MM-dd");
+					string newDate = To  .AddDays( 5).Date.ToString("yyyy-MM-dd");
+					tkData = SuriServer.GetTkData(id.Value, oldDate, newDate);
 				}
 			}
 		}
 		
 		protected override void OnBarUpdate() {
-			if (tkDeltaData == null) return;
+			if (tkData == null) return;
 			
-			string now = Time[0].Date.ToString("yyyy-MM-dd");
-			for (int i = nextIndex; i < tkDeltaData.Count; i++) {
-				if (tkDeltaData[i].Date.Equals(now)) {
-					Value[0] = tkDeltaData[i].Delta;
+			for (int i = nextIndex; i < tkData.Count; i++) {
+				if (tkData[i].Date.Date.Equals(Time[0].Date)) {
+					Value[0] = tkData[i].Delta;
 					nextIndex = i;
+					return;
+				}
+				if (tkData[i].Date.Date > Time[0].Date) {
+					Value[0] = Value[1];
 					return;
 				}
 			}
 		}
-/*
-		public override void OnCalculateMinMax() {
-			MinValue = 0;
-			MaxValue = 100;
-		}*/
 
 	}
 }

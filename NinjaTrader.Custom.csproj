@@ -183,6 +183,7 @@
     <Compile Include="Indicators\Suri\dev\Terminkurve.cs" />
     <Compile Include="Indicators\Suri\dev\TickExtractor.cs" />
     <Compile Include="Indicators\Suri\dev\TkDelta.cs" />
+    <Compile Include="Indicators\Suri\dev\Wasde.cs" />
     <Compile Include="Indicators\Suri\SuriMega.cs" />
     <Compile Include="Indicators\Suri\SuriDrawingToolTile.cs" />
     <Compile Include="Indicators\Suri\SuriVolumeProfileBig.cs" />

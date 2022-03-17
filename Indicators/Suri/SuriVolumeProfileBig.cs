@@ -38,12 +38,12 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		public int years { get; set; }*/
 		
 		[NinjaScriptProperty]
-		[Display(Name = "Von", Order = 0, GroupName = "Parameter", Description = "Von wann an Daten geladen werden sollen.")]
-		public DateTime dateFrom { get; set; }
-		
+		[Display(Name = "Von", Order = 0, GroupName = "Parameter", Description = "Von wann an Daten geladen werden sollen. Wenn leer, dann lade ab vor 20 Jahren.")]
+		public DateTime? dateFrom { get; set; }
+
 		[NinjaScriptProperty]
-		[Display(Name = "Bis", Order = 1, GroupName = "Parameter", Description = "Bis wann Daten geladen werden sollen.")]
-		public DateTime dateTo { get; set; }
+		[Display(Name = "Bis", Order = 1, GroupName = "Parameter", Description = "Bis wann Daten geladen werden sollen. Wenn leer, dann bis heute.")]
+		public DateTime? dateTo { get; set; }
 		
 		[Display(Name = "Breite", Order = 2, GroupName = "Parameter", Description = "Wenn leer, dann wird die Breite automatisch berechnet. Ansonsten werden die VP-Bars maximal so breit wie hier angegeben.")]
 		public int? maxWidth { get; set; }
@@ -94,9 +94,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				ZOrder										= 0;
 
 				useTicks									= false;
-				dateFrom									= DateTime.Now.AddYears(-20);
-				dateTo										= DateTime.Now.AddDays(-1);
-				maxWidth									= null;
 				normalAreaBrush								= Brushes.Gray.Clone();
 				normalAreaBrush.Opacity						= 0.5;
 				pocBrush									= Brushes.Red.Clone();
@@ -107,7 +104,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				if (Bars.IsTickReplay && useTicks) {
 					//AddDataSeries(null, new BarsPeriod { BarsPeriodType = BarsPeriodType.Minute, Value = 1440 }, years * 250, null, null);
 				} else {
-					BarsRequest barsReq = new BarsRequest(Instrument, dateFrom, dateTo) {
+					BarsRequest barsReq = new BarsRequest(Instrument, dateFrom ?? DateTime.Now.AddYears(-20).Date, dateTo ?? DateTime.Now.AddDays(-1).Date) {
 						MergePolicy		= MergePolicy.MergeBackAdjusted,
 						BarsPeriod		= new BarsPeriod { BarsPeriodType = BarsPeriodType.Minute, Value = 1 },
 						TradingHours	= TradingHours,
@@ -238,12 +235,12 @@ namespace NinjaTrader.NinjaScript.Indicators
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
 		private Suri.SuriVolumeProfileBig[] cacheSuriVolumeProfileBig;
-		public Suri.SuriVolumeProfileBig SuriVolumeProfileBig(DateTime dateFrom, DateTime dateTo)
+		public Suri.SuriVolumeProfileBig SuriVolumeProfileBig(DateTime? dateFrom, DateTime? dateTo)
 		{
 			return SuriVolumeProfileBig(Input, dateFrom, dateTo);
 		}
 
-		public Suri.SuriVolumeProfileBig SuriVolumeProfileBig(ISeries<double> input, DateTime dateFrom, DateTime dateTo)
+		public Suri.SuriVolumeProfileBig SuriVolumeProfileBig(ISeries<double> input, DateTime? dateFrom, DateTime? dateTo)
 		{
 			if (cacheSuriVolumeProfileBig != null)
 				for (int idx = 0; idx < cacheSuriVolumeProfileBig.Length; idx++)
@@ -258,12 +255,12 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.SuriVolumeProfileBig SuriVolumeProfileBig(DateTime dateFrom, DateTime dateTo)
+		public Indicators.Suri.SuriVolumeProfileBig SuriVolumeProfileBig(DateTime? dateFrom, DateTime? dateTo)
 		{
 			return indicator.SuriVolumeProfileBig(Input, dateFrom, dateTo);
 		}
 
-		public Indicators.Suri.SuriVolumeProfileBig SuriVolumeProfileBig(ISeries<double> input , DateTime dateFrom, DateTime dateTo)
+		public Indicators.Suri.SuriVolumeProfileBig SuriVolumeProfileBig(ISeries<double> input , DateTime? dateFrom, DateTime? dateTo)
 		{
 			return indicator.SuriVolumeProfileBig(input, dateFrom, dateTo);
 		}
@@ -274,12 +271,12 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.SuriVolumeProfileBig SuriVolumeProfileBig(DateTime dateFrom, DateTime dateTo)
+		public Indicators.Suri.SuriVolumeProfileBig SuriVolumeProfileBig(DateTime? dateFrom, DateTime? dateTo)
 		{
 			return indicator.SuriVolumeProfileBig(Input, dateFrom, dateTo);
 		}
 
-		public Indicators.Suri.SuriVolumeProfileBig SuriVolumeProfileBig(ISeries<double> input , DateTime dateFrom, DateTime dateTo)
+		public Indicators.Suri.SuriVolumeProfileBig SuriVolumeProfileBig(ISeries<double> input , DateTime? dateFrom, DateTime? dateTo)
 		{
 			return indicator.SuriVolumeProfileBig(input, dateFrom, dateTo);
 		}

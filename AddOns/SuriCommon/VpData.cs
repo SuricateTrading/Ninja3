@@ -9,11 +9,34 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 		public bool isPrepared;
 
 		public void Prepare() {
+			if (isPrepared) return;
 			isPrepared = true;
 			for (int i = barData.Count - 1; i >= 0; i--) {
 				VpBarData vpBarData = barData.ElementAt(i);
 				vpBarData.Prepare();
 				CalculateNakedPoc(i);
+			}
+			
+			// calculate boxes
+			int boxHigh, boxLow;
+			for (int i = 0; i < barData.Count; i++) {
+				List<VpBarData> box = new List<VpBarData> { barData[i] };
+				VpBarData current = barData[i];
+				boxLow  = current.vaLow;
+				boxHigh = current.vaHigh;
+				int boxBarCount = 1;
+
+				for (int j = i; j < barData.Count; j++) {
+					VpBarData next = barData[j];
+					if (next.vaHigh < current.vaHigh && next.vaHigh > current.vaLow ||
+					    next.vaLow > current.vaLow && next.vaLow < current.vaHigh
+					) {
+						// value areas overlap
+						boxLow = Math.Min(current.vaLow, next.vaLow);
+						boxHigh = Math.Max(current.vaHigh, next.vaHigh);
+					}
+				}
+				
 			}
 		}
 
@@ -32,16 +55,16 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 	public abstract class SingleVp {
 		public readonly SortedDictionary<int, VpTickData> tickData = new SortedDictionary<int, VpTickData>();
 		public bool isPrepared;
-		private readonly double tickSize;
-		private int tickCount;
-		private int low = int.MaxValue;
-		private int high = int.MinValue;
+		public readonly double tickSize;
+		public int tickCount;
+		public int low = int.MaxValue;
+		public int high = int.MinValue;
 		
-		private int pocIndex;
+		public int pocIndex;
 		public double pocVolume = double.MinValue;
 		
-		private int vaHigh;
-		private int vaLow;
+		public int vaHigh;
+		public int vaLow;
 		public double vaPercentage;
 		
 		public double totalVolume;
@@ -50,9 +73,9 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 
 		protected SingleVp(double tickSize) { this.tickSize = tickSize; }
 
-		private VpTickData At(int index) { return tickData.ElementAt(index).Value; }
+		public VpTickData At(int index) { return tickData.ElementAt(index).Value; }
 		public VpTickData PocTickData() { return tickData.ElementAt(pocIndex).Value; }
-		private int PriceToTick(double price) { return (int) Math.Round(price / tickSize); }
+		public int PriceToTick(double price) { return (int) Math.Round(price / tickSize); }
 		
 		public void AddTick(MarketDataEventArgs e) {
 			isPrepared = false;
@@ -285,7 +308,14 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 					At(low1.Value).isLvn = false;
 					return;
 				}
-
+				
+				double high1Volume = tickData.ElementAt(high1.Value).Value.distributedVolume;
+				double high2Volume = tickData.ElementAt(high2.Value).Value.distributedVolume;
+				double lowVolume   = tickData.ElementAt(low1 .Value).Value.distributedVolume;
+				if (lowVolume > Math.Min(high1Volume, high2Volume) * 0.4) {
+					At(low1.Value).isLvn = false;
+				}
+				
 				i = high2.Value;
 			}
 		}
@@ -307,8 +337,9 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 				}
 
 				if (ticksWithNoHigherValue == lookAhead - 1) {
-					double average = AverageAround(highIndex, Math.Max(4, (int) Math.Round(tickCount * 0.1, 0)) );
-					if (	average > totalVolume * 0.1 ||
+					double averageAround = AverageAround(highIndex, Math.Max(4, (int) Math.Round(tickCount * 0.1, 0)) );
+					if (	//  * * * * * * * high criterias * * * * * * * * * * * * * * * * * * * * * * 
+							averageAround > totalVolume * 0.1 ||
 					        Math.Abs(highIndex - pocIndex) < 4 ||
 					        At(highIndex).distributedVolume * 3 > pocVolume
 					   ) {
@@ -337,9 +368,10 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 				}
 
 				if (ticksWithNoLowerValue == lookAhead - 1) {
-					double average = AverageAround(lowIndex, Math.Max(4, (int) Math.Round(tickCount * 0.1, 0)) );
-					if (	average < totalVolume * 0.01 &&
-					        At(lowIndex).distributedVolume < pocVolume / 10.0
+					double averageAroundLow = AverageAround(lowIndex, Math.Max(4, (int) Math.Round(tickCount * 0.1, 0)) );
+					if (	//  * * * * * * * low criterias * * * * * * * * * * * * * * * * * * * * * * 
+							// averageAroundLow < At(pocIndex).distributedVolume * 0.35 &&
+					        At(lowIndex).distributedVolume < At(pocIndex).distributedVolume * 0.3
 					) {
 						At(lowIndex).isLvn = true;
 						return lowIndex;

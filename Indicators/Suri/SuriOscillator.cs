@@ -1,12 +1,10 @@
 #region Using declarations
-
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Windows.Media;
 using NinjaTrader.Gui.Chart;
 using NinjaTrader.Gui.NinjaScript;
 using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
-
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
