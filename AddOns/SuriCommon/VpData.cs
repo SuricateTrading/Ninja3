@@ -68,8 +68,11 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 		public double vaPercentage;
 		
 		public double totalVolume;
+		/** Buy */
 		public long totalBids;
+		/** Sell */
 		public long totalAsks;
+		public double highestDelta;
 
 		protected SingleVp(double tickSize) { this.tickSize = tickSize; }
 
@@ -81,26 +84,26 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			isPrepared = false;
 			
 			if (e.MarketDataType == MarketDataType.Last) {
-				int tick = PriceToTick(e.Price);
+				int price = PriceToTick(e.Price);
 				int bid  = PriceToTick(e.Bid);
 				int ask  = PriceToTick(e.Ask);
 				
-				if (!tickData.ContainsKey(tick)) {
-					tickData.Add(tick, new VpTickData(tick));
+				if (!tickData.ContainsKey(price)) {
+					tickData.Add(price, new VpTickData(price));
 				}
-				tickData[tick].volume += e.Volume;
+				tickData[price].volume += e.Volume;
 				totalVolume += e.Volume;
 
-				if (tick >= ask) {
-					tickData[tick].asks += e.Volume;
+				if (price >= ask) {
+					tickData[price].asks += e.Volume;
 					totalAsks += e.Volume;
-				} else if (tick <= bid) {
-					tickData[tick].bids += e.Volume;
+				} /*else*/ if (price <= bid) {
+					tickData[price].bids += e.Volume;
 					totalBids += e.Volume;
 				}
 				
-				if (tick > high) high = tick;
-				if (tick < low)  low  = tick;
+				if (price > high) high = price;
+				if (price < low)  low  = price;
 			}
 		}
 		
@@ -277,6 +280,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 					At(i + 1)	.distributedVolume += entry.Value.volume / 3.0;
 				}
 				
+				highestDelta = Math.Max(Math.Abs(highestDelta), Math.Abs(entry.Value.asks - entry.Value.bids));
 			}
 			PocTickData().isMainPoc = true;
 			

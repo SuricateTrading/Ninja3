@@ -238,7 +238,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				if (Value[i] <= 10 && Value[i - 1] > 10 || Value[i] >= 90 && Value[i - 1] < 90) {
 					if (Math.Abs(Value[i] - Value[0]) >= 80) {
 						if (IsShort()) lastSignal = TradePosition.Short;
-						if (IsLong()) lastSignal = TradePosition.Long;
+						if (IsLong())  lastSignal = TradePosition.Long;
 						lastSignalBar = CurrentBar;
 						doEnter = true;
 						return true;

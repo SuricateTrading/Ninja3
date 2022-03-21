@@ -133,6 +133,10 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 		}
 
 		private void Load() {
+			
+		}
+/*
+		private void Load2() {
 			ready = false;
 			try {
 				string[] lines = File.ReadAllLines(dbPath + @"\" + Instrument.MasterInstrument.Name + ".vpintra");
@@ -165,7 +169,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 				Print(e);
 			}
 		}
-
+*/
 		
 		protected override void OnRender(ChartControl chartControl, ChartScale chartScale) {
 			if (!ready || SuriAddOn.license == License.None || Bars == null || Bars.Instrument == null || IsInHitTest) {

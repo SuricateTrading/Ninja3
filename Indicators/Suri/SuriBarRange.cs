@@ -39,7 +39,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		}
 		public override string DisplayName { get { return SuriStrings.DisplayName(Name, Instrument); } }
         public double Percentage() { return 100 * Values[0][0] / Values[1][0]; }
-        public bool IsMegaRange() { return CurrentBar > days && Math.Abs(Values[0][0] - Values[1][0]) < 0.001; }
+        public bool IsMegaRange() { return CurrentBar > days && Math.Abs(Values[0][0] - Values[1][0]) < 0.00000001; }
 
         protected override void OnBarUpdate() {
 	        if (CurrentBar != 0) {

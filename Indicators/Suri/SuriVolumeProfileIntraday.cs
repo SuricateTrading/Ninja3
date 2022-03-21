@@ -29,10 +29,13 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		private SharpDX.Direct2D1.Brush vaFill;
 		private SharpDX.Direct2D1.Brush textFill;
 		private SharpDX.Direct2D1.Brush smaFill;
+		private SharpDX.Direct2D1.Brush footprintFill;
 		private SharpDX.Direct2D1.Brush testing1Fill;
 		private SharpDX.Direct2D1.Brush testing2Fill;
 		private SharpDX.Direct2D1.Brush testing3Fill;
 		private SharpDX.DirectWrite.TextFormat textFormat;
+
+		private bool drawFootprint = true;
 		
 		[Display(Name = "Breite", Order = 0, GroupName = "Parameter", Description = "Wenn leer, dann wird die Breite automatisch berechnet. Ansonsten wird es maximal so breit.")]
 		public int? maxWidth { get; set; }
@@ -81,13 +84,19 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			get { return Serialize.BrushToString(textBrush); }
 			set { textBrush = Serialize.StringToBrush(value); }
 		}
-		[XmlIgnore]
-		[Display(Name = "SMA", Order = 4, GroupName = "Farben")]
+		//[XmlIgnore]
+		//[Display(Name = "SMA", Order = 4, GroupName = "Farben")]
 		public Brush smaBrush { get; set; }
 		[Browsable(false)]
 		public string smaBrushSerialize {
 			get { return Serialize.BrushToString(smaBrush); }
 			set { smaBrush = Serialize.StringToBrush(value); }
+		}
+		public Brush footprintBrush { get; set; }
+		[Browsable(false)]
+		public string footprintBrushSerialize {
+			get { return Serialize.BrushToString(footprintBrush); }
+			set { footprintBrush = Serialize.StringToBrush(value); }
 		}
 		#endregion
 		#endregion
@@ -118,6 +127,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				pocBrush									= Brushes.Red;
 				textBrush									= Brushes.White;
 				smaBrush									= Brushes.Yellow;
+				footprintBrush								= Brushes.Orange;
 			} else if (State == State.Configure) {
 				prepared = false;
 				SimpleFont font = new SimpleFont { Size = textSize };
@@ -134,6 +144,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				vpIntraData.barData.Add(new VpBarData(TickSize, e.Time));
 			}
 			vpIntraData.barData.Last().AddTick(e);
+			//Print(e.Time + "\t\t" + e.Price + "\t\t" + e.Ask + "\t\t" + e.Bid + "\t\t" + e.Volume + "\t\t" + e.Last);
 		}
 
 		protected override void OnRender(ChartControl chartControl, ChartScale chartScale) {
@@ -148,6 +159,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				vaFill = valueAreaBrush.ToDxBrush(RenderTarget);
 				textFill = textBrush.ToDxBrush(RenderTarget);
 				smaFill = smaBrush.ToDxBrush(RenderTarget);
+				footprintFill = footprintBrush.ToDxBrush(RenderTarget);
 				testing1Fill = Brushes.Red.ToDxBrush(RenderTarget);
 				testing2Fill = Brushes.Green.ToDxBrush(RenderTarget);
 				testing3Fill = Brushes.Yellow.ToDxBrush(RenderTarget);
@@ -164,6 +176,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 
 				int i = 1;
 				float? previousDistVolWidth = null;
+				float? previousDelta = null;
 				foreach(KeyValuePair<int, VpTickData> entry in vpIntraData.barData[idx].tickData) {
 					rect.Y = (float) (y - i * height + height * 0.5f);
 					rect.Width = (float) ((maxWidth ?? barWidth) * entry.Value.volume / vpIntraData.barData[idx].pocVolume);
@@ -214,12 +227,27 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 							);
 						}
 					}
+
+					float delta = entry.Value.asks - entry.Value.bids;
+					delta = (float) (((maxWidth ?? barWidth)/2f) * delta / vpIntraData.barData[idx].highestDelta);
+					//Print(delta);
+					if (drawFootprint && previousDelta != null) {
+						RenderTarget.DrawLine(
+							new Vector2(rect.X + previousDelta.Value, rect.Y + rect.Height + rect.Height / 2f),
+							new Vector2(rect.X + delta              , rect.Y + rect.Height / 2f),
+							footprintFill, 2f
+						);
+					}
+					previousDelta = delta;
+					
 					i++;
 				}
 
 				if (drawText) {
+					double delta = (vpIntraData.barData[idx].totalAsks - vpIntraData.barData[idx].totalBids);
 					string str =	"Σ " + vpIntraData.barData[idx].totalVolume + "\n" +
-					                "∆ " + (vpIntraData.barData[idx].totalAsks - vpIntraData.barData[idx].totalBids) + "\n" +
+					                "∆ " + delta + "\n" +
+					                "∆% " + (100 * delta / vpIntraData.barData[idx].totalVolume).ToString("F1") + "%\n" +
 					                "Ticks " + (vpIntraData.barData[idx].tickData.Count - 1) + "\n" +
 					                "VA " + vpIntraData.barData[idx].vaPercentage + "%"
 					;

@@ -13,7 +13,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
     public static class SuriServer {
         
         private static string Post(string url, bool post) {
-            Code.Output.Process(url, PrintTo.OutputTab1);
+            //Code.Output.Process(url, PrintTo.OutputTab1);
             ServicePointManager.ServerCertificateValidationCallback = delegate { return true; }; // todo: delete?
             
             var data = Encoding.ASCII.GetBytes("5YjNQrsvuJgoPCQs33cgcelvPCJ2");
@@ -42,8 +42,8 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
             return serializer.Deserialize<List<TkData>>(response);
         }
         
-        public static List<WasdeData> GetWasdeData(int id, string oldDate, string newDate) {
-            string url = "https://cloud2.suricate-trading.de:8443/wasde/get?commId=" + id + "&isGlobal=false&oldDate=" + oldDate + "&newDate=" + newDate;
+        public static List<WasdeData> GetWasdeData(int id, bool isAmerica, string oldDate, string newDate) {
+            string url = "https://cloud2.suricate-trading.de:8443/wasde/get?commId=" + id + "&isGlobal=" + !isAmerica + "&oldDate=" + oldDate + "&newDate=" + newDate;
             string response = Post(url, true);
             var serializer = new JavaScriptSerializer();
             return serializer.Deserialize<List<WasdeData>>(response);
@@ -89,8 +89,6 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
         public bool? IsProjection {get; set;}
         public int EndMarketYear {get; set;}
         public Dictionary<String, Double> Attributes {get; set;}
-
-        public double endingStocks { get { return Attributes["Ending Stocks"]; } }
     }
 
     public sealed class DbCotData {

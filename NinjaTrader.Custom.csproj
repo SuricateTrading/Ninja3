@@ -89,6 +89,9 @@
     <Reference Include="NinjaTrader.Vendor">
       <HintPath>C:\Users\Bo\Documents\NinjaTrader 8\bin\Custom\NinjaTrader.Vendor.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>C:\Users\Bo\Documents\NinjaTrader 8\bin\Custom\Newtonsoft.Json.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AddOns\SuriCommon\IStrategyInterface.cs" />
@@ -98,6 +101,7 @@
     <Compile Include="AddOns\SuriCommon\SuriServer.cs" />
     <Compile Include="AddOns\SuriCommon\SuriStrings.cs" />
     <Compile Include="AddOns\SuriCommon\VpData.cs" />
+    <Compile Include="AddOns\SuriCommon\VpSerialization.cs" />
     <Compile Include="BarsTypes\%40DayBarsType.cs" />
     <Compile Include="BarsTypes\%40HeikenAshiBarsType.cs" />
     <Compile Include="BarsTypes\%40KagiBarsType.cs" />
