@@ -73,6 +73,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 		/** Sell */
 		public long totalAsks;
 		public double highestDelta;
+		public long delta { get { return totalAsks - totalBids; } }
 
 		protected SingleVp(double tickSize) { this.tickSize = tickSize; }
 
@@ -84,26 +85,26 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			isPrepared = false;
 			
 			if (e.MarketDataType == MarketDataType.Last) {
-				int price = PriceToTick(e.Price);
+				int tick = PriceToTick(e.Price);
 				int bid  = PriceToTick(e.Bid);
 				int ask  = PriceToTick(e.Ask);
 				
-				if (!tickData.ContainsKey(price)) {
-					tickData.Add(price, new VpTickData(price));
+				if (!tickData.ContainsKey(tick)) {
+					tickData.Add(tick, new VpTickData(tick));
 				}
-				tickData[price].volume += e.Volume;
+				tickData[tick].volume += e.Volume;
 				totalVolume += e.Volume;
 
-				if (price >= ask) {
-					tickData[price].asks += e.Volume;
+				if (tick >= ask) {
+					tickData[tick].asks += e.Volume;
 					totalAsks += e.Volume;
-				} /*else*/ if (price <= bid) {
-					tickData[price].bids += e.Volume;
+				} /*else*/ if (tick <= bid) {
+					tickData[tick].bids += e.Volume;
 					totalBids += e.Volume;
 				}
 				
-				if (price > high) high = price;
-				if (price < low)  low  = price;
+				if (tick > high) high = tick;
+				if (tick < low)  low  = tick;
 			}
 		}
 		
@@ -125,16 +126,27 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			}
 		}
 
-		public void AddCached(double price, long volume) {
+		public void AddCached(double price, long volume, double ask, double bid) {
 			isPrepared = false;
 			
 			int tick = PriceToTick(price);
+			int _bid  = PriceToTick(bid);
+			int _ask  = PriceToTick(ask);
 			
 			if (!tickData.ContainsKey(tick)) {
 				tickData.Add(tick, new VpTickData(tick));
 			}
 			tickData[tick].volume += volume;
 			totalVolume += volume;
+			
+			
+			if (tick >= _ask) {
+				tickData[tick].asks += volume;
+				totalAsks += volume;
+			} /*else*/ if (tick <= _bid) {
+				tickData[tick].bids += volume;
+				totalBids += volume;
+			}
 			
 			if (tick > high) high = tick;
 			if (tick < low)  low  = tick;

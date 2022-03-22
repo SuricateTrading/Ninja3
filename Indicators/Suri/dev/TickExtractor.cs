@@ -11,7 +11,7 @@ using NinjaTrader.Data;
 namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 	public class TickExtractor : Indicator {
 		private static readonly string dbPath = Globals.UserDataDir + @"db\suri\";
-		
+		/*
 		protected override void OnStateChange() {
 			if (State == State.SetDefaults) {
 				Description									= @"";
@@ -58,7 +58,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 				});
 			}
 		}
-		
+		*/
 		/*
 		 protected override void OnMarketData(MarketDataEventArgs e) {
 			VpIntraExtractor(e);

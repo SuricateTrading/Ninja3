@@ -86,11 +86,11 @@
     <Reference Include="SharpDX.Direct2D1">
       <HintPath>C:\Program Files (x86)\NinjaTrader 8\bin64\SharpDX.Direct2D1.dll</HintPath>
     </Reference>
-    <Reference Include="NinjaTrader.Vendor">
-      <HintPath>C:\Users\Bo\Documents\NinjaTrader 8\bin\Custom\NinjaTrader.Vendor.dll</HintPath>
-    </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>C:\Users\Bo\Documents\NinjaTrader 8\bin\Custom\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="NinjaTrader.Vendor">
+      <HintPath>C:\Users\Bo\Documents\NinjaTrader 8\bin\Custom\NinjaTrader.Vendor.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -181,12 +181,14 @@
     <Compile Include="Indicators\Suri\dev\BarInfo.cs" />
     <Compile Include="Indicators\Suri\dev\COTm.cs" />
     <Compile Include="Indicators\Suri\dev\DbCot.cs" />
+    <Compile Include="Indicators\Suri\dev\ProductionCost.cs" />
     <Compile Include="Indicators\Suri\dev\RolloverButton.cs" />
     <Compile Include="Indicators\Suri\dev\SuriSettings.cs" />
     <Compile Include="Indicators\Suri\dev\SuriTester.cs" />
     <Compile Include="Indicators\Suri\dev\Terminkurve.cs" />
     <Compile Include="Indicators\Suri\dev\TickExtractor.cs" />
     <Compile Include="Indicators\Suri\dev\TkDelta.cs" />
+    <Compile Include="Indicators\Suri\dev\VpMeta.cs" />
     <Compile Include="Indicators\Suri\dev\Wasde.cs" />
     <Compile Include="Indicators\Suri\SuriMega.cs" />
     <Compile Include="Indicators\Suri\SuriDrawingToolTile.cs" />

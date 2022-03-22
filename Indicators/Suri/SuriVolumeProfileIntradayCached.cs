@@ -20,7 +20,7 @@ using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 	public sealed class SuriVolumeProfileIntradayCached : Indicator {
-		private readonly VpIntraData vpIntraData = new VpIntraData();
+		private VpIntraData vpIntraData;
 		private static readonly string dbPath = Globals.UserDataDir + @"db\suri\";
 		private bool ready;
 		
@@ -133,43 +133,10 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 		}
 
 		private void Load() {
-			
+			string json = File.ReadAllText(dbPath + @"\" + Instrument.MasterInstrument.Name + ".vpintra");
+			vpIntraData = Newtonsoft.Json.JsonConvert.DeserializeObject<VpIntraData>(json);
+			ready = true;
 		}
-/*
-		private void Load2() {
-			ready = false;
-			try {
-				string[] lines = File.ReadAllLines(dbPath + @"\" + Instrument.MasterInstrument.Name + ".vpintra");
-
-				DateTime firstBarDate = ChartBars.Bars.GetTime(0).Date;
-				int startIndex = -1;
-				for (int i = 0; i < lines.Length; i++) {
-					string line = lines[i];
-					if (line.IsNullOrEmpty()) continue;
-					DateTime date = DateTime.Parse(line.Substring(0, 10)).Date;
-					if (startIndex == -1) {
-						if (date != firstBarDate) continue;
-						startIndex = i;
-					}
-
-					int index = i - startIndex;
-					if (index < 0) break;
-					double low  = ChartBars.Bars.GetLow (index);
-					vpIntraData.barData.Add(new VpBarData(TickSize, date.Date));
-					string[] tabs = line.Split('\t');
-					for (int j = 1; j < tabs.Length; j++) {
-						if (tabs[j].IsNullOrEmpty()) continue;
-						vpIntraData.barData.Last().AddCached(low + TickSize * (j-1), long.Parse(tabs[j]));
-					}
-					if (i-startIndex+1 >= ChartBars.Bars.Count) break;
-				}
-				vpIntraData.Prepare();
-				ready = true;
-			} catch (Exception e) {
-				Print(e);
-			}
-		}
-*/
 		
 		protected override void OnRender(ChartControl chartControl, ChartScale chartScale) {
 			if (!ready || SuriAddOn.license == License.None || Bars == null || Bars.Instrument == null || IsInHitTest) {
