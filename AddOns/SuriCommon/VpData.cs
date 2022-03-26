@@ -1,50 +1,78 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Forms;
 using NinjaTrader.Data;
+using NinjaTrader.Gui.NinjaScript;
+using NinjaTrader.NinjaScript;
 
 namespace NinjaTrader.Custom.AddOns.SuriCommon {
+	public sealed class VpBox {
+		public readonly int endIndex;
+		//public List<VpBarData> data;
+		public readonly int length;
+		public readonly int boxHigh;
+		public readonly int boxLow;
+
+		public VpBox(int length, int endIndex, int boxHigh, int boxLow) {
+			this.length = length;
+			this.endIndex = endIndex;
+			this.boxHigh = boxHigh;
+			this.boxLow = boxLow;
+		}
+	}
+	
 	public sealed class VpIntraData {
 		public readonly List<VpBarData> barData = new List<VpBarData>();
+		public readonly SortedDictionary<int, VpBox> boxes = new SortedDictionary<int, VpBox>();
 		public bool isPrepared;
 
 		public void Prepare() {
 			if (isPrepared) return;
 			isPrepared = true;
 			for (int i = barData.Count - 1; i >= 0; i--) {
-				VpBarData vpBarData = barData.ElementAt(i);
-				vpBarData.Prepare();
+				barData[i].Prepare();
 				CalculateNakedPoc(i);
 			}
-			
-			// calculate boxes
-			int boxHigh, boxLow;
 			for (int i = 0; i < barData.Count; i++) {
-				List<VpBarData> box = new List<VpBarData> { barData[i] };
-				VpBarData current = barData[i];
-				boxLow  = current.vaLow;
-				boxHigh = current.vaHigh;
-				int boxBarCount = 1;
-
-				for (int j = i; j < barData.Count; j++) {
-					VpBarData next = barData[j];
-					if (next.vaHigh < current.vaHigh && next.vaHigh > current.vaLow ||
-					    next.vaLow > current.vaLow && next.vaLow < current.vaHigh
-					) {
-						// value areas overlap
-						boxLow = Math.Min(current.vaLow, next.vaLow);
-						boxHigh = Math.Max(current.vaHigh, next.vaHigh);
-					}
-				}
-				
+				CalculateBox(i);
 			}
 		}
-
+		
+		private void CalculateBox(int index) {
+			int boxHigh = barData[index].vaHigh;
+			int boxLow  = barData[index].vaLow;
+			List<VpBarData> bars = new List<VpBarData> { barData[index] };
+			for (int i = index - 1; i >= 0; i--) {
+				VpBarData bar = barData[i];
+				// check if value areas overlap
+				if (bar.vaHigh < boxHigh && bar.vaHigh > boxLow || bar.vaLow > boxLow && bar.vaLow < boxHigh || bar.vaHigh > boxHigh && bar.vaLow < boxLow) {
+					bars.Add(bar);
+					boxHigh = Math.Min(bar.vaHigh, boxHigh);
+					boxLow = Math.Max(bar.vaLow, boxLow);
+				} else {
+					break; // todo: es darf ausreißer geben
+				}
+			}
+			if (bars.Count >= 3) {
+				
+				/*foreach (VpBarData vpBarData1 in bars) {
+					foreach (VpBarData vpBarData2 in bars) {
+						if (vpBarData1 == vpBarData2) continue;
+						
+					}
+				}*/
+				
+				
+				boxes[index] = new VpBox(bars.Count, index, boxHigh, boxLow);
+			}
+		}
+		
 		private void CalculateNakedPoc(int index) {
 			if (index >= barData.Count - 1) return;
 			int pocTick = barData[index].PocTickData().tick;
 			for (int i = index + 1; i < barData.Count; i++) {
-				if (barData[i].tickData.ContainsKey(pocTick) && barData[i].tickData[pocTick].volume != 0 ) {
+				if (barData[i].Contains(pocTick) && barData[i].tickData[pocTick].volume != 0 ) {
 					return;
 				}
 			}
@@ -53,7 +81,8 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 	}
 
 	public abstract class SingleVp {
-		public readonly SortedDictionary<int, VpTickData> tickData = new SortedDictionary<int, VpTickData>();
+		public bool isVpBig;
+		public readonly List<VpTickData> tickData = new List<VpTickData>();
 		public bool isPrepared;
 		public readonly double tickSize;
 		public int tickCount;
@@ -75,11 +104,17 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 		public double highestDelta;
 		public long delta { get { return totalAsks - totalBids; } }
 
-		protected SingleVp(double tickSize) { this.tickSize = tickSize; }
+		protected SingleVp(bool isVpBig, double tickSize) {
+			this.isVpBig = isVpBig;
+			this.tickSize = tickSize;
+		}
 
-		public VpTickData At(int index) { return tickData.ElementAt(index).Value; }
-		public VpTickData PocTickData() { return tickData.ElementAt(pocIndex).Value; }
+		public VpTickData At(int index) { return tickData[low + index]; }
+		public VpTickData PocTickData() { return At(pocIndex); }
 		public int PriceToTick(double price) { return (int) Math.Round(price / tickSize); }
+
+		/** Use only AFTER Prepared was called! */
+		public bool Contains(int tick) { return tick >= low || tick <= high; }
 		
 		public void AddTick(MarketDataEventArgs e) {
 			isPrepared = false;
@@ -89,17 +124,18 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 				int bid  = PriceToTick(e.Bid);
 				int ask  = PriceToTick(e.Ask);
 				
-				if (!tickData.ContainsKey(tick)) {
-					tickData.Add(tick, new VpTickData(tick));
+				if (tickData.Last().tick != tick) {
+					tickData.Add(new VpTickData(tick));
 				}
-				tickData[tick].volume += e.Volume;
+				VpTickData last = tickData.Last();
+				last.volume += e.Volume;
 				totalVolume += e.Volume;
 
 				if (tick >= ask) {
-					tickData[tick].asks += e.Volume;
+					last.asks += e.Volume;
 					totalAsks += e.Volume;
 				} /*else*/ if (tick <= bid) {
-					tickData[tick].bids += e.Volume;
+					last.bids += e.Volume;
 					totalBids += e.Volume;
 				}
 				
@@ -118,10 +154,10 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			
 			double volumePerTick = volume / (tickHigh - tickLow + 1.0);
 			for (int price = tickLow; price <= tickHigh; price++) {
-				if (!tickData.ContainsKey(price)) {
-					tickData.Add(price, new VpTickData(price));
+				if (tickData.Last().tick != price) {
+					tickData.Add(new VpTickData(price));
 				}
-				tickData[price].volume += volumePerTick;
+				tickData.Last().volume += volumePerTick;
 				totalVolume += volumePerTick;
 			}
 		}
@@ -133,18 +169,17 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			int _bid  = PriceToTick(bid);
 			int _ask  = PriceToTick(ask);
 			
-			if (!tickData.ContainsKey(tick)) {
-				tickData.Add(tick, new VpTickData(tick));
+			if (tickData.Last().tick != tick) {
+				tickData.Add(new VpTickData(tick));
 			}
-			tickData[tick].volume += volume;
+			tickData.Last().volume += volume;
 			totalVolume += volume;
 			
-			
 			if (tick >= _ask) {
-				tickData[tick].asks += volume;
+				tickData.Last().asks += volume;
 				totalAsks += volume;
 			} /*else*/ if (tick <= _bid) {
-				tickData[tick].bids += volume;
+				tickData.Last().bids += volume;
 				totalBids += volume;
 			}
 			
@@ -260,53 +295,56 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			tickCount = high - low;
 			
 			for (int i = 0; i < tickData.Count; i++) {
-				KeyValuePair<int, VpTickData> entry = tickData.ElementAt(i);
-				
 				// add missing values with a volume of zero
 				if (i > 0) {
-					int curr = tickData.ElementAt(i).Key;
-					int prev = tickData.ElementAt(i-1).Key;
+					int curr = At(i).tick;
+					int prev = At(i-1).tick;
 					if (Math.Abs(curr - prev) >= 2) {
-						tickData.Add(prev + 1, new VpTickData(prev + 1));
+						tickData.Insert(i, new VpTickData(prev + 1));
 						i--;
 						continue;
 					}
 				}
 				
 				// poc
-				if (pocVolume < entry.Value.volume) {
-					pocVolume = entry.Value.volume;
+				if (pocVolume < At(i).volume) {
+					pocVolume = At(i).volume;
 					pocIndex = i;
 				}
 				
 				// distributed volume
-				if (i == 0) {
-					entry.Value									.distributedVolume += entry.Value.volume / 2.0;
-					if (i < tickData.Count - 1) At(i + 1)	.distributedVolume += entry.Value.volume / 2.0;
-				} else if (i == tickData.Count - 1) {
-					if (i > 0) At(i - 1)					.distributedVolume += entry.Value.volume / 2.0;
-					entry.Value									.distributedVolume += entry.Value.volume / 2.0;
-				} else {
-					At(i - 1)	.distributedVolume += entry.Value.volume / 3.0;
-					entry.Value		.distributedVolume += entry.Value.volume / 3.0;
-					At(i + 1)	.distributedVolume += entry.Value.volume / 3.0;
+				if (!isVpBig && SuriAddOn.license == License.Dev) {
+					if (i == 0) {
+						At(i)										.distributedVolume += At(i).volume / 2.0;
+						if (i < tickData.Count - 1) At(i + 1)	.distributedVolume += At(i).volume / 2.0;
+					} else if (i == tickData.Count - 1) {
+						if (i > 0) At(i-1)						.distributedVolume += At(i).volume / 2.0;
+						At(i)										.distributedVolume += At(i).volume / 2.0;
+					} else {
+						At(i-1)			.distributedVolume += At(i).volume / 3.0;
+						At(i)					.distributedVolume += At(i).volume / 3.0;
+						At(i + 1)			.distributedVolume += At(i).volume / 3.0;
+					}
+					
+					highestDelta = Math.Max(Math.Abs(highestDelta), Math.Abs(At(i).asks - At(i).bids));
 				}
-				
-				highestDelta = Math.Max(Math.Abs(highestDelta), Math.Abs(entry.Value.asks - entry.Value.bids));
 			}
+			
 			PocTickData().isMainPoc = true;
-			
-			CalculateVaueArea();
-			
-			foreach (KeyValuePair<int, VpTickData> tick in tickData) {
-				// sub poc
-				if (tick.Value.volume * 1.1 > pocVolume) tick.Value.isSubPoc = true;
-			}
 
-			SetLvns();
+			if (!isVpBig) {
+				CalculateVaueArea();
+			
+				/*foreach (KeyValuePair<int, VpTickData> tick in tickData) {
+					// sub poc
+					if (tick.Value.volume * 1.1 > pocVolume) tick.Value.isSubPoc = true;
+				}*/
+
+				//SetLvns();
+			}
 		}
 
-		
+		/*
 		private void SetLvns(int start = 0) {
 			for (int i = start; i < tickData.Count; i++) {
 				int? high1, high2, low1;
@@ -406,14 +444,14 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			}
 			return value / count;
 		}
-		
+		*/
 	}
 
-	public sealed class VpBigData : SingleVp { public VpBigData(double tickSize) : base(tickSize) {} }
+	public sealed class VpBigData : SingleVp { public VpBigData(double tickSize) : base(true, tickSize) {} }
 
 	public sealed class VpBarData : SingleVp {
 		public DateTime dateTime;
-		public VpBarData(double tickSize, DateTime dateTime) : base(tickSize) {
+		public VpBarData(double tickSize, DateTime dateTime) : base(false, tickSize) {
 			this.dateTime = dateTime;
 		}
 	}

@@ -264,7 +264,7 @@ namespace NinjaTrader.Gui.NinjaScript {
 			if (downloadWorkspace != null) {
 				if (Cbi.License.MachineId.Equals("7965FF741129B8FA28B3CFD217B469B1")) {
 					try {
-						downloadWorkspace.Click += (sender, args) => VpSerialization.LoadVpBig();
+						downloadWorkspace.Click += (sender, args) => VpSerialization.LoadVp();
 					} catch (Exception e) {
 						Code.Output.Process(e.ToString(), PrintTo.OutputTab1);
 					}

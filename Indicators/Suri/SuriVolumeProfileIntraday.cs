@@ -31,6 +31,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		private SharpDX.Direct2D1.Brush textFill;
 		private SharpDX.Direct2D1.Brush smaFill;
 		private SharpDX.Direct2D1.Brush footprintFill;
+		private SharpDX.Direct2D1.Brush boxFill;
 		private SharpDX.Direct2D1.Brush testing1Fill;
 		private SharpDX.Direct2D1.Brush testing2Fill;
 		private SharpDX.Direct2D1.Brush testing3Fill;
@@ -49,6 +50,9 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		public bool drawText { get; set; }
 		[Display(Name = "Zeige 'Naked PoC'", Order = 2, GroupName = "Parameter")]
 		public bool drawNakedPoc { get; set; }
+		//[Display(Name = "Zeige 'Naked PoC'", Order = 2, GroupName = "Parameter")]
+		[Browsable(false)]
+		public bool drawBoxes { get; set; }
 		
 		#region Colors
 		[XmlIgnore]
@@ -97,6 +101,8 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			get { return Serialize.BrushToString(footprintBrush); }
 			set { footprintBrush = Serialize.StringToBrush(value); }
 		}
+		[Browsable(false)]
+		public Brush boxBrush { get; set; }
 		#endregion
 		#endregion
 		
@@ -127,6 +133,9 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				textBrush									= Brushes.White;
 				smaBrush									= Brushes.Yellow;
 				footprintBrush								= Brushes.Orange;
+				boxBrush									= Brushes.CornflowerBlue.Clone();
+				boxBrush.Opacity							= 0.5;
+				drawBoxes									= SuriAddOn.license == License.Dev;
 			} else if (State == State.Configure) {
 				prepared = false;
 				SimpleFont font = new SimpleFont { Size = textSize };
@@ -140,7 +149,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		}
 
 		protected override void OnMarketData(MarketDataEventArgs e) {
-			if (SuriAddOn.license == License.None || Bars.Count <= 0) return;
+			if (SuriAddOn.license == License.None || Bars.Count <= 0 || !Bars.IsTickReplay) return;
 			if (lastBar != CurrentBar) {
 				lastBar = CurrentBar;
 				vpIntraData.barData.Add(new VpBarData(TickSize, e.Time));
@@ -153,7 +162,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			if (Bars == null || Bars.Instrument == null || IsInHitTest || SuriAddOn.license == License.None || vpIntraData.barData.IsNullOrEmpty()) {
 				return;
 			}
-			
 			if (!vpIntraData.isPrepared) vpIntraData.Prepare();
 			if (!prepared) {
 				prepared = true;
@@ -163,6 +171,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				textFill = textBrush.ToDxBrush(RenderTarget);
 				smaFill = smaBrush.ToDxBrush(RenderTarget);
 				footprintFill = footprintBrush.ToDxBrush(RenderTarget);
+				boxFill = boxBrush.ToDxBrush(RenderTarget);
 				testing1Fill = Brushes.Red.ToDxBrush(RenderTarget);
 				testing2Fill = Brushes.Green.ToDxBrush(RenderTarget);
 				testing3Fill = Brushes.Yellow.ToDxBrush(RenderTarget);
@@ -270,6 +279,20 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 					y = chartScale.GetYByValue(ChartBars.Bars.GetLow(idx)) + 10f;
 					RenderTarget.DrawTextLayout(new Vector2(rect.X, (float) y + rect.Height/2.0f), textLayout, textFill, SharpDX.Direct2D1.DrawTextOptions.NoSnap);
 				}
+
+				if (drawBoxes) {
+					if (vpIntraData.boxes.ContainsKey(lastIndex)) {
+						VpBox box = vpIntraData.boxes[lastIndex];
+						RectangleF boxRect = new RectangleF {
+							X = chartControl.GetXByBarIndex(ChartBars, idx),
+							Y = chartScale.GetYByValue(box.boxHigh * TickSize)
+						};
+						boxRect.Width = chartControl.GetXByBarIndex(ChartBars, idx - box.length + 1) - boxRect.X;
+						boxRect.Height = chartScale.GetYByValue(box.boxLow * TickSize) - boxRect.Y;
+						RenderTarget.FillRectangle(boxRect, boxFill);
+					}
+				}
+				
 			}
 		}
 	}

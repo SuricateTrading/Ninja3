@@ -1,6 +1,7 @@
 #region Using declarations
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Media;
 using NinjaTrader.Custom.AddOns.SuriCommon;
 using NinjaTrader.Gui;
@@ -57,7 +58,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 				BarsRequiredToPlot							= 0;
 			} else if (State == State.Configure) {
 				AddPlot(new Stroke(Brushes.Red, 2), PlotStyle.Line, "Kosten");
-				AddPlot(new Stroke(Brushes.CornflowerBlue, 2), PlotStyle.Line, "Bruttowert");
+				//AddPlot(new Stroke(Brushes.CornflowerBlue, 2), PlotStyle.Line, "Bruttowert");
 			} else if (State == State.DataLoaded) {
 				Commodity? commodity = SuriStrings.GetComm(Instrument.MasterInstrument.Name);
 				if (commodity == null) return;
@@ -68,8 +69,13 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 		protected override void OnBarUpdate() {
 			if (data == null) return;
 			try {
-				Values[0][0] = data.grossValues[Time[0].Year].costs;
-				Values[1][0] = data.grossValues[Time[0].Year].grossValue;
+				if (Time[0].Year <= data.grossValues.First().Key) {
+					Values[0][0] = data.grossValues[Time[0].Year].costs;
+				} else {
+					Values[0][0] = data.grossValues.First().Value.costs;
+					PlotBrushes[0][0] = Brushes.Gray;
+				}
+				//Values[1][0] = data.grossValues[Time[0].Year].grossValue;
 			}
 			catch (Exception) {/**/}
 		}

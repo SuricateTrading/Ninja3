@@ -1,6 +1,7 @@
 #region Using declarations
 
 using System.IO;
+using System.Linq;
 using System.Windows.Media;
 using NinjaTrader.Custom.AddOns.SuriCommon;
 using NinjaTrader.Gui;
@@ -30,10 +31,9 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 				IsSuspendedWhileInactive					= true;
 				BarsRequiredToPlot							= 0;
 				
-				AddPlot(new Stroke(Brushes.CornflowerBlue, 2), PlotStyle.Bar, "Status");
-				AddPlot(new Stroke(Brushes.DarkGray, 2), PlotStyle.Line, "Delta");
-				AddPlot(new Stroke(Brushes.Green, 2), PlotStyle.Line, "Oszillator");
-			} else if (State == State.DataLoaded && !Bars.IsTickReplay && SuriAddOn.license == License.Dev) {
+				AddPlot(new Stroke(Brushes.CornflowerBlue, 2), PlotStyle.Bar, "Delta %");
+				AddPlot(new Stroke(Brushes.CornflowerBlue, 2), PlotStyle.Bar, "0");
+			} else if (State == State.DataLoaded) {
 				string json = File.ReadAllText(VpSerialization.dbPath + @"\" + Instrument.MasterInstrument.Name + ".vpintra");
 				vpIntraData = Newtonsoft.Json.JsonConvert.DeserializeObject<VpIntraData>(json);
 			}
@@ -43,13 +43,13 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 		
 		protected override void OnBarUpdate() {
 			if (vpIntraData == null || vpIntraData.barData.IsNullOrEmpty()) return;
+			Print(vpIntraData.barData.First().dateTime);
 			
 			for (; lastBar <= vpIntraData.barData.Count; lastBar++) {
 				if (lastBar == vpIntraData.barData.Count) return;
 				if (vpIntraData.barData[lastBar].dateTime.Date == Time[0].Date) break;
 			}
-			//RenderTarget.Draw
-
+			
 			Values[0][0] = 100 * vpIntraData.barData[lastBar].delta / vpIntraData.barData[lastBar].totalVolume;
 			if      (Values[0][0] > 0) PlotBrushes[0][0] = Brushes.Green;
 			else if (Values[0][0] < 0) PlotBrushes[0][0] = Brushes.Red;
