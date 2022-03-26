@@ -157,9 +157,11 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			if (!dataLoaded || SuriAddOn.license == License.None || Bars == null || Bars.Instrument == null || IsInHitTest) {
 				return;
 			}
+
 			if (!vpBigData.isPrepared) {
 				vpBigData.Prepare();
 			}
+
 			if (!prepared) {
 				prepared = true;
 				normalAreaFill = normalAreaBrush.ToDxBrush(RenderTarget);
@@ -176,8 +178,8 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				X = 0,
 				Height = rectHeight,
 			};
-			if (highestValue > vpBigData.tickData.Last().Key) {
-				rect.Y = chartScale.GetYByValue((vpBigData.tickData.Last().Key+1) * TickSize) - rect.Height / 2f;
+			if (highestValue > vpBigData.tickData.Last().tick) {
+				rect.Y = chartScale.GetYByValue((vpBigData.tickData.Last().tick+1) * TickSize) - rect.Height / 2f;
 			} else {
 				rect.Y = chartScale.GetYByValue((highestValue+1) * TickSize) - rect.Height / 2f;
 			}
@@ -191,13 +193,13 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 
 			for (int i = 0; i < tickCount; i++) {
 				int tick = highestValue - i;
-				if (vpBigData.tickData.ContainsKey(tick)) {
-					VpTickData tickData = vpBigData.tickData[tick];
+				if (vpBigData.Contains(tick)) {
+					VpTickData tickData = vpBigData.At(tick);
 
 					rect.Width = (float) ((maxWidth ?? ChartPanel.W * 0.6) * tickData.volume / vpBigData.pocVolume);
 					rect.Y += rect.Height;
 					rect.Height = tickData.isMainPoc ? Math.Max(1, rectHeight) : rectHeight;
-					
+				
 					RenderTarget.FillRectangle(rect, tickData.isMainPoc ? pocFill : normalAreaFill);
 					if (rect.Height > 13) {
 						SharpDX.DirectWrite.TextLayout textLayout = new SharpDX.DirectWrite.TextLayout(Core.Globals.DirectWriteFactory, tickData.volume.ToString("F0"), textFormat, 250, textFormat.FontSize);

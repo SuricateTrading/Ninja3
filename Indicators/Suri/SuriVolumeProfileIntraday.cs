@@ -200,16 +200,16 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				float? previousDistVolWidth = null;
 				float? previousDelta = null;
 
-				foreach(KeyValuePair<int, VpTickData> entry in vpIntraData.barData[lastIndex].tickData) {
+				foreach(VpTickData entry in vpIntraData.barData[lastIndex].tickData) {
 					rect.Y = (float) (y - i * height + height * 0.5f);
-					rect.Width = (float) ((maxWidth ?? barWidth) * entry.Value.volume / vpIntraData.barData[lastIndex].pocVolume);
+					rect.Width = (float) ((maxWidth ?? barWidth) * entry.volume / vpIntraData.barData[lastIndex].pocVolume);
 					rect.Height = (float) height;
 
 					SharpDX.Direct2D1.Brush b;
 					/*if (entry.Value.isLvn)				b = testing1Fill;
 					else if (entry.Value.isHigh)		b = testing2Fill;
-					else */if (entry.Value.isMainPoc)		b = pocFill;
-					else if (entry.Value.isInValueArea)	b = vaFill;
+					else */if (entry.isMainPoc)		b = pocFill;
+					else if (entry.isInValueArea)	b = vaFill;
 					else								b = normalAreaFill;
 					RenderTarget.FillRectangle(rect, b);
 
@@ -233,7 +233,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 					previousDistVolWidth = (float) ((maxWidth ?? barWidth) * entry.Value.distributedVolume / vpIntraData.barData[lastIndex].pocVolume);
 					*/
 					
-					if (drawNakedPoc && entry.Value.isNakedPoc) {
+					if (drawNakedPoc && entry.isNakedPoc) {
 						float pocX1 = rect.X + rect.Width + 10;
 						float pocX2 = (float) ChartPanel.W - 200;
 						if (pocX2 - pocX1 > 0) {
@@ -252,7 +252,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 					}
 
 					if (SuriAddOn.license == License.Dev) {
-						float delta = entry.Value.asks - entry.Value.bids;
+						float delta = entry.asks - entry.bids;
 						delta = (float) (((maxWidth ?? barWidth)/2f) * delta / vpIntraData.barData[lastIndex].highestDelta);
 						if (previousDelta != null) {
 							RenderTarget.DrawLine(

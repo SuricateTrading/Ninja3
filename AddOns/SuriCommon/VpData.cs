@@ -4,6 +4,7 @@ using System.Linq;
 using System.Windows.Forms;
 using NinjaTrader.Data;
 using NinjaTrader.Gui.NinjaScript;
+using NinjaTrader.Gui.Tools;
 using NinjaTrader.NinjaScript;
 
 namespace NinjaTrader.Custom.AddOns.SuriCommon {
@@ -109,12 +110,12 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			this.tickSize = tickSize;
 		}
 
-		public VpTickData At(int index) { return tickData[low + index]; }
-		public VpTickData PocTickData() { return At(pocIndex); }
+		public VpTickData At(int tick) { return tickData[tick - low]; }
+		public VpTickData PocTickData() { return tickData[pocIndex]; }
 		public int PriceToTick(double price) { return (int) Math.Round(price / tickSize); }
 
 		/** Use only AFTER Prepared was called! */
-		public bool Contains(int tick) { return tick >= low || tick <= high; }
+		public bool Contains(int tick) { return tick >= low && tick <= high; }
 		
 		public void AddTick(MarketDataEventArgs e) {
 			isPrepared = false;
@@ -124,7 +125,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 				int bid  = PriceToTick(e.Bid);
 				int ask  = PriceToTick(e.Ask);
 				
-				if (tickData.Last().tick != tick) {
+				if (tickData.IsNullOrEmpty() || tickData.Last().tick != tick) {
 					tickData.Add(new VpTickData(tick));
 				}
 				VpTickData last = tickData.Last();
@@ -149,16 +150,24 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			
 			int tickHigh = PriceToTick(high);
 			int tickLow  = PriceToTick(low);
+			double volumePerTick = volume / (tickHigh - tickLow + 1.0);
+			totalVolume += volume;
+
+			if (tickData.IsNullOrEmpty()) {
+				for (int i = tickLow; i <= tickHigh; i++) {
+					tickData.Add(new VpTickData(i));
+				}
+			} else {
+				// iff we have to add ticks which were not already present, this is first executed to add all those ticks with empty volume.
+				for (int i = this.high + 1; tickHigh >= i; i++) tickData.Add(new VpTickData(i));
+				for (int i = this.low  - 1; tickLow  <= i; i--) tickData.Insert(0, new VpTickData(i));
+			}
+			
 			if (tickHigh > this.high) this.high = tickHigh;
 			if (tickLow  < this.low ) this.low  = tickLow;
 			
-			double volumePerTick = volume / (tickHigh - tickLow + 1.0);
 			for (int price = tickLow; price <= tickHigh; price++) {
-				if (tickData.Last().tick != price) {
-					tickData.Add(new VpTickData(price));
-				}
-				tickData.Last().volume += volumePerTick;
-				totalVolume += volumePerTick;
+				At(price).volume += volumePerTick;
 			}
 		}
 
@@ -169,7 +178,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			int _bid  = PriceToTick(bid);
 			int _ask  = PriceToTick(ask);
 			
-			if (tickData.Last().tick != tick) {
+			if (tickData.IsNullOrEmpty() || tickData.Last().tick != tick) {
 				tickData.Add(new VpTickData(tick));
 			}
 			tickData.Last().volume += volume;
@@ -297,8 +306,8 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			for (int i = 0; i < tickData.Count; i++) {
 				// add missing values with a volume of zero
 				if (i > 0) {
-					int curr = At(i).tick;
-					int prev = At(i-1).tick;
+					int curr = tickData[i].tick;
+					int prev = tickData[i-1].tick;
 					if (Math.Abs(curr - prev) >= 2) {
 						tickData.Insert(i, new VpTickData(prev + 1));
 						i--;
@@ -307,26 +316,26 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 				}
 				
 				// poc
-				if (pocVolume < At(i).volume) {
-					pocVolume = At(i).volume;
+				if (pocVolume < tickData[i].volume) {
+					pocVolume = tickData[i].volume;
 					pocIndex = i;
 				}
 				
 				// distributed volume
 				if (!isVpBig && SuriAddOn.license == License.Dev) {
 					if (i == 0) {
-						At(i)										.distributedVolume += At(i).volume / 2.0;
-						if (i < tickData.Count - 1) At(i + 1)	.distributedVolume += At(i).volume / 2.0;
+						tickData[i]									.distributedVolume += tickData[i].volume / 2.0;
+						if (i < tickData.Count - 1) tickData[i+1]	.distributedVolume += tickData[i].volume / 2.0;
 					} else if (i == tickData.Count - 1) {
-						if (i > 0) At(i-1)						.distributedVolume += At(i).volume / 2.0;
-						At(i)										.distributedVolume += At(i).volume / 2.0;
+						if (i > 0) tickData[i-1]					.distributedVolume += tickData[i].volume / 2.0;
+						tickData[i]									.distributedVolume += tickData[i].volume / 2.0;
 					} else {
-						At(i-1)			.distributedVolume += At(i).volume / 3.0;
-						At(i)					.distributedVolume += At(i).volume / 3.0;
-						At(i + 1)			.distributedVolume += At(i).volume / 3.0;
+						tickData[i-1]				.distributedVolume += tickData[i].volume / 3.0;
+						tickData[i]					.distributedVolume += tickData[i].volume / 3.0;
+						tickData[i+1]				.distributedVolume += tickData[i].volume / 3.0;
 					}
 					
-					highestDelta = Math.Max(Math.Abs(highestDelta), Math.Abs(At(i).asks - At(i).bids));
+					highestDelta = Math.Max(Math.Abs(highestDelta), Math.Abs(tickData[i].asks - tickData[i].bids));
 				}
 			}
 			
