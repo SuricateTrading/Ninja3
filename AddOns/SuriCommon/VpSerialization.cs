@@ -48,7 +48,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 								vpIntraData.barData.Add(new VpBarData(instrument.MasterInstrument.TickSize, time.Date));
 							}
 							lastDayOfYear  = time.DayOfYear;
-							vpIntraData.barData.Last().AddCached(bars.Bars.GetClose(i), bars.Bars.GetVolume(i), bars.Bars.GetAsk(i), bars.Bars.GetBid(i));
+							vpIntraData.barData.Last().AddTick(bars.Bars.GetClose(i), bars.Bars.GetVolume(i), bars.Bars.GetAsk(i), bars.Bars.GetBid(i));
 						}
 						vpIntraData.barData.Last().Prepare();
 						stream.Write("\n" + Newtonsoft.Json.JsonConvert.SerializeObject(vpIntraData));

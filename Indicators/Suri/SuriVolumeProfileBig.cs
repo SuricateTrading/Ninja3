@@ -6,7 +6,6 @@ using NinjaTrader.Data;
 using NinjaTrader.Gui;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
 using NinjaTrader.Cbi;
@@ -23,7 +22,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		private bool dataLoaded;
 		
 		#region Properties
-		private bool prepared;
 		private SharpDX.Direct2D1.Brush normalAreaFill;
 		private SharpDX.Direct2D1.Brush pocFill;
 		private SharpDX.Direct2D1.Brush vaFill;
@@ -122,7 +120,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 							BarsPeriod		= new BarsPeriod { BarsPeriodType = BarsPeriodType.Minute, Value = 1 },
 							TradingHours	= TradingHours,
 						};
-						prepared = false;
 					
 						barsReq.Request((bars, errorCode, errorMessage) => {
 							if (errorCode != ErrorCode.NoError) {
@@ -152,6 +149,21 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				
 			}
 		}*/
+		
+		
+		public override void OnRenderTargetChanged() {
+			// if dxBrush exists on first render target change, dispose of it
+			if (normalAreaFill != null) {
+				normalAreaFill.Dispose();
+				pocFill.Dispose();
+				textFill.Dispose();
+			}
+			if (RenderTarget != null) {
+				normalAreaFill = normalAreaBrush.ToDxBrush(RenderTarget);
+				pocFill = pocBrush.ToDxBrush(RenderTarget);
+				textFill = textBrush.ToDxBrush(RenderTarget);
+			}
+		}
 
 		protected override void OnRender(ChartControl chartControl, ChartScale chartScale) {
 			if (!dataLoaded || SuriAddOn.license == License.None || Bars == null || Bars.Instrument == null || IsInHitTest) {
@@ -160,13 +172,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 
 			if (!vpBigData.isPrepared) {
 				vpBigData.Prepare();
-			}
-
-			if (!prepared) {
-				prepared = true;
-				normalAreaFill = normalAreaBrush.ToDxBrush(RenderTarget);
-				pocFill = pocBrush.ToDxBrush(RenderTarget);
-				textFill = textBrush.ToDxBrush(RenderTarget);
 			}
 			
 			int highestValue = (int) Math.Floor(chartScale.MaxValue / TickSize);

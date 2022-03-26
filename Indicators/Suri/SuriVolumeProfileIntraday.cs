@@ -24,7 +24,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		private int? lastBar;
 		
 		#region Properties
-		private bool prepared;
 		private SharpDX.Direct2D1.Brush normalAreaFill;
 		private SharpDX.Direct2D1.Brush pocFill;
 		private SharpDX.Direct2D1.Brush vaFill;
@@ -137,7 +136,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				boxBrush.Opacity							= 0.5;
 				drawBoxes									= SuriAddOn.license == License.Dev;
 			} else if (State == State.Configure) {
-				prepared = false;
 				SimpleFont font = new SimpleFont { Size = textSize };
 				textFormat					= font.ToDirectWriteTextFormat();
 				textFormat.TextAlignment	= SharpDX.DirectWrite.TextAlignment.Leading;
@@ -157,14 +155,22 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			vpIntraData.barData.Last().AddTick(e);
 			//Print(e.Time + "\t\t" + e.Price + "\t\t" + e.Ask + "\t\t" + e.Bid + "\t\t" + e.Volume + "\t\t" + e.Last);
 		}
-
-		protected override void OnRender(ChartControl chartControl, ChartScale chartScale) {
-			if (Bars == null || Bars.Instrument == null || IsInHitTest || SuriAddOn.license == License.None || vpIntraData.barData.IsNullOrEmpty()) {
-				return;
+		
+		public override void OnRenderTargetChanged() {
+			// if dxBrush exists on first render target change, dispose of it
+			if (normalAreaFill != null) {
+				normalAreaFill.Dispose();
+				pocFill.Dispose();
+				vaFill.Dispose();
+				textFill.Dispose();
+				smaFill.Dispose();
+				footprintFill.Dispose();
+				boxFill.Dispose();
+				testing1Fill.Dispose();
+				testing2Fill.Dispose();
+				testing3Fill.Dispose();
 			}
-			if (!vpIntraData.isPrepared) vpIntraData.Prepare();
-			if (!prepared) {
-				prepared = true;
+			if (RenderTarget != null) {
 				normalAreaFill = normalAreaBrush.ToDxBrush(RenderTarget);
 				pocFill = pocBrush.ToDxBrush(RenderTarget);
 				vaFill = valueAreaBrush.ToDxBrush(RenderTarget);
@@ -176,6 +182,14 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				testing2Fill = Brushes.Green.ToDxBrush(RenderTarget);
 				testing3Fill = Brushes.Yellow.ToDxBrush(RenderTarget);
 			}
+		}
+
+		protected override void OnRender(ChartControl chartControl, ChartScale chartScale) {
+			if (Bars == null || Bars.Instrument == null || IsInHitTest || SuriAddOn.license == License.None || vpIntraData.barData.IsNullOrEmpty()) {
+				return;
+			}
+			if (!vpIntraData.isPrepared) vpIntraData.Prepare();
+			return;
 
 			SharpDX.DirectWrite.TextLayout textLayout;
 			RectangleF rect = new RectangleF();
