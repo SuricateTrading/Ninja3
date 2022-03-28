@@ -28,24 +28,24 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		private SharpDX.Direct2D1.Brush textFill;
 		private SharpDX.DirectWrite.TextFormat textFormat;
 		
-		[Browsable(false)]
-		[Display(Name = "Benutze Tickdaten", Order = 0, GroupName = "Parameter", Description = "Tickdaten dauern länger zu laden, sind aber genauer. 'Tick Replay' muss dafür aktiviert sein.")]
-		public bool useTicks { get; set; }
-		
 		/*[Browsable(false)]
 		[Display(Name = "Jahre zu laden", Order = 1, GroupName = "Parameter", Description = "Wie viele Jahre an Daten geladen werden sollen.")]
 		public int years { get; set; }*/
 		
+		[NinjaScriptProperty]
+		[Display(Name = "Aktuelles VP", Order = 0, GroupName = "Parameter", Description = "Wenn aktiv, wird das aktuelle Volumen Profil geladen und die beiden Parameter 'Jahre zu laden' und 'End Datum' haben dann keine Auswirkung mehr! Hierfür ist die Premium Version nötig.")]
+		public bool loadRecent { get; set; }
+		
 		[Range(1, 30)]
 		[NinjaScriptProperty]
-		[Display(Name = "Jahre zu laden", Order = 0, GroupName = "Parameter", Description = "Wie viele Jahre geladen werden sollen.")]
+		[Display(Name = "Jahre zu laden", Order = 1, GroupName = "Parameter", Description = "Wie viele Jahre geladen werden sollen.")]
 		public int years { get; set; }
 
 		[NinjaScriptProperty]
-		[Display(Name = "End Datum", Order = 1, GroupName = "Parameter", Description = "Bis wann Daten geladen werden sollen.")]
+		[Display(Name = "End Datum", Order = 2, GroupName = "Parameter", Description = "Bis wann Daten geladen werden sollen.")]
 		public DateTime dateTo { get; set; }
 		
-		[Display(Name = "Breite", Order = 2, GroupName = "Parameter", Description = "Wenn leer, dann wird die Breite automatisch berechnet. Ansonsten werden die VP-Bars maximal so breit wie hier angegeben.")]
+		[Display(Name = "Breite", Order = 3, GroupName = "Parameter", Description = "Wenn leer, dann wird die Breite automatisch berechnet. Ansonsten werden die VP-Bars maximal so breit wie hier angegeben.")]
 		public int? maxWidth { get; set; }
 		
 		#region Colors
@@ -93,9 +93,9 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				BarsRequiredToPlot							= 0;
 				ZOrder										= 0;
 
+				loadRecent									= true;
 				years										= 20;
 				dateTo										= DateTime.Now;
-				useTicks									= false;
 				normalAreaBrush								= Brushes.Gray.Clone();
 				normalAreaBrush.Opacity						= 0.5;
 				pocBrush									= Brushes.Red.Clone();
@@ -103,54 +103,31 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				textBrush									= Brushes.White;
 			} else if (State == State.DataLoaded) {
 				vpBigData = new VpBigData(TickSize);
-				if (Bars.IsTickReplay && useTicks) {
-					//AddDataSeries(null, new BarsPeriod { BarsPeriodType = BarsPeriodType.Minute, Value = 1440 }, years * 250, null, null);
+				if ((SuriAddOn.license == License.PremiumCot || SuriAddOn.license == License.Dev) && loadRecent) {
+					vpBigData = VpSerialization.GetVpBig(Instrument);
+					dataLoaded = true;
 				} else {
-					if (SuriAddOn.license == License.Dev && false) {
-						/*DateTime date = dateTo ?? DateTime.Now.Date;
-						date = date.AddMonths(-1);
-						string path = VpSerialization.GetVpBigFilePath(Instrument, date);
-						string json = File.ReadAllText(path);
-						vpBigData = Newtonsoft.Json.JsonConvert.DeserializeObject<VpBigData>(json);
-						//if (vpBigData!=null) vpBigData.Prepare();
-						dataLoaded = true;*/
-					} else {
-						BarsRequest barsReq = new BarsRequest(Instrument, dateTo.AddYears(-years).Date, dateTo.AddDays(-1).Date) {
-							MergePolicy		= MergePolicy.MergeBackAdjusted,
-							BarsPeriod		= new BarsPeriod { BarsPeriodType = BarsPeriodType.Minute, Value = 1 },
-							TradingHours	= TradingHours,
-						};
-					
-						barsReq.Request((bars, errorCode, errorMessage) => {
-							if (errorCode != ErrorCode.NoError) {
-								Print(string.Format("Error on requesting bars: {0}, {1}", errorCode, errorMessage));
-								return;
-							}
-							for (int i = 0; i < bars.Bars.Count; i++) {
-								vpBigData.AddMinuteVolume(bars.Bars.GetVolume(i), bars.Bars.GetHigh(i), bars.Bars.GetLow(i));
-							}
-							dataLoaded = true;
-							ForceRefresh();
-						});
-					}
+					BarsRequest barsReq = new BarsRequest(Instrument, dateTo.AddYears(-years).Date, dateTo.AddDays(-1).Date) {
+						MergePolicy		= MergePolicy.MergeBackAdjusted,
+						BarsPeriod		= new BarsPeriod { BarsPeriodType = BarsPeriodType.Minute, Value = 1 },
+						TradingHours	= TradingHours,
+					};
+				
+					barsReq.Request((bars, errorCode, errorMessage) => {
+						if (errorCode != ErrorCode.NoError) {
+							Print(string.Format("Error on requesting bars: {0}, {1}", errorCode, errorMessage));
+							return;
+						}
+						for (int i = 0; i < bars.Bars.Count; i++) {
+							vpBigData.AddMinuteVolume(bars.Bars.GetVolume(i), bars.Bars.GetHigh(i), bars.Bars.GetLow(i));
+						}
+						dataLoaded = true;
+						ForceRefresh();
+					});
 				}
 			}
 		}
 
-		/*protected override void OnMarketData(MarketDataEventArgs e) {
-			if (SuriAddOn.license == License.None) return;
-			
-			if (Bars.IsTickReplay && useTicks && Bars.Count > 0 && Bars.BarsPeriod.BarsPeriodType == BarsPeriodType.Minute && Bars.BarsPeriod.Value == 1440) {
-				if (!test) {
-					test = true;
-					Print("OnMarketData\t" + e.Price + "\t" + e.Volume + "\t" + e.Time + "\t" + Bars.BarsPeriod.BarsPeriodType);
-				}
-				vpBigData.AddTick(e);
-				
-			}
-		}*/
-		
-		
 		public override void OnRenderTargetChanged() {
 			// if dxBrush exists on first render target change, dispose of it
 			if (normalAreaFill != null) {
@@ -164,12 +141,11 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				textFill = textBrush.ToDxBrush(RenderTarget);
 			}
 		}
-
+		
 		protected override void OnRender(ChartControl chartControl, ChartScale chartScale) {
 			if (!dataLoaded || SuriAddOn.license == License.None || Bars == null || Bars.Instrument == null || IsInHitTest) {
 				return;
 			}
-
 			if (!vpBigData.isPrepared) {
 				vpBigData.Prepare();
 			}
@@ -183,8 +159,8 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				X = 0,
 				Height = rectHeight,
 			};
-			if (highestValue > vpBigData.tickData.Last().tick) {
-				rect.Y = chartScale.GetYByValue((vpBigData.tickData.Last().tick+1) * TickSize) - rect.Height / 2f;
+			if (highestValue > vpBigData.tickData.Last().Key) {
+				rect.Y = chartScale.GetYByValue((vpBigData.tickData.Last().Key+1) * TickSize) - rect.Height / 2f;
 			} else {
 				rect.Y = chartScale.GetYByValue((highestValue+1) * TickSize) - rect.Height / 2f;
 			}
@@ -198,13 +174,13 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 
 			for (int i = 0; i < tickCount; i++) {
 				int tick = highestValue - i;
-				if (vpBigData.Contains(tick)) {
-					VpTickData tickData = vpBigData.At(tick);
+				if (vpBigData.tickData.ContainsKey(tick)) {
+					VpTickData tickData = vpBigData.tickData[tick];
 
 					rect.Width = (float) ((maxWidth ?? ChartPanel.W * 0.6) * tickData.volume / vpBigData.pocVolume);
 					rect.Y += rect.Height;
 					rect.Height = tickData.isMainPoc ? Math.Max(1, rectHeight) : rectHeight;
-				
+					
 					RenderTarget.FillRectangle(rect, tickData.isMainPoc ? pocFill : normalAreaFill);
 					if (rect.Height > 13) {
 						SharpDX.DirectWrite.TextLayout textLayout = new SharpDX.DirectWrite.TextLayout(Core.Globals.DirectWriteFactory, tickData.volume.ToString("F0"), textFormat, 250, textFormat.FontSize);
@@ -212,7 +188,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 					}
 				}
 			}
-			
 			
 		}
 	}
@@ -260,18 +235,18 @@ namespace NinjaTrader.NinjaScript.Indicators
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
 		private Suri.SuriVolumeProfileBig[] cacheSuriVolumeProfileBig;
-		public Suri.SuriVolumeProfileBig SuriVolumeProfileBig(int years, DateTime dateTo)
+		public Suri.SuriVolumeProfileBig SuriVolumeProfileBig(bool loadRecent, int years, DateTime dateTo)
 		{
-			return SuriVolumeProfileBig(Input, years, dateTo);
+			return SuriVolumeProfileBig(Input, loadRecent, years, dateTo);
 		}
 
-		public Suri.SuriVolumeProfileBig SuriVolumeProfileBig(ISeries<double> input, int years, DateTime dateTo)
+		public Suri.SuriVolumeProfileBig SuriVolumeProfileBig(ISeries<double> input, bool loadRecent, int years, DateTime dateTo)
 		{
 			if (cacheSuriVolumeProfileBig != null)
 				for (int idx = 0; idx < cacheSuriVolumeProfileBig.Length; idx++)
-					if (cacheSuriVolumeProfileBig[idx] != null && cacheSuriVolumeProfileBig[idx].years == years && cacheSuriVolumeProfileBig[idx].dateTo == dateTo && cacheSuriVolumeProfileBig[idx].EqualsInput(input))
+					if (cacheSuriVolumeProfileBig[idx] != null && cacheSuriVolumeProfileBig[idx].loadRecent == loadRecent && cacheSuriVolumeProfileBig[idx].years == years && cacheSuriVolumeProfileBig[idx].dateTo == dateTo && cacheSuriVolumeProfileBig[idx].EqualsInput(input))
 						return cacheSuriVolumeProfileBig[idx];
-			return CacheIndicator<Suri.SuriVolumeProfileBig>(new Suri.SuriVolumeProfileBig(){ years = years, dateTo = dateTo }, input, ref cacheSuriVolumeProfileBig);
+			return CacheIndicator<Suri.SuriVolumeProfileBig>(new Suri.SuriVolumeProfileBig(){ loadRecent = loadRecent, years = years, dateTo = dateTo }, input, ref cacheSuriVolumeProfileBig);
 		}
 	}
 }
@@ -280,14 +255,14 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.SuriVolumeProfileBig SuriVolumeProfileBig(int years, DateTime dateTo)
+		public Indicators.Suri.SuriVolumeProfileBig SuriVolumeProfileBig(bool loadRecent, int years, DateTime dateTo)
 		{
-			return indicator.SuriVolumeProfileBig(Input, years, dateTo);
+			return indicator.SuriVolumeProfileBig(Input, loadRecent, years, dateTo);
 		}
 
-		public Indicators.Suri.SuriVolumeProfileBig SuriVolumeProfileBig(ISeries<double> input , int years, DateTime dateTo)
+		public Indicators.Suri.SuriVolumeProfileBig SuriVolumeProfileBig(ISeries<double> input , bool loadRecent, int years, DateTime dateTo)
 		{
-			return indicator.SuriVolumeProfileBig(input, years, dateTo);
+			return indicator.SuriVolumeProfileBig(input, loadRecent, years, dateTo);
 		}
 	}
 }
@@ -296,14 +271,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.SuriVolumeProfileBig SuriVolumeProfileBig(int years, DateTime dateTo)
+		public Indicators.Suri.SuriVolumeProfileBig SuriVolumeProfileBig(bool loadRecent, int years, DateTime dateTo)
 		{
-			return indicator.SuriVolumeProfileBig(Input, years, dateTo);
+			return indicator.SuriVolumeProfileBig(Input, loadRecent, years, dateTo);
 		}
 
-		public Indicators.Suri.SuriVolumeProfileBig SuriVolumeProfileBig(ISeries<double> input , int years, DateTime dateTo)
+		public Indicators.Suri.SuriVolumeProfileBig SuriVolumeProfileBig(ISeries<double> input , bool loadRecent, int years, DateTime dateTo)
 		{
-			return indicator.SuriVolumeProfileBig(input, years, dateTo);
+			return indicator.SuriVolumeProfileBig(input, loadRecent, years, dateTo);
 		}
 	}
 }

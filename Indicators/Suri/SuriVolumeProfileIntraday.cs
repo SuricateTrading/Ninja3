@@ -49,9 +49,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		public bool drawText { get; set; }
 		[Display(Name = "Zeige 'Naked PoC'", Order = 2, GroupName = "Parameter")]
 		public bool drawNakedPoc { get; set; }
-		//[Display(Name = "Zeige 'Naked PoC'", Order = 2, GroupName = "Parameter")]
-		[Browsable(false)]
-		public bool drawBoxes { get; set; }
 		
 		#region Colors
 		[XmlIgnore]
@@ -86,22 +83,18 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			get { return Serialize.BrushToString(textBrush); }
 			set { textBrush = Serialize.StringToBrush(value); }
 		}
-		//[XmlIgnore]
-		//[Display(Name = "SMA", Order = 4, GroupName = "Farben")]
-		public Brush smaBrush { get; set; }
-		[Browsable(false)]
-		public string smaBrushSerialize {
-			get { return Serialize.BrushToString(smaBrush); }
-			set { smaBrush = Serialize.StringToBrush(value); }
-		}
+		
+		private Brush smaBrush { get; set; }
+		private Brush boxBrush { get; set; }
+		
+		[XmlIgnore]
+		[Display(Name = "Bid Ask Delta Linie", Order = 4, GroupName = "Farben")]
 		public Brush footprintBrush { get; set; }
 		[Browsable(false)]
 		public string footprintBrushSerialize {
 			get { return Serialize.BrushToString(footprintBrush); }
 			set { footprintBrush = Serialize.StringToBrush(value); }
 		}
-		[Browsable(false)]
-		public Brush boxBrush { get; set; }
 		#endregion
 		#endregion
 		
@@ -134,7 +127,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				footprintBrush								= Brushes.Orange;
 				boxBrush									= Brushes.CornflowerBlue.Clone();
 				boxBrush.Opacity							= 0.5;
-				drawBoxes									= SuriAddOn.license == License.Dev;
 			} else if (State == State.Configure) {
 				SimpleFont font = new SimpleFont { Size = textSize };
 				textFormat					= font.ToDirectWriteTextFormat();
@@ -189,7 +181,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				return;
 			}
 			if (!vpIntraData.isPrepared) vpIntraData.Prepare();
-			return;
 
 			SharpDX.DirectWrite.TextLayout textLayout;
 			RectangleF rect = new RectangleF();
@@ -214,16 +205,16 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				float? previousDistVolWidth = null;
 				float? previousDelta = null;
 
-				foreach(VpTickData entry in vpIntraData.barData[lastIndex].tickData) {
+				foreach(KeyValuePair<int, VpTickData> entry in vpIntraData.barData[lastIndex].tickData) {
 					rect.Y = (float) (y - i * height + height * 0.5f);
-					rect.Width = (float) ((maxWidth ?? barWidth) * entry.volume / vpIntraData.barData[lastIndex].pocVolume);
+					rect.Width = (float) ((maxWidth ?? barWidth) * entry.Value.volume / vpIntraData.barData[lastIndex].pocVolume);
 					rect.Height = (float) height;
 
 					SharpDX.Direct2D1.Brush b;
 					/*if (entry.Value.isLvn)				b = testing1Fill;
 					else if (entry.Value.isHigh)		b = testing2Fill;
-					else */if (entry.isMainPoc)		b = pocFill;
-					else if (entry.isInValueArea)	b = vaFill;
+					else */if (entry.Value.isMainPoc)		b = pocFill;
+					else if (entry.Value.isInValueArea)	b = vaFill;
 					else								b = normalAreaFill;
 					RenderTarget.FillRectangle(rect, b);
 
@@ -247,7 +238,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 					previousDistVolWidth = (float) ((maxWidth ?? barWidth) * entry.Value.distributedVolume / vpIntraData.barData[lastIndex].pocVolume);
 					*/
 					
-					if (drawNakedPoc && entry.isNakedPoc) {
+					if (drawNakedPoc && entry.Value.isNakedPoc) {
 						float pocX1 = rect.X + rect.Width + 10;
 						float pocX2 = (float) ChartPanel.W - 200;
 						if (pocX2 - pocX1 > 0) {
@@ -265,8 +256,9 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 						}
 					}
 
+					// bid ask delta
 					if (SuriAddOn.license == License.Dev) {
-						float delta = entry.asks - entry.bids;
+						float delta = entry.Value.asks - entry.Value.bids;
 						delta = (float) (((maxWidth ?? barWidth)/2f) * delta / vpIntraData.barData[lastIndex].highestDelta);
 						if (previousDelta != null) {
 							RenderTarget.DrawLine(
@@ -294,7 +286,8 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 					RenderTarget.DrawTextLayout(new Vector2(rect.X, (float) y + rect.Height/2.0f), textLayout, textFill, SharpDX.Direct2D1.DrawTextOptions.NoSnap);
 				}
 
-				if (drawBoxes) {
+				// box
+				if (SuriAddOn.license == License.Dev) {
 					if (vpIntraData.boxes.ContainsKey(lastIndex)) {
 						VpBox box = vpIntraData.boxes[lastIndex];
 						RectangleF boxRect = new RectangleF {

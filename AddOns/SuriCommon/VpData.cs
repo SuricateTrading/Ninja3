@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Forms;
 using NinjaTrader.Data;
-using NinjaTrader.Gui.NinjaScript;
-using NinjaTrader.Gui.Tools;
-using NinjaTrader.NinjaScript;
 
 namespace NinjaTrader.Custom.AddOns.SuriCommon {
 	public sealed class VpBox {
@@ -32,18 +28,20 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			if (isPrepared) return;
 			isPrepared = true;
 			for (int i = barData.Count - 1; i >= 0; i--) {
-				barData[i].Prepare();
-				//CalculateNakedPoc(i);
+				VpBarData vpBarData = barData[i];
+				vpBarData.Prepare();
+				CalculateNakedPoc(i);
 			}
-			/*for (int i = 0; i < barData.Count; i++) {
+			for (int i = 0; i < barData.Count; i++) {
 				CalculateBox(i);
-			}*/
+			}
 		}
 		
 		private void CalculateBox(int index) {
 			int boxHigh = barData[index].vaHigh;
 			int boxLow  = barData[index].vaLow;
-			List<VpBarData> bars = new List<VpBarData> { barData[index] };
+			List<VpBarData> bars = new List<VpBarData>();
+			bars.Add(barData[index]);
 			for (int i = index - 1; i >= 0; i--) {
 				VpBarData bar = barData[i];
 				// check if value areas overlap
@@ -56,6 +54,8 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 				}
 			}
 			if (bars.Count >= 3) {
+				
+				
 				
 				/*foreach (VpBarData vpBarData1 in bars) {
 					foreach (VpBarData vpBarData2 in bars) {
@@ -73,7 +73,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			if (index >= barData.Count - 1) return;
 			int pocTick = barData[index].PocTickData().tick;
 			for (int i = index + 1; i < barData.Count; i++) {
-				if (barData[i].Contains(pocTick) && barData[i].tickData[pocTick].volume != 0 ) {
+				if (barData[i].tickData.ContainsKey(pocTick) && barData[i].tickData[pocTick].volume != 0 ) {
 					return;
 				}
 			}
@@ -83,7 +83,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 
 	public abstract class SingleVp {
 		public bool isVpBig;
-		public readonly List<VpTickData> tickData = new List<VpTickData>();
+		public readonly SortedDictionary<int, VpTickData> tickData = new SortedDictionary<int, VpTickData>();
 		public bool isPrepared;
 		public readonly double tickSize;
 		public int tickCount;
@@ -110,12 +110,9 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			this.tickSize = tickSize;
 		}
 
-		public VpTickData At(int tick) { return tickData[tick - low]; }
-		public VpTickData PocTickData() { return tickData[pocIndex]; }
+		public VpTickData At(int index) { return tickData[low + index]; }
+		public VpTickData PocTickData() { return tickData[low + pocIndex]; }
 		public int PriceToTick(double price) { return (int) Math.Round(price / tickSize); }
-
-		/** Use only AFTER Prepared was called! */
-		public bool Contains(int tick) { return tick >= low && tick <= high; }
 		
 		public void AddTick(MarketDataEventArgs e) {
 			if (e.MarketDataType != MarketDataType.Last) return;
@@ -128,25 +125,17 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			int _bid  = PriceToTick(bid);
 			int _ask  = PriceToTick(ask);
 			
-			if (tickData.IsNullOrEmpty()) tickData.Add(new VpTickData(tick));
-			
-			
-			if (tick > high) {
-				tickData.Add(new VpTickData(tick));
-				tickData.Last().volume += volume;
-			} else if (tick < low) {
-				tickData.Insert(0, new VpTickData(tick));
-				tickData[0].volume += volume;
-			} else {
-				At(tick).volume += volume;
+			if (!tickData.ContainsKey(tick)) {
+				tickData[tick] = new VpTickData(tick);
 			}
+			tickData[tick].volume += volume;
 			totalVolume += volume;
 			
 			if (tick >= _ask) {
-				tickData.Last().asks += volume;
+				tickData[tick].asks += volume;
 				totalAsks += volume;
 			} /*else*/ if (tick <= _bid) {
-				tickData.Last().bids += volume;
+				tickData[tick].bids += volume;
 				totalBids += volume;
 			}
 			
@@ -159,27 +148,18 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			
 			int tickHigh = PriceToTick(high);
 			int tickLow  = PriceToTick(low);
-			double volumePerTick = volume / (tickHigh - tickLow + 1.0);
-			totalVolume += volume;
-
-			if (tickData.IsNullOrEmpty()) {
-				for (int i = tickLow; i <= tickHigh; i++) {
-					tickData.Add(new VpTickData(i));
-				}
-			} else {
-				// iff we have to add ticks which were not already present, this is first executed to add all those ticks with empty volume.
-				for (int i = this.high + 1; tickHigh >= i; i++) tickData.Add(new VpTickData(i));
-				for (int i = this.low  - 1; tickLow  <= i; i--) tickData.Insert(0, new VpTickData(i));
-			}
-			
 			if (tickHigh > this.high) this.high = tickHigh;
 			if (tickLow  < this.low ) this.low  = tickLow;
 			
+			double volumePerTick = volume / (tickHigh - tickLow + 1.0);
 			for (int price = tickLow; price <= tickHigh; price++) {
-				At(price).volume += volumePerTick;
+				if (!tickData.ContainsKey(price)) {
+					tickData.Add(price, new VpTickData(price));
+				}
+				tickData[price].volume += volumePerTick;
+				totalVolume += volumePerTick;
 			}
 		}
-
 
 		private void CalculateVaueArea(bool checkPairs = false) {
 			PocTickData().isInValueArea = true;
@@ -200,83 +180,81 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 				bool up2 = indexAbove < tickData.Count -1;
 				bool down1 = indexBelow >= 0;
 				bool down2 = indexBelow >= 1;
-
-				VpTickData vpAbove1 = tickData[indexAbove];
 				
 				if (checkPairs) {
 					double totalAbove = double.MinValue;
 					if (up1) {
-						totalAbove = tickData[indexAbove].volume;
-						if (up2) totalAbove += tickData[indexAbove+1].volume;
+						totalAbove = At(indexAbove).volume;
+						if (up2) totalAbove += At(indexAbove+1).volume;
 					}
 					double totalBelow = double.MinValue;
 					if (down1) {
-						totalBelow = tickData[indexBelow].volume;
-						if (down2) totalBelow += tickData[indexBelow-1].volume;
+						totalBelow = At(indexBelow).volume;
+						if (down2) totalBelow += At(indexBelow-1).volume;
 					}
 
 					if (up1 && totalAbove > totalBelow) {
-						tickData[indexAbove].isInValueArea = true;
-						vaVolume -= tickData[indexAbove].volume;
-						vaHigh = tickData[indexAbove].tick;
+						At(indexAbove).isInValueArea = true;
+						vaVolume -= At(indexAbove).volume;
+						vaHigh = At(indexAbove).tick;
 						indexAbove++;
 						if (up2) {
-							tickData[indexAbove].isInValueArea = true;
-							vaVolume -= tickData[indexAbove].volume;
-							vaHigh = tickData[indexAbove].tick;
+							At(indexAbove).isInValueArea = true;
+							vaVolume -= At(indexAbove).volume;
+							vaHigh = At(indexAbove).tick;
 							indexAbove++;
 						}
 					} else if (down1 && totalAbove < totalBelow) {
-						tickData[indexBelow].isInValueArea = true;
-						vaVolume -= tickData[indexBelow].volume;
-						vaLow = tickData[indexBelow].tick;
+						At(indexBelow).isInValueArea = true;
+						vaVolume -= At(indexBelow).volume;
+						vaLow = At(indexBelow).tick;
 						indexBelow--;
 						if (down2) {
-							tickData[indexBelow].isInValueArea = true;
-							vaVolume -= tickData[indexBelow].volume;
-							vaLow = tickData[indexBelow].tick;
+							At(indexBelow).isInValueArea = true;
+							vaVolume -= At(indexBelow).volume;
+							vaLow = At(indexBelow).tick;
 							indexBelow--;
 						}
 					} else {
-						if (tickData[indexAbove].volume > tickData[indexBelow].volume) {
-							tickData[indexAbove].isInValueArea = true;
-							vaVolume -= tickData[indexAbove].volume;
-							vaHigh = tickData[indexAbove].tick;
+						if (At(indexAbove).volume > At(indexBelow).volume) {
+							At(indexAbove).isInValueArea = true;
+							vaVolume -= At(indexAbove).volume;
+							vaHigh = At(indexAbove).tick;
 							indexAbove++;
-						} else if (tickData[indexAbove].volume < tickData[indexBelow].volume) {
-							tickData[indexBelow].isInValueArea = true;
-							vaVolume -= tickData[indexBelow].volume;
-							vaLow = tickData[indexBelow].tick;
+						} else if (At(indexAbove).volume < At(indexBelow).volume) {
+							At(indexBelow).isInValueArea = true;
+							vaVolume -= At(indexBelow).volume;
+							vaLow = At(indexBelow).tick;
 							indexBelow--;
 						} else {
-							tickData[indexAbove].isInValueArea = true;
-							tickData[indexBelow].isInValueArea = true;
-							vaVolume -= tickData[indexAbove].volume;
-							vaVolume -= tickData[indexBelow].volume;
-							vaHigh = tickData[indexAbove].tick;
-							vaLow = tickData[indexBelow].tick;
+							At(indexAbove).isInValueArea = true;
+							At(indexBelow).isInValueArea = true;
+							vaVolume -= At(indexAbove).volume;
+							vaVolume -= At(indexBelow).volume;
+							vaHigh = At(indexAbove).tick;
+							vaLow = At(indexBelow).tick;
 							indexAbove++;
 							indexBelow--;
 						}
 					}
 				} else {
-					if (!down1 || up1 && tickData[indexAbove].volume > tickData[indexBelow].volume) {
-						tickData[indexAbove].isInValueArea = true;
-						vaVolume -= tickData[indexAbove].volume;
-						vaHigh = tickData[indexAbove].tick;
+					if (!down1 || up1 && At(indexAbove).volume > At(indexBelow).volume) {
+						At(indexAbove).isInValueArea = true;
+						vaVolume -= At(indexAbove).volume;
+						vaHigh = At(indexAbove).tick;
 						indexAbove++;
-					} else if (!up1 || tickData[indexAbove].volume < tickData[indexBelow].volume) {
-						tickData[indexBelow].isInValueArea = true;
-						vaVolume -= tickData[indexBelow].volume;
-						vaLow = tickData[indexBelow].tick;
+					} else if (!up1 || At(indexAbove).volume < At(indexBelow).volume) {
+						At(indexBelow).isInValueArea = true;
+						vaVolume -= At(indexBelow).volume;
+						vaLow = At(indexBelow).tick;
 						indexBelow--;
 					} else {
-						tickData[indexAbove].isInValueArea = true;
-						tickData[indexBelow].isInValueArea = true;
-						vaVolume -= tickData[indexAbove].volume;
-						vaVolume -= tickData[indexBelow].volume;
-						vaHigh = tickData[indexAbove].tick;
-						vaLow = tickData[indexBelow].tick;
+						At(indexAbove).isInValueArea = true;
+						At(indexBelow).isInValueArea = true;
+						vaVolume -= At(indexAbove).volume;
+						vaVolume -= At(indexBelow).volume;
+						vaHigh = At(indexAbove).tick;
+						vaLow = At(indexBelow).tick;
 						indexAbove++;
 						indexBelow--;
 					}
@@ -292,44 +270,42 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			
 			for (int i = 0; i < tickData.Count; i++) {
 				// add missing values with a volume of zero
-				if (i > 0) {
-					int curr = tickData[i].tick;
-					int prev = tickData[i-1].tick;
-					if (Math.Abs(curr - prev) >= 2) {
-						tickData.Insert(i, new VpTickData(prev + 1));
-						i--;
-						continue;
-					}
+				if (!tickData.ContainsKey(low + i)) {
+					tickData[low + i] = new VpTickData(low + i);
 				}
+				
+				VpTickData entry = tickData[low + i];
 				
 				// poc
-				if (pocVolume < tickData[i].volume) {
-					pocVolume = tickData[i].volume;
+				if (pocVolume < entry.volume) {
+					pocVolume = entry.volume;
 					pocIndex = i;
 				}
-				
-				// distributed volume
-				if (!isVpBig && SuriAddOn.license == License.Dev && false) {
-					if (i == 0) {
-						tickData[i]									.distributedVolume += tickData[i].volume / 2.0;
-						if (i < tickData.Count - 1) tickData[i+1]	.distributedVolume += tickData[i].volume / 2.0;
-					} else if (i == tickData.Count - 1) {
-						if (i > 0) tickData[i-1]					.distributedVolume += tickData[i].volume / 2.0;
-						tickData[i]									.distributedVolume += tickData[i].volume / 2.0;
-					} else {
-						tickData[i-1]				.distributedVolume += tickData[i].volume / 3.0;
-						tickData[i]					.distributedVolume += tickData[i].volume / 3.0;
-						tickData[i+1]				.distributedVolume += tickData[i].volume / 3.0;
-					}
-					
-					highestDelta = Math.Max(Math.Abs(highestDelta), Math.Abs(tickData[i].asks - tickData[i].bids));
-				}
 			}
-			
 			PocTickData().isMainPoc = true;
 
 			if (!isVpBig) {
-				//CalculateVaueArea();
+				CalculateVaueArea();
+				
+				
+				
+				// distributed volume
+				// must not be executed in the for-loop above, because entries may be missing.
+				/*if (!isVpBig && SuriAddOn.license == License.Dev && false) {
+					if (i == 0) {
+						entry										.distributedVolume += entry.volume / 2.0;
+						if (i < tickData.Count - 1) At(i + 1)	.distributedVolume += entry.volume / 2.0;
+					} else if (i == tickData.Count - 1) {
+						if (i > 0) At(i - 1)					.distributedVolume += entry.volume / 2.0;
+						entry										.distributedVolume += entry.volume / 2.0;
+					} else {
+						At(i - 1)			.distributedVolume += entry.volume / 3.0;
+						entry					.distributedVolume += entry.volume / 3.0;
+						At(i + 1)			.distributedVolume += entry.volume / 3.0;
+					}
+					
+					highestDelta = Math.Max(Math.Abs(highestDelta), Math.Abs(entry.asks - entry.bids));
+				}*/
 			
 				/*foreach (KeyValuePair<int, VpTickData> tick in tickData) {
 					// sub poc
@@ -340,7 +316,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			}
 		}
 
-		/*
+		
 		private void SetLvns(int start = 0) {
 			for (int i = start; i < tickData.Count; i++) {
 				int? high1, high2, low1;
@@ -359,9 +335,9 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 					return;
 				}
 				
-				double high1Volume = tickData.ElementAt(high1.Value).Value.distributedVolume;
-				double high2Volume = tickData.ElementAt(high2.Value).Value.distributedVolume;
-				double lowVolume   = tickData.ElementAt(low1 .Value).Value.distributedVolume;
+				double high1Volume = At(high1.Value).distributedVolume;
+				double high2Volume = At(high2.Value).distributedVolume;
+				double lowVolume   = At(low1 .Value).distributedVolume;
 				if (lowVolume > Math.Min(high1Volume, high2Volume) * 0.4) {
 					At(low1.Value).isLvn = false;
 				}
@@ -440,7 +416,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			}
 			return value / count;
 		}
-		*/
+		
 	}
 
 	public sealed class VpBigData : SingleVp { public VpBigData(double tickSize) : base(true, tickSize) {} }
