@@ -6,6 +6,7 @@ using NinjaTrader.NinjaScript;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Web.Script.Serialization;
 using NinjaTrader.Cbi;
 using NinjaTrader.Core;
 using NinjaTrader.Data;
@@ -13,19 +14,18 @@ using Instrument = NinjaTrader.Cbi.Instrument;
 #endregion
 
 namespace NinjaTrader.Custom.AddOns.SuriCommon {
-    public class VpSerialization {
+    public class SuriVpSerialization {
 	    public static readonly string dbPath = Globals.UserDataDir + @"db\suri\";
 
 	    private static Instrument GetInstrument(CommodityData commodity) {
-		    return Instrument.All.Where(x => x.MasterInstrument.Name == commodity.shortName && x.MasterInstrument.InstrumentType == InstrumentType.Future && x.Expiry.Date > DateTime.Now)
-			    .OrderBy(o => o.Expiry.Date).First();
+		    return Instrument.GetInstrument(commodity.shortName + Instrument.GetInstrument(commodity.shortName+" ##-##").MasterInstrument.GetNextExpiry(DateTime.Now).ToString(" MM-yy"));
 	    }
 
 	    public static void LoadVp() {
-		    StoreVpBigToFile();
+		    //StoreVpBigToFile();
 	    }
 	    
-		public static void LoadVpIntra() {
+	    /*private static void LoadVpIntra() {
 			try {
 				foreach (KeyValuePair<Commodity,CommodityData> entry in SuriStrings.data) {
 					if (entry.Key != Commodity.BrazilianReal) continue;
@@ -42,19 +42,19 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 						if (errorCode != ErrorCode.NoError) return;
 						StreamWriter stream = File.AppendText(dbPath + instrument.MasterInstrument.Name + ".vpintra");
 
-						VpIntraData vpIntraData = new VpIntraData();
+						SuriVpIntraData suriVpIntraData = new SuriVpIntraData();
 						int lastDayOfYear = -1;
 						for (int i = 0; i < bars.Bars.Count; i++) {
 							DateTime time = bars.Bars.GetTime(i);
 							if (lastDayOfYear != time.DayOfYear) {
-								if (i != 0) vpIntraData.barData.Last().Prepare();
-								vpIntraData.barData.Add(new VpBarData(instrument.MasterInstrument.TickSize, time.Date));
+								if (i != 0) suriVpIntraData.barData.Last().Prepare();
+								suriVpIntraData.barData.Add(new SuriVpBarData(instrument.MasterInstrument.TickSize, time.Date));
 							}
 							lastDayOfYear  = time.DayOfYear;
-							vpIntraData.barData.Last().AddTick(bars.Bars.GetClose(i), bars.Bars.GetVolume(i), bars.Bars.GetAsk(i), bars.Bars.GetBid(i));
+							suriVpIntraData.barData.Last().AddTick(bars.Bars.GetClose(i), bars.Bars.GetVolume(i), bars.Bars.GetAsk(i), bars.Bars.GetBid(i));
 						}
-						vpIntraData.barData.Last().Prepare();
-						stream.Write("\n" + Newtonsoft.Json.JsonConvert.SerializeObject(vpIntraData));
+						suriVpIntraData.barData.Last().Prepare();
+						stream.Write("\n" + Newtonsoft.Json.JsonConvert.SerializeObject(suriVpIntraData));
 						stream.Close();
 						Code.Output.Process("Done", PrintTo.OutputTab1);
 					});
@@ -65,15 +65,13 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 		}
 		
 		
-		
-		
-		public static void StoreVpBigToFile(int commodityIndex = 0, bool onlyRecent = true) {
+		private static void StoreVpBigToFile(int commodityIndex = 0, bool onlyRecent = true) {
 			KeyValuePair<Commodity, CommodityData> entry;
 			try {
 				entry = SuriStrings.data.ElementAt(commodityIndex);
 			} catch (Exception) { return; }
 
-			if (entry.Key != Commodity.BitcoinMicro) {
+			if (entry.Key == Commodity.BitcoinMicro) {
 				StoreVpBigToFile(commodityIndex + 1, onlyRecent);
 				return;
 			}
@@ -94,14 +92,12 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 						return;
 					}
 					
-					VpBigData vpBigData = new VpBigData(instrument.MasterInstrument.TickSize);
+					SuriVpBigData suriVpBigData = new SuriVpBigData(instrument.MasterInstrument.TickSize);
 					string path = dbPath + @"vpbig\" + instrument.MasterInstrument.Name + @"\";
 					Directory.CreateDirectory(path);
 					for (int i = 0; i < bars.Bars.Count; i++) {
 						DateTime date = bars.Bars.GetTime(i).Date;
 						if (!onlyRecent && (date - bars.Bars.GetTime(0).Date).Days > 365 * 6) {
-							// this is only executed iff at least 6 years have been loaded
-							
 							DateTime oldDate = bars.Bars.GetTime(i-1).Date;
 							int newWeek = Week(date);
 							int oldWeek = Week(oldDate);
@@ -109,29 +105,33 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 								// this happens if a new year started and the first week of the year did not have a single trading day.
 								Code.Output.Process("Fehlende erste Woche bei " + instrument.MasterInstrument.Name + " " + date, PrintTo.OutputTab1);
 								using (StreamWriter stream = File.CreateText(GetVpBigFilePath(instrument, date.Year, 1))) {
-									VpBigDataSerialized vp = FromVpBig(vpBigData);
-									vp.date = new DateTime(date.Year, 1, 1);
-									stream.Write("\n" + Newtonsoft.Json.JsonConvert.SerializeObject(vp));
+									suriVpBigData.AddMissingValues();
+									SuriVpBigDataSerialized suriVp = FromVpBig(suriVpBigData);
+									suriVp.date = new DateTime(date.Year, 1, 1);
+									stream.Write(Newtonsoft.Json.JsonConvert.SerializeObject(suriVp));
 								}
 							}
 							
 							if (oldWeek < newWeek || oldWeek - newWeek > 1) {
 								using (StreamWriter stream = File.CreateText(GetVpBigFilePath(instrument, date.Year, newWeek))) {
-									VpBigDataSerialized vp = FromVpBig(vpBigData);
-									vp.date = date.Date;
-									stream.Write("\n" + Newtonsoft.Json.JsonConvert.SerializeObject(vp));
+									suriVpBigData.AddMissingValues();
+									SuriVpBigDataSerialized suriVp = FromVpBig(suriVpBigData);
+									suriVp.date = date.Date;
+									stream.Write(Newtonsoft.Json.JsonConvert.SerializeObject(suriVp));
 								}
 							}
 						}
-						vpBigData.AddMinuteVolume(bars.Bars.GetVolume(i), bars.Bars.GetHigh(i), bars.Bars.GetLow(i));
+						
+						suriVpBigData.AddMinuteVolume(bars.Bars.GetVolume(i), bars.Bars.GetHigh(i), bars.Bars.GetLow(i));
 					}
 
 					DateTime now = DateTime.Now;
-					if (now.DayOfWeek == DayOfWeek.Saturday || now.DayOfWeek == DayOfWeek.Sunday) {
-						using (StreamWriter stream = File.CreateText(GetVpBigFilePath(instrument, onlyRecent ? (int?) null : now.Year, onlyRecent ? (int?) null : Week(now)+1))) {
-							VpBigDataSerialized vp = FromVpBig(vpBigData);
-							vp.date = now.Date;
-							stream.Write("\n" + Newtonsoft.Json.JsonConvert.SerializeObject(vp));
+					if (onlyRecent) {
+						using (StreamWriter stream = File.CreateText(GetVpBigFilePath(instrument))) {
+							suriVpBigData.AddMissingValues();
+							SuriVpBigDataSerialized suriVp = FromVpBig(suriVpBigData);
+							suriVp.date = now.Date;
+							stream.Write(Newtonsoft.Json.JsonConvert.SerializeObject(suriVp));
 						}
 					}
 
@@ -144,9 +144,9 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 				StoreVpBigToFile(commodityIndex + 1, onlyRecent);
 			}
 		}
-		
+		*/
 
-		public static VpBigData GetVpBig(Instrument instrument, DateTime? date = null) {
+		public static SuriVpBigData GetVpBig(Instrument instrument, DateTime? date = null) {
 			int? year = null, week = null;
 			if (date != null) {
 				year = date.Value.Year;
@@ -159,21 +159,27 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 				DateTime fileCreation = File.GetCreationTime(fileName);
 				int fileWeek = Week(fileCreation);
 				int currentWeek = Week(DateTime.Now);
-				if (currentWeek == fileWeek && DateTime.Now.Year == fileCreation.Year) {
+				if (currentWeek == fileWeek && DateTime.Now.Year == fileCreation.Year && (DateTime.Now - fileCreation).TotalDays <= 3) {
 					updateVpFile = false;
 				}
 			}
 			if (updateVpFile) {
 				string serverFile = @"https://app.suricate-trading.de/ninja/vpbig/" + instrument.MasterInstrument.Name + ".vpbig";
-				using (WebClient webClient = new WebClient()) {
-					webClient.DownloadFile(serverFile, fileName);
+				try {
+					using (WebClient webClient = new WebClient()) {
+						webClient.DownloadFile(serverFile, fileName);
+					}
+				} catch (Exception) {
+					return null;
 				}
 			}
 			string json = File.ReadAllText(fileName);
-			VpBigDataSerialized s = Newtonsoft.Json.JsonConvert.DeserializeObject<VpBigDataSerialized>(json);
-			VpBigData vp = ToVpBig(s);
-			vp.Prepare();
-			return vp;
+			var serializer = new JavaScriptSerializer();
+			SuriVpBigDataSerialized s = serializer.Deserialize<SuriVpBigDataSerialized>(json);
+			
+			SuriVpBigData suriVp = ToVpBig(s);
+			suriVp.Prepare();
+			return suriVp;
 		}
 
 		private static string GetVpBigFilePath(Instrument instrument, int? year = null, int? week = null) {
@@ -192,37 +198,37 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			return CultureInfo.InvariantCulture.Calendar.GetWeekOfYear(time, CalendarWeekRule.FirstDay, DayOfWeek.Monday);
 		}
 		
-		private static VpBigData ToVpBig(VpBigDataSerialized vpBigDataSerialized) {
-			VpBigData vpBigData = new VpBigData(vpBigDataSerialized.tickSize) {
-				low = vpBigDataSerialized.low,
-				high = vpBigDataSerialized.high,
-				totalVolume = vpBigDataSerialized.totalVolume
+		private static SuriVpBigData ToVpBig(SuriVpBigDataSerialized suriVpBigDataSerialized) {
+			SuriVpBigData suriVpBigData = new SuriVpBigData(suriVpBigDataSerialized.tickSize) {
+				low = suriVpBigDataSerialized.low,
+				high = suriVpBigDataSerialized.high,
+				totalVolume = suriVpBigDataSerialized.totalVolume
 			};
-			int tick = vpBigData.low;
-			foreach (var volume in vpBigDataSerialized.tickData) {
-				vpBigData.tickData[tick] = new VpTickData(tick);
-				vpBigData.tickData[tick].volume = volume;
+			int tick = suriVpBigData.low;
+			foreach (var volume in suriVpBigDataSerialized.tickData) {
+				suriVpBigData.tickData[tick] = new SuriVpTickData(tick);
+				suriVpBigData.tickData[tick].volume = volume;
 				tick++;
 			}
-			return vpBigData;
+			return suriVpBigData;
 		}
-		private static VpBigDataSerialized FromVpBig(VpBigData vpBigData) {
-			VpBigDataSerialized vpBigDataSerialized = new VpBigDataSerialized {
-				low = vpBigData.low,
-				high = vpBigData.high,
-				totalVolume = vpBigData.totalVolume,
-				tickSize = vpBigData.tickSize,
+		private static SuriVpBigDataSerialized FromVpBig(SuriVpBigData suriVpBigData) {
+			SuriVpBigDataSerialized suriVpBigDataSerialized = new SuriVpBigDataSerialized {
+				low = suriVpBigData.low,
+				high = suriVpBigData.high,
+				totalVolume = suriVpBigData.totalVolume,
+				tickSize = suriVpBigData.tickSize,
 				tickData = new List<long>()
 			};
-			foreach (var pair in vpBigData.tickData) {
-				vpBigDataSerialized.tickData.Add((long) Math.Round(pair.Value.volume));
+			foreach (var pair in suriVpBigData.tickData) {
+				suriVpBigDataSerialized.tickData.Add((long) Math.Round(pair.Value.volume));
 			}
-			return vpBigDataSerialized;
+			return suriVpBigDataSerialized;
 		}
 		
     }
     
-    public sealed class VpBigDataSerialized {
+    public sealed class SuriVpBigDataSerialized {
 	    public List<long> tickData;
 	    public int high;
 	    public int low;

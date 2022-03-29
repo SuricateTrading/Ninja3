@@ -20,7 +20,7 @@ using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
 	public sealed class SuriVolumeProfileIntraday : Indicator {
-		private VpIntraData vpIntraData = new VpIntraData();
+		private SuriVpIntraData suriVpIntraData = new SuriVpIntraData();
 		private int? lastBar;
 		
 		#region Properties
@@ -132,19 +132,19 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				textFormat					= font.ToDirectWriteTextFormat();
 				textFormat.TextAlignment	= SharpDX.DirectWrite.TextAlignment.Leading;
 				textFormat.WordWrapping		= SharpDX.DirectWrite.WordWrapping.NoWrap;
-			} else if (State == State.DataLoaded && !Bars.IsTickReplay && SuriAddOn.license == License.Dev) {
-				string json = File.ReadAllText(VpSerialization.dbPath + @"\" + Instrument.MasterInstrument.Name + ".vpintra");
-				vpIntraData = Newtonsoft.Json.JsonConvert.DeserializeObject<VpIntraData>(json);
-			}
+			} /*else if (State == State.DataLoaded && !Bars.IsTickReplay && SuriAddOn.license == License.Dev) {
+				string json = File.ReadAllText(SuriVpSerialization.dbPath + @"\" + Instrument.MasterInstrument.Name + ".vpintra");
+				suriVpIntraData = Newtonsoft.Json.JsonConvert.DeserializeObject<SuriVpIntraData>(json);
+			}*/
 		}
 
 		protected override void OnMarketData(MarketDataEventArgs e) {
 			if (SuriAddOn.license == License.None || Bars.Count <= 0 || !Bars.IsTickReplay) return;
 			if (lastBar != CurrentBar) {
 				lastBar = CurrentBar;
-				vpIntraData.barData.Add(new VpBarData(TickSize, e.Time));
+				suriVpIntraData.barData.Add(new SuriVpBarData(TickSize, e.Time));
 			}
-			vpIntraData.barData.Last().AddTick(e);
+			suriVpIntraData.barData.Last().AddTick(e);
 			//Print(e.Time + "\t\t" + e.Price + "\t\t" + e.Ask + "\t\t" + e.Bid + "\t\t" + e.Volume + "\t\t" + e.Last);
 		}
 		
@@ -177,10 +177,10 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		}
 
 		protected override void OnRender(ChartControl chartControl, ChartScale chartScale) {
-			if (Bars == null || Bars.Instrument == null || IsInHitTest || SuriAddOn.license == License.None || vpIntraData.barData.IsNullOrEmpty()) {
+			if (Bars == null || Bars.Instrument == null || IsInHitTest || SuriAddOn.license == License.None || suriVpIntraData.barData.IsNullOrEmpty()) {
 				return;
 			}
-			if (!vpIntraData.isPrepared) vpIntraData.Prepare();
+			if (!suriVpIntraData.isPrepared) suriVpIntraData.Prepare();
 
 			SharpDX.DirectWrite.TextLayout textLayout;
 			RectangleF rect = new RectangleF();
@@ -189,9 +189,9 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			int lastIndex = 0;
 			for (int idx = ChartBars.FromIndex; idx <= ChartBars.ToIndex; idx++) {
 				if (!Bars.IsTickReplay && SuriAddOn.license == License.Dev) {
-					for (; lastIndex <= vpIntraData.barData.Count; lastIndex++) {
-						if (lastIndex == vpIntraData.barData.Count) return;
-						if (vpIntraData.barData[lastIndex].dateTime.Date == ChartBars.Bars.GetTime(idx).Date) break;
+					for (; lastIndex <= suriVpIntraData.barData.Count; lastIndex++) {
+						if (lastIndex == suriVpIntraData.barData.Count) return;
+						if (suriVpIntraData.barData[lastIndex].dateTime.Date == ChartBars.Bars.GetTime(idx).Date) break;
 					}
 				} else {
 					lastIndex = idx;
@@ -199,15 +199,15 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				
 				rect.X = chartControl.GetXByBarIndex(ChartBars, idx) + offset;
 				double y = chartScale.GetYByValue(ChartBars.Bars.GetLow(idx));
-				double height = (y - chartScale.GetYByValue(ChartBars.Bars.GetHigh(idx))) / Math.Max(1, vpIntraData.barData[lastIndex].tickData.Count-1);
+				double height = (y - chartScale.GetYByValue(ChartBars.Bars.GetHigh(idx))) / Math.Max(1, suriVpIntraData.barData[lastIndex].tickData.Count-1);
 
 				int i = 1;
 				float? previousDistVolWidth = null;
 				float? previousDelta = null;
 
-				foreach(KeyValuePair<int, VpTickData> entry in vpIntraData.barData[lastIndex].tickData) {
+				foreach(KeyValuePair<int, SuriVpTickData> entry in suriVpIntraData.barData[lastIndex].tickData) {
 					rect.Y = (float) (y - i * height + height * 0.5f);
-					rect.Width = (float) ((maxWidth ?? barWidth) * entry.Value.volume / vpIntraData.barData[lastIndex].pocVolume);
+					rect.Width = (float) ((maxWidth ?? barWidth) * entry.Value.volume / suriVpIntraData.barData[lastIndex].pocVolume);
 					rect.Height = (float) height;
 
 					SharpDX.Direct2D1.Brush b;
@@ -257,10 +257,11 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 					}
 
 					// bid ask delta
-					if (SuriAddOn.license == License.Dev) {
+					if (false && SuriAddOn.license == License.Dev) {
 						float delta = entry.Value.asks - entry.Value.bids;
-						delta = (float) (((maxWidth ?? barWidth)/2f) * delta / vpIntraData.barData[lastIndex].highestDelta);
+						delta = (float) (((maxWidth ?? barWidth)/2f) * delta / suriVpIntraData.barData[lastIndex].highestDelta);
 						if (previousDelta != null) {
+							Print(suriVpIntraData.barData[lastIndex].highestDelta);
 							RenderTarget.DrawLine(
 								new Vector2(rect.X + previousDelta.Value, rect.Y + rect.Height + rect.Height / 2f),
 								new Vector2(rect.X + delta              , rect.Y + rect.Height / 2f),
@@ -274,12 +275,12 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				}
 
 				if (drawText) {
-					double delta = vpIntraData.barData[lastIndex].delta;
-					string str =	"Σ " + vpIntraData.barData[lastIndex].totalVolume + "\n" +
+					double delta = suriVpIntraData.barData[lastIndex].delta;
+					string str =	"Σ " + suriVpIntraData.barData[lastIndex].totalVolume + "\n" +
 					                "∆ " + delta + "\n" +
-					                "∆% " + (100 * delta / vpIntraData.barData[lastIndex].totalVolume).ToString("F1") + "%\n" +
-					                "Ticks " + (vpIntraData.barData[lastIndex].tickData.Count - 1) + "\n" +
-					                "VA " + vpIntraData.barData[lastIndex].vaPercentage + "%"
+					                "∆% " + (100 * delta / suriVpIntraData.barData[lastIndex].totalVolume).ToString("F1") + "%\n" +
+					                "Ticks " + (suriVpIntraData.barData[lastIndex].tickData.Count - 1) + "\n" +
+					                "VA " + suriVpIntraData.barData[lastIndex].vaPercentage + "%"
 					;
 					textLayout  = new SharpDX.DirectWrite.TextLayout(Core.Globals.DirectWriteFactory, str, textFormat, 250, textFormat.FontSize);
 					y = chartScale.GetYByValue(ChartBars.Bars.GetLow(idx)) + 10f;
@@ -287,9 +288,9 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				}
 
 				// box
-				if (SuriAddOn.license == License.Dev) {
-					if (vpIntraData.boxes.ContainsKey(lastIndex)) {
-						VpBox box = vpIntraData.boxes[lastIndex];
+				if (false && SuriAddOn.license == License.Dev) {
+					if (suriVpIntraData.boxes.ContainsKey(lastIndex)) {
+						SuriVpBox box = suriVpIntraData.boxes[lastIndex];
 						RectangleF boxRect = new RectangleF {
 							X = chartControl.GetXByBarIndex(ChartBars, idx),
 							Y = chartScale.GetYByValue(box.boxHigh * TickSize)

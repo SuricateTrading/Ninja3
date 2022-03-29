@@ -10,12 +10,8 @@ using NinjaTrader.Gui;
 using NinjaTrader.Gui.Chart;
 using NinjaTrader.Gui.NinjaScript;
 using NinjaTrader.NinjaScript.DrawingTools;
-using NinjaTrader.NinjaScript.Indicators.Suri;
-using NinjaTrader.NinjaScript.Indicators.Suri.dev;
-using SharpDX;
 using Brush = System.Windows.Media.Brush;
 using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
-
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {

@@ -97,7 +97,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				ColumnDefinitions = {
 					new ColumnDefinition(), new ColumnDefinition(), new ColumnDefinition(), new ColumnDefinition(),
 					new ColumnDefinition(), new ColumnDefinition(), new ColumnDefinition(), new ColumnDefinition(),
-					new ColumnDefinition(),
+					new ColumnDefinition(), new ColumnDefinition {Width = new GridLength(200)},
 				},
 				RowDefinitions = { new RowDefinition() },
 			};
@@ -128,11 +128,12 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			AddCheckBox("Comm Netto", IsIndicatorVisible(new[] {typeof(SuriCot)}, SuriCotReportField.CommercialNet), 0, 2, (sender, args) => OnCheckBoxClick(new[] {typeof(SuriCot)}, SuriCotReportField.CommercialNet));
 			AddCheckBox("SMA", IsIndicatorVisible(new[] {typeof(SuriSma)}), 0, 3, (sender, args) => OnCheckBoxClick(new[] {typeof(SuriSma)}));
 			AddCheckBox("Volumen", IsIndicatorVisible(new[] {typeof(SuriVolume)}), 0, 4, (sender, args) => OnCheckBoxClick(new[] {typeof(SuriVolume)}));
-			AddCheckBox("Preis Range", IsIndicatorVisible(new[] {typeof(SuriBarRange)}), 0, 5, (sender, args) => OnCheckBoxClick(new[] {typeof(SuriBarRange)}));
+			AddCheckBox("Bargröße", IsIndicatorVisible(new[] {typeof(SuriBarRange)}), 0, 5, (sender, args) => OnCheckBoxClick(new[] {typeof(SuriBarRange)}));
 			AddCheckBox("Trend Trader", IsIndicatorVisible(new []{typeof(SuriCot)}, SuriCotReportField.NoncommercialLong, SuriCotReportField.NoncommercialShort), 0, 6, (sender, args) => OnCheckBoxClick(new []{typeof(SuriCot)}, SuriCotReportField.NoncommercialLong, SuriCotReportField.NoncommercialShort));
 			AddCheckBox("Open Interest", IsIndicatorVisible(new []{typeof(ComShortOpenInterest), typeof(SuriCot)}, SuriCotReportField.OpenInterest), 0, 7, (sender, args) => OnCheckBoxClick(new []{typeof(ComShortOpenInterest), typeof(SuriCot)}, SuriCotReportField.OpenInterest));
+			AddCheckBox("VP groß", IsIndicatorVisible(new []{typeof(SuriVolumeProfileBig)}), 0, 8, (sender, args) => OnCheckBoxClick(new []{typeof(SuriVolumeProfileBig)}));
 			
-			var comList = new ComboBox { Width = 180, };
+			var comList = new ComboBox();
 			foreach (KeyValuePair<Commodity,CommodityData> entry in SuriStrings.data) {
 				comList.Items.Add(entry.Value.shortName + "\t" + entry.Value.longName);
 			}
@@ -150,9 +151,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				string change = ((ComboBox) sender).SelectedItem as string;
 				if (change == null) return;
 				string shortName = Regex.Replace(change, "\t.*", "");
-			
-				Instrument ins = Instrument.All.Where(x => x.MasterInstrument.Name == shortName && x.MasterInstrument.InstrumentType == InstrumentType.Future && x.Expiry.Date > DateTime.Now)
-					.OrderBy(o => o.Expiry.Date).First();
+				Instrument ins = Instrument.GetInstrument(shortName + Instrument.GetInstrument(shortName+" ##-##").MasterInstrument.GetNextExpiry(DateTime.Now).ToString(" MM-yy"));
 			
 				Keyboard.FocusedElement.RaiseEvent(new TextCompositionEventArgs(InputManager.Current.PrimaryKeyboardDevice,
 						new TextComposition(InputManager.Current, ChartControl.OwnerChart, "open sesame"))
@@ -164,7 +163,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 					PresentationSource.FromVisual(ChartControl.OwnerChart), 0,  Key.Enter) { RoutedEvent = Keyboard.PreviewKeyDownEvent } );
 			};
 			Grid.SetRow(comList, 0);
-			Grid.SetColumn(comList, 8);
+			Grid.SetColumn(comList, 9);
 			menu.Children.Add(comList);
 		}
 		

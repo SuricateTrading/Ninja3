@@ -1,4 +1,4 @@
-#region Using declarations
+/*#region Using declarations
 
 using System.IO;
 using System.Linq;
@@ -13,7 +13,7 @@ using NinjaTrader.Gui.Tools;
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 	public class VpMeta : Indicator {
-		private VpIntraData vpIntraData;
+		private SuriVpIntraData suriVpIntraData;
 		private int lastBar;
 		
 		protected override void OnStateChange() {
@@ -34,23 +34,23 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 				AddPlot(new Stroke(Brushes.CornflowerBlue, 2), PlotStyle.Bar, "Delta %");
 				AddPlot(new Stroke(Brushes.CornflowerBlue, 2), PlotStyle.Bar, "0");
 			} else if (State == State.DataLoaded) {
-				string json = File.ReadAllText(VpSerialization.dbPath + @"\" + Instrument.MasterInstrument.Name + ".vpintra");
-				vpIntraData = Newtonsoft.Json.JsonConvert.DeserializeObject<VpIntraData>(json);
+				string json = File.ReadAllText(SuriVpSerialization.dbPath + @"\" + Instrument.MasterInstrument.Name + ".vpintra");
+				suriVpIntraData = Newtonsoft.Json.JsonConvert.DeserializeObject<SuriVpIntraData>(json);
 			}
 		}
 		
 		//public override void OnCalculateMinMax() { MinValue = -2; MaxValue = 2; }
 		
 		protected override void OnBarUpdate() {
-			if (vpIntraData == null || vpIntraData.barData.IsNullOrEmpty()) return;
-			Print(vpIntraData.barData.First().dateTime);
+			if (suriVpIntraData == null || suriVpIntraData.barData.IsNullOrEmpty()) return;
+			Print(suriVpIntraData.barData.First().dateTime);
 			
-			for (; lastBar <= vpIntraData.barData.Count; lastBar++) {
-				if (lastBar == vpIntraData.barData.Count) return;
-				if (vpIntraData.barData[lastBar].dateTime.Date == Time[0].Date) break;
+			for (; lastBar <= suriVpIntraData.barData.Count; lastBar++) {
+				if (lastBar == suriVpIntraData.barData.Count) return;
+				if (suriVpIntraData.barData[lastBar].dateTime.Date == Time[0].Date) break;
 			}
 			
-			Values[0][0] = 100 * vpIntraData.barData[lastBar].delta / vpIntraData.barData[lastBar].totalVolume;
+			Values[0][0] = 100 * suriVpIntraData.barData[lastBar].delta / suriVpIntraData.barData[lastBar].totalVolume;
 			if      (Values[0][0] > 0) PlotBrushes[0][0] = Brushes.Green;
 			else if (Values[0][0] < 0) PlotBrushes[0][0] = Brushes.Red;
 			else                       PlotBrushes[0][0] = Brushes.Yellow;
@@ -114,59 +114,5 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 
 //
 
-#region NinjaScript generated code. Neither change nor remove.
 
-namespace NinjaTrader.NinjaScript.Indicators
-{
-	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
-	{
-		private Suri.dev.VpMeta[] cacheVpMeta;
-		public Suri.dev.VpMeta VpMeta()
-		{
-			return VpMeta(Input);
-		}
-
-		public Suri.dev.VpMeta VpMeta(ISeries<double> input)
-		{
-			if (cacheVpMeta != null)
-				for (int idx = 0; idx < cacheVpMeta.Length; idx++)
-					if (cacheVpMeta[idx] != null &&  cacheVpMeta[idx].EqualsInput(input))
-						return cacheVpMeta[idx];
-			return CacheIndicator<Suri.dev.VpMeta>(new Suri.dev.VpMeta(), input, ref cacheVpMeta);
-		}
-	}
-}
-
-namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
-{
-	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
-	{
-		public Indicators.Suri.dev.VpMeta VpMeta()
-		{
-			return indicator.VpMeta(Input);
-		}
-
-		public Indicators.Suri.dev.VpMeta VpMeta(ISeries<double> input )
-		{
-			return indicator.VpMeta(input);
-		}
-	}
-}
-
-namespace NinjaTrader.NinjaScript.Strategies
-{
-	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
-	{
-		public Indicators.Suri.dev.VpMeta VpMeta()
-		{
-			return indicator.VpMeta(Input);
-		}
-
-		public Indicators.Suri.dev.VpMeta VpMeta(ISeries<double> input )
-		{
-			return indicator.VpMeta(input);
-		}
-	}
-}
-
-#endregion
+*/

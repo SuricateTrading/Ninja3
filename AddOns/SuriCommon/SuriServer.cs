@@ -5,8 +5,6 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Web.Script.Serialization;
-using NinjaTrader.NinjaScript;
-
 #endregion
 
 namespace NinjaTrader.Custom.AddOns.SuriCommon {

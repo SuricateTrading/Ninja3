@@ -18,7 +18,7 @@ using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
 	public sealed class SuriVolumeProfileBig : Indicator {
-		private VpBigData vpBigData;
+		private SuriVpBigData suriVpBigData;
 		private bool dataLoaded;
 		
 		#region Properties
@@ -42,6 +42,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		public int years { get; set; }
 
 		[NinjaScriptProperty]
+		[XmlIgnore]
 		[Display(Name = "End Datum", Order = 2, GroupName = "Parameter", Description = "Bis wann Daten geladen werden sollen.")]
 		public DateTime dateTo { get; set; }
 		
@@ -102,24 +103,24 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				pocBrush.Opacity							= 0.5;
 				textBrush									= Brushes.White;
 			} else if (State == State.DataLoaded) {
-				vpBigData = new VpBigData(TickSize);
+				dataLoaded = false;
 				if ((SuriAddOn.license == License.PremiumCot || SuriAddOn.license == License.Dev) && loadRecent) {
-					vpBigData = VpSerialization.GetVpBig(Instrument);
-					dataLoaded = true;
-				} else {
-					BarsRequest barsReq = new BarsRequest(Instrument, dateTo.AddYears(-years).Date, dateTo.AddDays(-1).Date) {
+					suriVpBigData = SuriVpSerialization.GetVpBig(Instrument);
+					if (suriVpBigData != null) dataLoaded = true;
+				}
+				if (!dataLoaded) {
+					suriVpBigData = new SuriVpBigData(TickSize);
+					new BarsRequest(Instrument, dateTo.AddYears(-years).Date, dateTo.AddDays(-1).Date) {
 						MergePolicy		= MergePolicy.MergeBackAdjusted,
 						BarsPeriod		= new BarsPeriod { BarsPeriodType = BarsPeriodType.Minute, Value = 1 },
 						TradingHours	= TradingHours,
-					};
-				
-					barsReq.Request((bars, errorCode, errorMessage) => {
+					}.Request((bars, errorCode, errorMessage) => {
 						if (errorCode != ErrorCode.NoError) {
 							Print(string.Format("Error on requesting bars: {0}, {1}", errorCode, errorMessage));
 							return;
 						}
 						for (int i = 0; i < bars.Bars.Count; i++) {
-							vpBigData.AddMinuteVolume(bars.Bars.GetVolume(i), bars.Bars.GetHigh(i), bars.Bars.GetLow(i));
+							suriVpBigData.AddMinuteVolume(bars.Bars.GetVolume(i), bars.Bars.GetHigh(i), bars.Bars.GetLow(i));
 						}
 						dataLoaded = true;
 						ForceRefresh();
@@ -146,8 +147,8 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			if (!dataLoaded || SuriAddOn.license == License.None || Bars == null || Bars.Instrument == null || IsInHitTest) {
 				return;
 			}
-			if (!vpBigData.isPrepared) {
-				vpBigData.Prepare();
+			if (!suriVpBigData.isPrepared) {
+				suriVpBigData.Prepare();
 			}
 			
 			int highestValue = (int) Math.Floor(chartScale.MaxValue / TickSize);
@@ -159,8 +160,8 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				X = 0,
 				Height = rectHeight,
 			};
-			if (highestValue > vpBigData.tickData.Last().Key) {
-				rect.Y = chartScale.GetYByValue((vpBigData.tickData.Last().Key+1) * TickSize) - rect.Height / 2f;
+			if (highestValue > suriVpBigData.tickData.Last().Key) {
+				rect.Y = chartScale.GetYByValue((suriVpBigData.tickData.Last().Key+1) * TickSize) - rect.Height / 2f;
 			} else {
 				rect.Y = chartScale.GetYByValue((highestValue+1) * TickSize) - rect.Height / 2f;
 			}
@@ -174,10 +175,10 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 
 			for (int i = 0; i < tickCount; i++) {
 				int tick = highestValue - i;
-				if (vpBigData.tickData.ContainsKey(tick)) {
-					VpTickData tickData = vpBigData.tickData[tick];
+				if (suriVpBigData.tickData.ContainsKey(tick)) {
+					SuriVpTickData tickData = suriVpBigData.tickData[tick];
 
-					rect.Width = (float) ((maxWidth ?? ChartPanel.W * 0.6) * tickData.volume / vpBigData.pocVolume);
+					rect.Width = (float) ((maxWidth ?? ChartPanel.W * 0.6) * tickData.volume / suriVpBigData.pocVolume);
 					rect.Y += rect.Height;
 					rect.Height = tickData.isMainPoc ? Math.Max(1, rectHeight) : rectHeight;
 					

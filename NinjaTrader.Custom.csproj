@@ -100,8 +100,8 @@
     <Compile Include="AddOns\SuriCommon\SuriHelper.cs" />
     <Compile Include="AddOns\SuriCommon\SuriServer.cs" />
     <Compile Include="AddOns\SuriCommon\SuriStrings.cs" />
-    <Compile Include="AddOns\SuriCommon\VpData.cs" />
-    <Compile Include="AddOns\SuriCommon\VpSerialization.cs" />
+    <Compile Include="AddOns\SuriCommon\SuriVpData.cs" />
+    <Compile Include="AddOns\SuriCommon\SuriVpSerialization.cs" />
     <Compile Include="BarsTypes\%40DayBarsType.cs" />
     <Compile Include="BarsTypes\%40HeikenAshiBarsType.cs" />
     <Compile Include="BarsTypes\%40KagiBarsType.cs" />
@@ -178,13 +178,9 @@
     <Compile Include="Indicators\%40VolumeUpDown.cs" />
     <Compile Include="Indicators\%40VolumeZones.cs" />
     <Compile Include="Indicators\%40Vortex.cs" />
-    <Compile Include="Indicators\Suri\dev\BarInfo.cs" />
-    <Compile Include="Indicators\Suri\dev\COTm.cs" />
     <Compile Include="Indicators\Suri\dev\DbCot.cs" />
     <Compile Include="Indicators\Suri\dev\ProductionCost.cs" />
     <Compile Include="Indicators\Suri\dev\RolloverButton.cs" />
-    <Compile Include="Indicators\Suri\dev\SuriSettings.cs" />
-    <Compile Include="Indicators\Suri\dev\SuriTester.cs" />
     <Compile Include="Indicators\Suri\dev\Terminkurve.cs" />
     <Compile Include="Indicators\Suri\dev\TickExtractor.cs" />
     <Compile Include="Indicators\Suri\dev\TkDelta.cs" />
