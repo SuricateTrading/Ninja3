@@ -12,7 +12,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 	public class ProductionCost : Indicator {
 		private ProductionCostData data;
 		
-		public static readonly Dictionary<Commodity, ProductionCostData> costs = new Dictionary<Commodity, ProductionCostData> {
+		private static readonly Dictionary<Commodity, ProductionCostData> costs = new Dictionary<Commodity, ProductionCostData> {
 			{Commodity.Corn,		new ProductionCostData(new Dictionary<int, ProductionSingleData> {
 				{2020,new ProductionSingleData(644.72,328.01,355.32)},
 				{2019,new ProductionSingleData(664.94,337.38,352.97)},

@@ -97,6 +97,7 @@
     <Compile Include="AddOns\SuriCommon\IStrategyInterface.cs" />
     <Compile Include="AddOns\SuriCommon\StrikingCalculator.cs" />
     <Compile Include="AddOns\SuriCommon\SuriCommon.cs" />
+    <Compile Include="AddOns\SuriCommon\SuriCotStrategy.cs" />
     <Compile Include="AddOns\SuriCommon\SuriHelper.cs" />
     <Compile Include="AddOns\SuriCommon\SuriServer.cs" />
     <Compile Include="AddOns\SuriCommon\SuriStrings.cs" />
@@ -186,6 +187,7 @@
     <Compile Include="Indicators\Suri\dev\TkDelta.cs" />
     <Compile Include="Indicators\Suri\dev\VpMeta.cs" />
     <Compile Include="Indicators\Suri\dev\Wasde.cs" />
+    <Compile Include="Indicators\Suri\SuriCot1Strategy.cs" />
     <Compile Include="Indicators\Suri\SuriMega.cs" />
     <Compile Include="Indicators\Suri\SuriDrawingToolTile.cs" />
     <Compile Include="Indicators\Suri\SuriVolumeProfileBig.cs" />

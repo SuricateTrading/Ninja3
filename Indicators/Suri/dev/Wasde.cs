@@ -1,4 +1,5 @@
 #region Using declarations
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows.Media;
@@ -7,7 +8,7 @@ using NinjaTrader.Gui;
 using NinjaTrader.Gui.Chart;
 using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
-
+using NinjaTrader.NinjaScript.DrawingTools;
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
@@ -16,6 +17,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 		private int nextIndex;
 		private bool hasStarted;
 		
+		#region Parameter
 		[NinjaScriptProperty]
 		[Display(Name="Wasde Feld", Order=0, GroupName="Parameter")]
 		public WasdeField field
@@ -66,6 +68,14 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 			get { return Serialize.BrushToString(projectedCropBrush); }
 			set { projectedCropBrush = Serialize.StringToBrush(value); }
 		}
+		[Display(Name = "Neues Erntejahr", Order = 3, GroupName = "Farben")]
+		public Brush newCropYearBrush { get; set; }
+		[Browsable(false)]
+		public string newCropYearBrushSerialize {
+			get { return Serialize.BrushToString(newCropYearBrush); }
+			set { newCropYearBrush = Serialize.StringToBrush(value); }
+		}
+		#endregion
 		#endregion
 		
 		protected override void OnStateChange() {
@@ -89,8 +99,10 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 				showProjectedCrop							= true;
 				isAmerica									= true;
 				oldCropBrush								= Brushes.DarkGreen;
-				estimatedCropBrush							= Brushes.Green;
+				estimatedCropBrush							= Brushes.YellowGreen;
 				projectedCropBrush							= Brushes.LightGreen;
+				newCropYearBrush							= Brushes.CornflowerBlue.Clone();
+				newCropYearBrush.Opacity = 0.7;
 				lineWidth									= 2;
 			} else if (State == State.Configure) {
 				fieldText = Regex.Replace(field.ToString(), "([a-z])([A-Z])", "$1 $2");;
@@ -109,6 +121,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 		
 		protected override void OnBarUpdate() {
 			if (wasdeData == null) return;
+			
 			for (int i = nextIndex; i < wasdeData.Count; i++) {
 				if (wasdeData[i].Date.Date.Equals(Time[0].Date)) {
 					hasStarted = true;
@@ -116,17 +129,19 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 					Values[1][0] = wasdeData[i].Attributes[fieldText];	i++;
 					Values[2][0] = wasdeData[i].Attributes[fieldText];
 					nextIndex = i;
-					return;
+					break;
 				}
 				if (hasStarted && wasdeData[i].Date.Date > Time[0].Date) {
 					Values[0][0] = Values[0][1];
 					Values[1][0] = Values[1][1];
 					Values[2][0] = Values[2][1];
-					return;
+					break;
 				}
 			}
+			if (CurrentBar > 0 && Time[0].Month == 5 && Math.Abs(Value[0] - Value[1]) > 0.0000001) {
+				Draw.VerticalLine(this, Time[0].Year.ToString(), 0, newCropYearBrush, DashStyleHelper.Dot, 1, false);
+			}
 		}
-		
 	}
 }
 

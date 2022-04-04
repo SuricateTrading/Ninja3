@@ -15,36 +15,11 @@ using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
-	public sealed class SuriCot1 : StrategyIndicator2 {
+	public sealed class SuriCot1 : Indicator {
 		private SuriCot suriCotData;
 		private SuriSma suriSma;
 		
 		private bool isCurrentlyASignal;
-		
-		private TradePosition? lastSignal;
-		public bool LastSignalWasLong()  { return lastSignal == TradePosition.Long; }
-		public bool LastSignalWasShort() { return lastSignal == TradePosition.Short; }
-		
-		private int? lastSignalBar;
-		public int? GetLastSignalBar() { return lastSignalBar; }
-		
-		private bool _lookOutForEntry;
-		[Browsable(false)]
-		public bool doEnter {
-			get {
-				return
-					_lookOutForEntry &&
-					lastSignalBar != null &&
-					lastEntryValue != null &&
-					(Time[0].DayOfWeek == DayOfWeek.Monday || CurrentBar - lastSignalBar >= 4) &&
-					lastSignalBar != null && (Time[0] - Time[lastSignalBar.Value]).Days > 36 &&
-					LastSignalWasLong() && High[0] > lastEntryValue || LastSignalWasShort() && Low[0] < lastEntryValue
-				;
-			}
-			set { _lookOutForEntry = value; }
-		}
-		private double? lastEntryValue;
-		public double? LastEntryValue() { return lastEntryValue; }
 
 		#region Indicator
 		[NinjaScriptProperty]
@@ -201,8 +176,8 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			}
 			if (isCurrentlyASignal) {
 				if (SuriAddOn.license != License.Basic) {
-					if      (suriSma[0] > suriSma[1] && IsLong())  PlotBrushes[0][0] = longBrush;
-					else if (suriSma[0] < suriSma[1] && IsShort()) PlotBrushes[0][0] = shortBrush;
+					if      (suriSma[0] > suriSma[1] && Value[0] >= 90)  PlotBrushes[0][0] = longBrush;
+					else if (suriSma[0] < suriSma[1] && Value[0] <= 10) PlotBrushes[0][0] = shortBrush;
 					else PlotBrushes[0][0] = noSignalBrush;
 				}
 			}
@@ -212,111 +187,20 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			Values[3][0] = 90;
 		}
 		
-		
-
-		public override bool IsLong()  { return Value[0] >= 90; }
-		public override bool IsShort() { return Value[0] <= 10; }
-		public override bool IsInLongHalf()  { return Value[0] >= 50; }
-		public override bool IsInShortHalf() { return Value[0] <= 50; }
-		public override TradePosition GetTradePosition() {
-			if (Value[0] > 50) return TradePosition.Long;
-			if (Value[0] < 50) return TradePosition.Short;
-			return TradePosition.Middle;
-		}
-		
-		public override bool IsSignal() {
+		private bool IsSignal() {
 			if (CurrentBar <= days) return false;
-			if (Value[0] < 90 && Value[0] > 10) return false;
+			if ( Value[0] < 90 && Value[0] > 10 ) return false;
 			if ( (Value[1] > 10 && Value[0] <= 10 || Value[1] < 90 && Value[0] >= 90) == false ) return false;
 			
 			// check if we come from the other side
 			for (int i = 2; i <= CurrentBar - days; i++) {
 				if (Value[i] <= 10 && Value[i - 1] > 10 || Value[i] >= 90 && Value[i - 1] < 90) {
-					if (Math.Abs(Value[i] - Value[0]) >= 80) {
-						if (IsShort()) lastSignal = TradePosition.Short;
-						if (IsLong())  lastSignal = TradePosition.Long;
-						lastSignalBar = CurrentBar;
-						doEnter = true;
-						return true;
-					}
-					return false;
+					return Math.Abs(Value[i] - Value[0]) >= 80;
 				}
 			}
 			return false;
 		}
 
-		public override bool? IsEntry() {
-			if (IsSignal() && (
-				    suriSma[0] > suriSma[1] && IsLong() ||
-				    suriSma[0] < suriSma[1] && IsShort()
-			)) {
-				SetEntryValue();
-				return true;
-			}
-			return false;
-		}
-		
-		public override DateTime? FirstSignalDate() {
-			for (int i = 1; i <= CurrentBar - days; i++) {
-				if (Value[i] > 10 && Value[i - 1] <= 10 ||
-				    Value[i] < 90 && Value[i - 1] >= 90) {
-					return Time[i-1];
-				}
-			}
-			return null;
-		}
-		
-		/** Expects to be called on tuesday, right when the signal occured.*/
-		private double? SetEntryValue() {
-			double max = double.MinValue;
-			double min = double.MaxValue;
-			for (int i = CurrentBar - 1; i < CurrentBar + 4; i++) {
-				if (i >= CurrentBar && Bars.GetTime(i).DayOfWeek == DayOfWeek.Monday) {
-					break; // break when the next week begins.
-				}
-				if (Bars.GetHigh(i) > max) max = Bars.GetHigh(i);
-				if (Bars.GetLow(i)  < min) min =  Bars.GetLow(i);
-			}
-			if (IsLong())  return max + TickSize;
-			if (IsShort()) return min - TickSize;
-			return null;
-		}
-		
-		public override double GetStopValue() {
-			double max = double.MinValue;
-			double min = double.MaxValue;
-			for (int i = 0; i < 10; i++) {
-				if (High[i] > max) max = High[i];
-				if (Low[i]  < min) min =  Low[i];
-			}
-			return LastSignalWasLong() ? min - TickSize : max + TickSize;
-		}
-
-		public override bool ShouldExit(TradePosition tradePosition) {
-			return tradePosition == TradePosition.Long && Value[0] <= 10 ||
-			       tradePosition == TradePosition.Short && Value[0] >= 90;
-		}
-		
-		
-		
-		
-		
-		/** todo: delete?
-		 * Returns the value of the last given day of week.
-		 */
-		public double ValueOfLast(DayOfWeek dayOfWeek) {
-			for (int i = 0; i < 10; i++) {
-				if (Time[i].DayOfWeek == dayOfWeek) {
-					return Value[i];
-				}
-			}
-			return 0;
-		}
-
-		public override double? GetPositionStrength() {
-			throw new NotImplementedException();
-		}
-		
     }
 }
 
