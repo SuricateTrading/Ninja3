@@ -104,7 +104,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				textBrush									= Brushes.White;
 			} else if (State == State.DataLoaded) {
 				dataLoaded = false;
-				if ((SuriAddOn.license == License.PremiumCot || SuriAddOn.license == License.Dev) && loadRecent) {
+				if ((SuriAddOn.license == License.PremiumVp || SuriAddOn.license == License.Dev) && loadRecent) {
 					suriVpBigData = SuriVpSerialization.GetVpBig(Instrument);
 					if (suriVpBigData != null) dataLoaded = true;
 				}

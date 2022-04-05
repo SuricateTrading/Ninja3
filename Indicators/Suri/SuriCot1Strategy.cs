@@ -69,24 +69,23 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
         public DateTime? signalDate;
         /** The stop of the last signal. Null iff there was no signal the last 6 weeks. */
         public double? stop;
-        public TradePosition? signalTradePosition;
-        /** Iff true, immediately exit the trade. Is set to true by the indicator and set to false by the strategy after the exit has been done. */
-        public bool mustExit;
-        /** Iff true, COT1 wants to enter. No other rules have been taken into consideration. Is set to true by the indicator and set to false by the strategy after the order has been executed. */
-        public bool waitingToEnter;
-        /** Set to true by the order. */
-        public bool orderHasBeenFilled;
-        public Order order;
 
-        /**  */
-        public void Reset() {
+        public bool IsLong()  { return Value[0] >= 90; }
+        public bool IsShort() { return Value[0] <= 10; }
+        public bool IsInLongHalf()  { return Value[0] >= 50; }
+        public bool IsInShortHalf() { return Value[0] <= 50; }
+        public TradePosition GetTradePosition() {
+	        if (Value[0] > 50) return TradePosition.Long;
+	        if (Value[0] < 50) return TradePosition.Short;
+	        return TradePosition.Middle;
+        }
+        
+        public void Clean() {
 	        entry = null;
 	        signalDate = null;
 	        stop = null;
-	        signalTradePosition = null;
-	        mustExit = true;
-	        waitingToEnter = false;
-	        orderHasBeenFilled = false;
+	        if (suriTest.cot1Order != null) suriTest.cot1Order.Exit();
+	        suriTest.cot1Order = null;
         }
         
 		protected override void OnBarUpdate() {
@@ -94,18 +93,13 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			suriCot1.Update();
 			
 			// Check if signal has expired and clean it up.
-			if (signalDate != null && !orderHasBeenFilled && (Time[0] - signalDate.Value.AddDays(42)).Days > 0) {
-				Reset();
+			if (signalDate != null && suriTest.cot1Order != null && suriTest.cot1Order.order.OrderState != OrderState.Filled && (Time[0] - signalDate.Value.AddDays(42)).Days > 0) {
+				suriTest.cot1Order.Cancel();
+				Clean();
 			}
 			
-			// set stop if we reached entry
-			// todo: man setzt ja eine limit order. d.h. man muss schon am gleichen tag rein...
-			if (stop == null && (signalTradePosition == TradePosition.Long && High[0] > entry.Value || signalTradePosition == TradePosition.Short && Low[0] < entry.Value)) {
-				SetStop();
-			}
-			
+			// check if report was released today
 			if (SuriCotStrategy.releaseToReportDates.ContainsKey(Time[0].ToString("yyyy-MM-dd"))) {
-				// cot report was released today
 				DateTime reportDate = DateTime.Parse(SuriCotStrategy.releaseToReportDates[Time[0].ToString("yyyy-MM-dd")]);
 
 				bool found = false;
@@ -116,6 +110,8 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 						if (Value[0] >= 90 && Value[1] < 90 || Value[0] <= 10 && Value[1] > 10) {
 							PlotBrushes[0][0] = suriCot1.PlotBrushes[0][barsAgo];
 							if (PlotBrushes[0][0] == Brushes.Yellow) {
+								if (suriTest.cot1Order != null) suriTest.cot1Order.Cancel();
+								Clean();
 							} else if (PlotBrushes[0][0] == Brushes.Green) {
 								SetEntry(barsAgo);
 							} else if (PlotBrushes[0][0] == Brushes.Red) {
@@ -134,8 +130,9 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				Values[0][0] = Values[0][1];
 			}
 			
-			if (entry != null && (signalTradePosition == TradePosition.Long && Value[0] <= 10 || signalTradePosition == TradePosition.Short && Value[0] >= 90)) {
-				mustExit = true;
+			// set stop if we reached entry
+			if (suriTest.cot1Order != null && suriTest.cot1Order.order.OrderState == OrderState.Filled && suriTest.cot1Order.stopOrder == null) {
+				SetStop();
 			}
 			
 			Values[1][0] = 10;
@@ -143,20 +140,11 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			Values[3][0] = 90;
 		}
 		
-		public bool IsLong()  { return Value[0] >= 90; }
-		public bool IsShort() { return Value[0] <= 10; }
-		public bool IsInLongHalf()  { return Value[0] >= 50; }
-		public bool IsInShortHalf() { return Value[0] <= 50; }
-		public TradePosition GetTradePosition() {
-			if (Value[0] > 50) return TradePosition.Long;
-			if (Value[0] < 50) return TradePosition.Short;
-			return TradePosition.Middle;
-		}
-		
-		
+
 		/** Expects to be called on the bar of the cot release date. BarsAgo should be the bar of the cot report date. */
 		private void SetEntry(int barsAgo) {
-			waitingToEnter = true;
+			if (suriTest.cot1Order != null) suriTest.cot1Order.Cancel();
+			Clean();
 			signalDate = Time[barsAgo];
 			
 			double max = double.MinValue;
@@ -176,18 +164,20 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				if (Low[i]  < min) min =  Low[i];
 				i--;
 			}
-			
+
 			if (IsLong()) {
 				entry = max + TickSize;
-				signalTradePosition = TradePosition.Long;
+				string signalName = "COT1 Long " + SuriCommon.random;
+				suriTest.cot1Order = new OrderS(signalName, OrderAction.Buy, OrderType.StopMarket, entry.Value, entry.Value);
 			}
 			if (IsShort()) {
 				entry = min - TickSize;
-				signalTradePosition = TradePosition.Short;
+				string signalName = "COT1 Short " + SuriCommon.random;
+				suriTest.cot1Order = new OrderS(signalName, OrderAction.Sell, OrderType.StopMarket, entry.Value, entry.Value);
 			}
 			
 			Draw.Line(this, "Entry " + SuriCommon.random, false, 4, entry.Value, 0, entry.Value, Brushes.LimeGreen, DashStyleHelper.Solid, 1);
-			int yOffset = signalTradePosition == TradePosition.Long ? 15 : -15;
+			int yOffset = suriTest.cot1Order != null && suriTest.cot1Order.IsLong() ? 15 : -15;
 			SuriCommon.DrawText(this, "Entry ", "Entry @" + entry.Value, 2, entry.Value, yOffset);
 		}
 		
@@ -199,17 +189,28 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				if (Low[i]  < min) min =  Low[i];
 			}
 			
-			if (signalTradePosition == TradePosition.Long)  stop = min - TickSize;
-			if (signalTradePosition == TradePosition.Short) stop = max + TickSize;
+			if (suriTest.cot1Order.IsLong())  stop = min - TickSize;
+			if (suriTest.cot1Order.IsShort()) stop = max + TickSize;
+			
+			if (SuriCommon.PriceToCurrency(Instrument, Math.Abs(entry.Value - stop.Value)) > 2000) {
+				SuriCommon.DrawText(this, "Stop zu groß ", "X", 0, stop.Value, 0);
+			} else {
+				suriTest.cot1Order.SetStopLoss(stop.Value);
+			}
 			
 			Draw.Line(this, "Stop " + SuriCommon.random, false, 9, stop.Value, 0, stop.Value, Brushes.LimeGreen, DashStyleHelper.Solid, 1);
-			int offset = signalTradePosition == TradePosition.Long ? -15 : 15;
+			int offset = suriTest.cot1Order.IsLong() ? -15 : 15;
 			SuriCommon.DrawText(this, "Stop ", "Stop @" + stop.Value + " (" + SuriCommon.PriceToCurrency(Instrument, entry.Value - stop.Value) + " $)", 5, stop.Value, offset);
 		}
 
     }
 }
 
+public enum StrategyState {
+	None,
+	Limit,
+	Filled,
+}
 
 
 
