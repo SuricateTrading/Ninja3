@@ -8,12 +8,14 @@ using NinjaTrader.Gui;
 using NinjaTrader.Gui.Chart;
 #endregion
 
-namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
-	public class ProductionCost : Indicator {
+namespace NinjaTrader.NinjaScript.Indicators.Suri {
+	public class SuriProductionCost : Indicator {
 		private ProductionCostData data;
 		
 		private static readonly Dictionary<Commodity, ProductionCostData> costs = new Dictionary<Commodity, ProductionCostData> {
 			{Commodity.Corn,		new ProductionCostData(new Dictionary<int, ProductionSingleData> {
+				{2022,new ProductionSingleData(644.72,340.71,355.32)},
+				{2021,new ProductionSingleData(644.72,336.98,355.32)},
 				{2020,new ProductionSingleData(644.72,328.01,355.32)},
 				{2019,new ProductionSingleData(664.94,337.38,352.97)},
 				{2018,new ProductionSingleData(631.54,330.27,346.75)},
@@ -61,8 +63,9 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 				//AddPlot(new Stroke(Brushes.CornflowerBlue, 2), PlotStyle.Line, "Bruttowert");
 			} else if (State == State.DataLoaded) {
 				Commodity? commodity = SuriStrings.GetComm(Instrument.MasterInstrument.Name);
-				if (commodity == null) return;
-				data = costs[commodity.Value];
+				if (commodity != null && costs.ContainsKey(commodity.Value)) {
+					data = costs[commodity.Value];
+				}
 			}
 		}
 		
@@ -76,8 +79,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 					PlotBrushes[0][0] = Brushes.Gray;
 				}
 				//Values[1][0] = data.grossValues[Time[0].Year].grossValue;
-			}
-			catch (Exception) {/**/}
+			} catch (Exception) {/**/}
 		}
 		
 	}
@@ -165,19 +167,19 @@ namespace NinjaTrader.NinjaScript.Indicators
 {
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
-		private Suri.dev.ProductionCost[] cacheProductionCost;
-		public Suri.dev.ProductionCost ProductionCost()
+		private Suri.SuriProductionCost[] cacheSuriProductionCost;
+		public Suri.SuriProductionCost SuriProductionCost()
 		{
-			return ProductionCost(Input);
+			return SuriProductionCost(Input);
 		}
 
-		public Suri.dev.ProductionCost ProductionCost(ISeries<double> input)
+		public Suri.SuriProductionCost SuriProductionCost(ISeries<double> input)
 		{
-			if (cacheProductionCost != null)
-				for (int idx = 0; idx < cacheProductionCost.Length; idx++)
-					if (cacheProductionCost[idx] != null &&  cacheProductionCost[idx].EqualsInput(input))
-						return cacheProductionCost[idx];
-			return CacheIndicator<Suri.dev.ProductionCost>(new Suri.dev.ProductionCost(), input, ref cacheProductionCost);
+			if (cacheSuriProductionCost != null)
+				for (int idx = 0; idx < cacheSuriProductionCost.Length; idx++)
+					if (cacheSuriProductionCost[idx] != null &&  cacheSuriProductionCost[idx].EqualsInput(input))
+						return cacheSuriProductionCost[idx];
+			return CacheIndicator<Suri.SuriProductionCost>(new Suri.SuriProductionCost(), input, ref cacheSuriProductionCost);
 		}
 	}
 }
@@ -186,14 +188,14 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.dev.ProductionCost ProductionCost()
+		public Indicators.Suri.SuriProductionCost SuriProductionCost()
 		{
-			return indicator.ProductionCost(Input);
+			return indicator.SuriProductionCost(Input);
 		}
 
-		public Indicators.Suri.dev.ProductionCost ProductionCost(ISeries<double> input )
+		public Indicators.Suri.SuriProductionCost SuriProductionCost(ISeries<double> input )
 		{
-			return indicator.ProductionCost(input);
+			return indicator.SuriProductionCost(input);
 		}
 	}
 }
@@ -202,14 +204,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.dev.ProductionCost ProductionCost()
+		public Indicators.Suri.SuriProductionCost SuriProductionCost()
 		{
-			return indicator.ProductionCost(Input);
+			return indicator.SuriProductionCost(Input);
 		}
 
-		public Indicators.Suri.dev.ProductionCost ProductionCost(ISeries<double> input )
+		public Indicators.Suri.SuriProductionCost SuriProductionCost(ISeries<double> input )
 		{
-			return indicator.ProductionCost(input);
+			return indicator.SuriProductionCost(input);
 		}
 	}
 }

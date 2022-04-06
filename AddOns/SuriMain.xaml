@@ -6,11 +6,7 @@
     <Grid Background="Transparent">
         <TabControl Background="Transparent">
             <TabItem Header="Suricate" Padding="10,5">
-                <Grid >
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="137*"/>
-                        <ColumnDefinition Width="657*"/>
-                    </Grid.ColumnDefinitions>
+                <ScrollViewer>
                     <StackPanel Grid.ColumnSpan="2" Margin="0,0,0.334,0.333">
                         <Image x:Name="NinjatImage" Height="270" Width="270" VerticalAlignment="Top" Margin="10" />
                         <!--TextBlock TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Foreground="LightGray" FontSize="16" Margin="10,0" >
@@ -33,7 +29,7 @@
                                 </TextBlock>
                             </BulletDecorator>
                         </TextBlock-->
-                        <TextBlock TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Foreground="LightGray" FontSize="16" Margin="10,50,10,5" >
+                        <TextBlock TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Foreground="LightGray" FontSize="16" Margin="10,10,10,5" >
                             Termine
                             <LineBreak/>
                             <BulletDecorator  Margin="0,5,0,0" VerticalAlignment="Center">
@@ -41,25 +37,7 @@
                                     <Ellipse Height="5" Width="5" Fill="#FF0096FF"/>
                                 </BulletDecorator.Bullet>
                                 <TextBlock TextWrapping="Wrap" HorizontalAlignment="Left" Foreground ="LightGray" FontSize="16" Margin="10,0">
-                                    29.03.22 um 20:00 Uhr VP Webinar
-                                </TextBlock>
-                            </BulletDecorator>
-                            <LineBreak/>
-                            <BulletDecorator  Margin="0,5,0,0" VerticalAlignment="Center">
-                                <BulletDecorator.Bullet>
-                                    <Ellipse Height="5" Width="5" Fill="#FF0096FF"/>
-                                </BulletDecorator.Bullet>
-                                <TextBlock TextWrapping="Wrap" HorizontalAlignment="Left" Foreground ="LightGray" FontSize="16" Margin="10,0">
-                                    03.04.22 um 19:00 Uhr Marktanalyse
-                                </TextBlock>
-                            </BulletDecorator>
-                            <LineBreak/>
-                            <BulletDecorator  Margin="0,5,0,0" VerticalAlignment="Center">
-                                <BulletDecorator.Bullet>
-                                    <Ellipse Height="5" Width="5" Fill="#FF0096FF"/>
-                                </BulletDecorator.Bullet>
-                                <TextBlock TextWrapping="Wrap" HorizontalAlignment="Left" Foreground ="LightGray" FontSize="16" Margin="10,0">
-                                    05.04.22 um 19:00 Uhr Suri Tool Webinar
+                                    05.04.22 um 19:00 Uhr Technisches Webinar
                                 </TextBlock>
                             </BulletDecorator>
                             <LineBreak/>
@@ -71,18 +49,48 @@
                                     10.04.22 um 20:00 Uhr Marktanalyse
                                 </TextBlock>
                             </BulletDecorator>
+                            <LineBreak/>
+                            <BulletDecorator  Margin="0,5,0,0" VerticalAlignment="Center">
+                                <BulletDecorator.Bullet>
+                                    <Ellipse Height="5" Width="5" Fill="#FF0096FF"/>
+                                </BulletDecorator.Bullet>
+                                <TextBlock TextWrapping="Wrap" HorizontalAlignment="Left" Foreground ="LightGray" FontSize="16" Margin="10,0">
+                                    17.04.22 um 20:00 Uhr Marktanalyse
+                                </TextBlock>
+                            </BulletDecorator>
+                            <LineBreak/>
+                            <BulletDecorator  Margin="0,5,0,0" VerticalAlignment="Center">
+                                <BulletDecorator.Bullet>
+                                    <Ellipse Height="5" Width="5" Fill="#FF0096FF"/>
+                                </BulletDecorator.Bullet>
+                                <TextBlock TextWrapping="Wrap" HorizontalAlignment="Left" Foreground ="LightGray" FontSize="16" Margin="10,0">
+                                    25.04.22 um 20:00 Uhr COT Webinar
+                                </TextBlock>
+                            </BulletDecorator>
+                            <LineBreak/>
+                            <BulletDecorator  Margin="0,5,0,0" VerticalAlignment="Center">
+                                <BulletDecorator.Bullet>
+                                    <Ellipse Height="5" Width="5" Fill="#FF0096FF"/>
+                                </BulletDecorator.Bullet>
+                                <TextBlock TextWrapping="Wrap" HorizontalAlignment="Left" Foreground ="LightGray" FontSize="16" Margin="10,0">
+                                    26.04.22 um 20:00 Uhr VP Webinar
+                                </TextBlock>
+                            </BulletDecorator>
                         </TextBlock>
-                    </StackPanel>
-                    <StackPanel Margin="0,0,0.334,10.333" VerticalAlignment="Bottom" Grid.ColumnSpan="2" >
-                        <TextBlock TextWrapping="WrapWithOverflow" TextAlignment="Center" HorizontalAlignment="Center" Foreground="LightGray" FontSize="16" Margin="0,0,0,10" >
+
+
+                        <StackPanel Margin="0,60,0,10" VerticalAlignment="Bottom" Grid.ColumnSpan="2" >
+                            <TextBlock TextWrapping="WrapWithOverflow" TextAlignment="Center" HorizontalAlignment="Center" Foreground="LightGray" FontSize="16" Margin="0,0,0,10" >
                             Wir wünschen Dir viel Spaß mit dem Suri Tool<LineBreak/>
                             Dein Suricate Trading Team
-                        </TextBlock>
-                        <TextBlock HorizontalAlignment="Center"><Hyperlink x:Name="website" FontSize="16" NavigateUri="https://www.suricate-trading.de/"><Run Text="Suricate-Trading.de"/></Hyperlink></TextBlock>
-                        <TextBlock HorizontalAlignment="Center"><Hyperlink x:Name="terminkurven" FontSize="16" NavigateUri="https://www.suricate-trading.de/suri-app/"><Run Text="Suri App"/></Hyperlink></TextBlock>
-                        <TextBlock HorizontalAlignment="Center"><Hyperlink x:Name="seasonals" FontSize="16" NavigateUri="https://www.suricate-trading.de/seasonal-charts/seasonal-cot-data-charts/"><Run Text="Saisonalitäten"/></Hyperlink></TextBlock>
+                            </TextBlock>
+                            <TextBlock HorizontalAlignment="Center" Margin="0"><Hyperlink x:Name="website" FontSize="16" NavigateUri="https://www.suricate-trading.de/"><Run Text="Suricate-Trading.de"/></Hyperlink></TextBlock>
+                            <TextBlock HorizontalAlignment="Center"><Hyperlink x:Name="terminkurven" FontSize="16" NavigateUri="https://www.suricate-trading.de/suri-app/"><Run Text="Suri App"/></Hyperlink></TextBlock>
+                            <TextBlock HorizontalAlignment="Center"><Hyperlink x:Name="seasonals" FontSize="16" NavigateUri="https://www.suricate-trading.de/seasonal-charts/seasonal-cot-data-charts/"><Run Text="Saisonalitäten"/></Hyperlink></TextBlock>
+                        </StackPanel>
                     </StackPanel>
-                </Grid>
+                    
+                </ScrollViewer>
             </TabItem>
 
             <!--TabItem Header="Manage" Padding="10,5">
@@ -337,7 +345,7 @@
             </TabItem>
 
             <TabItem Header="Hilfe" Padding="10,5">
-                <Grid>
+                <ScrollViewer>
                     <StackPanel Margin="0,0,0,10" >
                         <TextBlock x:Name="Version" TextAlignment="Center" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="LightGray" FontSize="16" Margin="20,10,20,0">
                             Du benutzt Version
@@ -360,18 +368,20 @@
                             Du musst NinjaTrader neu starten um das Workspace benutzen zu können.
                         </TextBlock>
 
-                        <!--TextBlock x:Name="LicenseUntil" TextAlignment="Center" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" VerticalAlignment="Top" Foreground="LightGray" FontSize="16" Margin="20,70,20,0">
+                        <TextBlock x:Name="LicenseUntil" TextAlignment="Center" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" VerticalAlignment="Top" Foreground="LightGray" FontSize="16" Margin="20,70,20,0">
                             Deine Lizenz läuft bis zum
                         </TextBlock>
-                        <Button x:Name="ExtendLicense" Content="Lizenz verlängern" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,5" Padding="10" BorderBrush="#FF0B76C4" /-->
-                    </StackPanel>
-                    <TextBlock TextAlignment="Center" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" VerticalAlignment="Bottom" Foreground="LightGray" FontSize="16" Margin="20,50,20,20">
+                        <Button x:Name="ExtendLicense" Content="Lizenz verlängern" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,5" Padding="10" BorderBrush="#FF0B76C4" />
+                        
+                        <TextBlock TextAlignment="Center" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" VerticalAlignment="Top" Foreground="LightGray" FontSize="16" Margin="20,70,20,20">
                         Falls Du eine Frage oder Verbesserungswünsche hast, schreibe uns bitte eine Mail an<LineBreak/>
                         <Hyperlink x:Name="contact" FontSize="16" NavigateUri="mailto:info@suricate-trading.de">
                             <Run Text="info@suricate-trading.de"/>
                         </Hyperlink>
-                    </TextBlock>
-                </Grid>
+                        </TextBlock>
+                        
+                    </StackPanel>
+                 </ScrollViewer>
             </TabItem>
         </TabControl>
     </Grid>

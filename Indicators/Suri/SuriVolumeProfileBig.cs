@@ -33,7 +33,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		public int years { get; set; }*/
 		
 		[NinjaScriptProperty]
-		[Display(Name = "Aktuelles VP", Order = 0, GroupName = "Parameter", Description = "Wenn aktiv, wird das aktuelle Volumen Profil geladen und die beiden Parameter 'Jahre zu laden' und 'End Datum' haben dann keine Auswirkung mehr! Hierfür ist die Premium Version nötig.")]
+		[Display(Name = "Schnelles VP", Order = 0, GroupName = "Parameter", Description = "Wenn aktiv, wird das aktuelle Volumen Profil geladen und die beiden Parameter 'Jahre zu laden' und 'End Datum' haben dann keine Auswirkung mehr! Hierfür ist die Premium Version nötig.")]
 		public bool loadRecent { get; set; }
 		
 		[Range(1, 30)]

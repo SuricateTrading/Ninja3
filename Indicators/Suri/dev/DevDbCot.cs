@@ -7,7 +7,7 @@ using NinjaTrader.Gui.Chart;
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
-	public class DbCot : Indicator {
+	public class DevDbCot : Indicator {
 		private List<DbCotData> dbCotData;
 		private int nextIndex;
 		
@@ -103,19 +103,19 @@ namespace NinjaTrader.NinjaScript.Indicators
 {
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
-		private Suri.dev.DbCot[] cacheDbCot;
-		public Suri.dev.DbCot DbCot()
+		private Suri.dev.DevDbCot[] cacheDevDbCot;
+		public Suri.dev.DevDbCot DevDbCot()
 		{
-			return DbCot(Input);
+			return DevDbCot(Input);
 		}
 
-		public Suri.dev.DbCot DbCot(ISeries<double> input)
+		public Suri.dev.DevDbCot DevDbCot(ISeries<double> input)
 		{
-			if (cacheDbCot != null)
-				for (int idx = 0; idx < cacheDbCot.Length; idx++)
-					if (cacheDbCot[idx] != null &&  cacheDbCot[idx].EqualsInput(input))
-						return cacheDbCot[idx];
-			return CacheIndicator<Suri.dev.DbCot>(new Suri.dev.DbCot(), input, ref cacheDbCot);
+			if (cacheDevDbCot != null)
+				for (int idx = 0; idx < cacheDevDbCot.Length; idx++)
+					if (cacheDevDbCot[idx] != null &&  cacheDevDbCot[idx].EqualsInput(input))
+						return cacheDevDbCot[idx];
+			return CacheIndicator<Suri.dev.DevDbCot>(new Suri.dev.DevDbCot(), input, ref cacheDevDbCot);
 		}
 	}
 }
@@ -124,14 +124,14 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.dev.DbCot DbCot()
+		public Indicators.Suri.dev.DevDbCot DevDbCot()
 		{
-			return indicator.DbCot(Input);
+			return indicator.DevDbCot(Input);
 		}
 
-		public Indicators.Suri.dev.DbCot DbCot(ISeries<double> input )
+		public Indicators.Suri.dev.DevDbCot DevDbCot(ISeries<double> input )
 		{
-			return indicator.DbCot(input);
+			return indicator.DevDbCot(input);
 		}
 	}
 }
@@ -140,14 +140,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.dev.DbCot DbCot()
+		public Indicators.Suri.dev.DevDbCot DevDbCot()
 		{
-			return indicator.DbCot(Input);
+			return indicator.DevDbCot(Input);
 		}
 
-		public Indicators.Suri.dev.DbCot DbCot(ISeries<double> input )
+		public Indicators.Suri.dev.DevDbCot DevDbCot(ISeries<double> input )
 		{
-			return indicator.DbCot(input);
+			return indicator.DevDbCot(input);
 		}
 	}
 }

@@ -89,6 +89,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		
 		[XmlIgnore]
 		[Display(Name = "Bid Ask Delta Linie", Order = 4, GroupName = "Farben")]
+		[Browsable(false)]
 		public Brush footprintBrush { get; set; }
 		[Browsable(false)]
 		public string footprintBrushSerialize {

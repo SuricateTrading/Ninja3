@@ -31,7 +31,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				days										= 125;
 				signalBrush									= Brushes.Yellow;
 				maxBrush									= Brushes.DarkCyan;
-				barBrush									= Brushes.RoyalBlue;
+				barBrush									= Brushes.OrangeRed;
 			} else if (State == State.Configure) {
 				AddPlot(new Stroke(barBrush, 2), PlotStyle.Bar, "Bargröße");
 				AddPlot(new Stroke(maxBrush, 1), PlotStyle.Line, "Max");

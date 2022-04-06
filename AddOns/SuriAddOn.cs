@@ -58,7 +58,8 @@ namespace NinjaTrader.Gui.NinjaScript {
 			}
 		}
 
-		public static readonly License license = SuriServer.GetSuri(Cbi.License.MachineId);
+		public static readonly Suri suri = SuriServer.GetSuri(Cbi.License.MachineId);
+		public static License license { get { return suri.license; } }
 		
 		protected override void OnWindowCreated(Window window) {
 			/*Chart.Chart chart = window as Chart.Chart;
@@ -264,7 +265,7 @@ namespace NinjaTrader.Gui.NinjaScript {
 			if (downloadWorkspace != null) {
 				if (Cbi.License.MachineId.Equals("7965FF741129B8FA28B3CFD217B469B1")) {
 					try {
-						downloadWorkspace.Click += (sender, args) => SuriVpSerialization.LoadVp();
+						//downloadWorkspace.Click += (sender, args) => SuriAdmin.LoadVp();
 					} catch (Exception e) {
 						Code.Output.Process(e.ToString(), PrintTo.OutputTab1);
 					}
@@ -285,16 +286,16 @@ namespace NinjaTrader.Gui.NinjaScript {
 				}
 			}
 			
-			/*TextBlock licenseUntil = LogicalTreeHelper.FindLogicalNode(page, "LicenseUntil") as TextBlock;
+			TextBlock licenseUntil = LogicalTreeHelper.FindLogicalNode(page, "LicenseUntil") as TextBlock;
 			if (licenseUntil != null) {
-				licenseUntil.Text += ""; // todo
+				licenseUntil.Text += " " + DateTime.Parse(SuriAddOn.suri.Until).ToString("dd.MM.yyyy");
 			}
 			Button extendLicense = LogicalTreeHelper.FindLogicalNode(page, "ExtendLicense") as Button;
 			if (extendLicense != null) {
 				extendLicense.Click += (sender, args) => {
 					Process.Start("mailto:tools@suricate-trading.de?subject=Lizenz verlängern");
 				};
-			}*/
+			}
 
 			//Redraw();
 		}

@@ -3,14 +3,14 @@ using NinjaTrader.Cbi;
 using NinjaTrader.NinjaScript.Strategies;
 
 namespace NinjaTrader.Custom.AddOns.SuriCommon {
-    public class OrderS {
+    public class SuriOrder {
         public Order order;
         public readonly string signalName;
         public readonly OrderAction orderAction;
         public Order stopOrder;
         public static Strategy strategy;
 
-        public OrderS(string signalName, OrderAction orderAction, OrderType orderType, double limitPrice = 0, double stopPrice = 0) {
+        public SuriOrder(string signalName, OrderAction orderAction, OrderType orderType, double limitPrice = 0, double stopPrice = 0) {
             if (orderAction == OrderAction.SellShort || orderAction == OrderAction.BuyToCover) throw new Exception("Don't create a new Order with " + orderAction);
             if (signalName == null) {
                 

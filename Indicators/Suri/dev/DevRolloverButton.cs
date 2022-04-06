@@ -8,7 +8,7 @@ using NinjaTrader.Gui.Chart;
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators {
-	public class RolloverIndications : Indicator {
+	public class DevRolloverButton : Indicator {
 		private ChartTab						chartTab;
 		private Chart							chartWindow;
 		private TabItem							tabItem;
@@ -191,19 +191,19 @@ namespace NinjaTrader.NinjaScript.Indicators
 {
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
-		private RolloverIndications[] cacheRolloverIndications;
-		public RolloverIndications RolloverIndications()
+		private DevRolloverButton[] cacheDevRolloverButton;
+		public DevRolloverButton DevRolloverButton()
 		{
-			return RolloverIndications(Input);
+			return DevRolloverButton(Input);
 		}
 
-		public RolloverIndications RolloverIndications(ISeries<double> input)
+		public DevRolloverButton DevRolloverButton(ISeries<double> input)
 		{
-			if (cacheRolloverIndications != null)
-				for (int idx = 0; idx < cacheRolloverIndications.Length; idx++)
-					if (cacheRolloverIndications[idx] != null &&  cacheRolloverIndications[idx].EqualsInput(input))
-						return cacheRolloverIndications[idx];
-			return CacheIndicator<RolloverIndications>(new RolloverIndications(), input, ref cacheRolloverIndications);
+			if (cacheDevRolloverButton != null)
+				for (int idx = 0; idx < cacheDevRolloverButton.Length; idx++)
+					if (cacheDevRolloverButton[idx] != null &&  cacheDevRolloverButton[idx].EqualsInput(input))
+						return cacheDevRolloverButton[idx];
+			return CacheIndicator<DevRolloverButton>(new DevRolloverButton(), input, ref cacheDevRolloverButton);
 		}
 	}
 }
@@ -212,14 +212,14 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.RolloverIndications RolloverIndications()
+		public Indicators.DevRolloverButton DevRolloverButton()
 		{
-			return indicator.RolloverIndications(Input);
+			return indicator.DevRolloverButton(Input);
 		}
 
-		public Indicators.RolloverIndications RolloverIndications(ISeries<double> input )
+		public Indicators.DevRolloverButton DevRolloverButton(ISeries<double> input )
 		{
-			return indicator.RolloverIndications(input);
+			return indicator.DevRolloverButton(input);
 		}
 	}
 }
@@ -228,14 +228,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.RolloverIndications RolloverIndications()
+		public Indicators.DevRolloverButton DevRolloverButton()
 		{
-			return indicator.RolloverIndications(Input);
+			return indicator.DevRolloverButton(Input);
 		}
 
-		public Indicators.RolloverIndications RolloverIndications(ISeries<double> input )
+		public Indicators.DevRolloverButton DevRolloverButton(ISeries<double> input )
 		{
-			return indicator.RolloverIndications(input);
+			return indicator.DevRolloverButton(input);
 		}
 	}
 }

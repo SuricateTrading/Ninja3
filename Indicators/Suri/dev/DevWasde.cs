@@ -12,7 +12,7 @@ using NinjaTrader.NinjaScript.DrawingTools;
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
-	public class Wasde : Indicator {
+	public class DevWasde : Indicator {
 		private List<WasdeData> wasdeData;
 		private int nextIndex;
 		private bool hasStarted;
@@ -286,19 +286,19 @@ namespace NinjaTrader.NinjaScript.Indicators
 {
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
-		private Suri.dev.Wasde[] cacheWasde;
-		public Suri.dev.Wasde Wasde(WasdeField field, bool showOldCrop, bool showEstimatedCrop, bool showProjectedCrop, bool isAmerica)
+		private Suri.dev.DevWasde[] cacheDevWasde;
+		public Suri.dev.DevWasde DevWasde(WasdeField field, bool showOldCrop, bool showEstimatedCrop, bool showProjectedCrop, bool isAmerica)
 		{
-			return Wasde(Input, field, showOldCrop, showEstimatedCrop, showProjectedCrop, isAmerica);
+			return DevWasde(Input, field, showOldCrop, showEstimatedCrop, showProjectedCrop, isAmerica);
 		}
 
-		public Suri.dev.Wasde Wasde(ISeries<double> input, WasdeField field, bool showOldCrop, bool showEstimatedCrop, bool showProjectedCrop, bool isAmerica)
+		public Suri.dev.DevWasde DevWasde(ISeries<double> input, WasdeField field, bool showOldCrop, bool showEstimatedCrop, bool showProjectedCrop, bool isAmerica)
 		{
-			if (cacheWasde != null)
-				for (int idx = 0; idx < cacheWasde.Length; idx++)
-					if (cacheWasde[idx] != null && cacheWasde[idx].field == field && cacheWasde[idx].showOldCrop == showOldCrop && cacheWasde[idx].showEstimatedCrop == showEstimatedCrop && cacheWasde[idx].showProjectedCrop == showProjectedCrop && cacheWasde[idx].isAmerica == isAmerica && cacheWasde[idx].EqualsInput(input))
-						return cacheWasde[idx];
-			return CacheIndicator<Suri.dev.Wasde>(new Suri.dev.Wasde(){ field = field, showOldCrop = showOldCrop, showEstimatedCrop = showEstimatedCrop, showProjectedCrop = showProjectedCrop, isAmerica = isAmerica }, input, ref cacheWasde);
+			if (cacheDevWasde != null)
+				for (int idx = 0; idx < cacheDevWasde.Length; idx++)
+					if (cacheDevWasde[idx] != null && cacheDevWasde[idx].field == field && cacheDevWasde[idx].showOldCrop == showOldCrop && cacheDevWasde[idx].showEstimatedCrop == showEstimatedCrop && cacheDevWasde[idx].showProjectedCrop == showProjectedCrop && cacheDevWasde[idx].isAmerica == isAmerica && cacheDevWasde[idx].EqualsInput(input))
+						return cacheDevWasde[idx];
+			return CacheIndicator<Suri.dev.DevWasde>(new Suri.dev.DevWasde(){ field = field, showOldCrop = showOldCrop, showEstimatedCrop = showEstimatedCrop, showProjectedCrop = showProjectedCrop, isAmerica = isAmerica }, input, ref cacheDevWasde);
 		}
 	}
 }
@@ -307,14 +307,14 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.dev.Wasde Wasde(WasdeField field, bool showOldCrop, bool showEstimatedCrop, bool showProjectedCrop, bool isAmerica)
+		public Indicators.Suri.dev.DevWasde DevWasde(WasdeField field, bool showOldCrop, bool showEstimatedCrop, bool showProjectedCrop, bool isAmerica)
 		{
-			return indicator.Wasde(Input, field, showOldCrop, showEstimatedCrop, showProjectedCrop, isAmerica);
+			return indicator.DevWasde(Input, field, showOldCrop, showEstimatedCrop, showProjectedCrop, isAmerica);
 		}
 
-		public Indicators.Suri.dev.Wasde Wasde(ISeries<double> input , WasdeField field, bool showOldCrop, bool showEstimatedCrop, bool showProjectedCrop, bool isAmerica)
+		public Indicators.Suri.dev.DevWasde DevWasde(ISeries<double> input , WasdeField field, bool showOldCrop, bool showEstimatedCrop, bool showProjectedCrop, bool isAmerica)
 		{
-			return indicator.Wasde(input, field, showOldCrop, showEstimatedCrop, showProjectedCrop, isAmerica);
+			return indicator.DevWasde(input, field, showOldCrop, showEstimatedCrop, showProjectedCrop, isAmerica);
 		}
 	}
 }
@@ -323,14 +323,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.dev.Wasde Wasde(WasdeField field, bool showOldCrop, bool showEstimatedCrop, bool showProjectedCrop, bool isAmerica)
+		public Indicators.Suri.dev.DevWasde DevWasde(WasdeField field, bool showOldCrop, bool showEstimatedCrop, bool showProjectedCrop, bool isAmerica)
 		{
-			return indicator.Wasde(Input, field, showOldCrop, showEstimatedCrop, showProjectedCrop, isAmerica);
+			return indicator.DevWasde(Input, field, showOldCrop, showEstimatedCrop, showProjectedCrop, isAmerica);
 		}
 
-		public Indicators.Suri.dev.Wasde Wasde(ISeries<double> input , WasdeField field, bool showOldCrop, bool showEstimatedCrop, bool showProjectedCrop, bool isAmerica)
+		public Indicators.Suri.dev.DevWasde DevWasde(ISeries<double> input , WasdeField field, bool showOldCrop, bool showEstimatedCrop, bool showProjectedCrop, bool isAmerica)
 		{
-			return indicator.Wasde(input, field, showOldCrop, showEstimatedCrop, showProjectedCrop, isAmerica);
+			return indicator.DevWasde(input, field, showOldCrop, showEstimatedCrop, showProjectedCrop, isAmerica);
 		}
 	}
 }

@@ -5,6 +5,8 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Web.Script.Serialization;
+using NinjaTrader.NinjaScript;
+
 #endregion
 
 namespace NinjaTrader.Custom.AddOns.SuriCommon {
@@ -54,24 +56,30 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
             return serializer.Deserialize<List<DbCotData>>(response);
         }
 		
-        public static License GetSuri(string license) {
+        public static Suri GetSuri(string license) {
             try {
                 string url = "https://cloud2.suricate-trading.de:8443/suriguard/nt?license=" + license;
                 string response = Post(url, false);
                 var serializer = new JavaScriptSerializer();
                 Suri suri = serializer.Deserialize<Suri>(response);
-                DateTime dateTime = DateTime.Parse(suri.Until);
-                if(dateTime < DateTime.Now) return License.None;
-                switch (suri.LicenseType) {
-                    case 0: return License.Basic;
-                    case 1: return License.PremiumCot;
-                    case 2: return License.PremiumVp;
-                    case 99: return License.Dev;
+                if (suri == null) {
+                    return new Suri { license = License.None };
                 }
-                return License.None;
-            } catch (Exception) {
-                return License.None;
-            }
+                DateTime dateTime = DateTime.Parse(suri.Until);
+                if(dateTime < DateTime.Now) {
+                    suri.license = License.None;
+                    return suri;
+                }
+                switch (suri.LicenseType) {
+                    case 0: suri.license = License.Basic; break;
+                    case 1: suri.license = License.PremiumCot; break;
+                    case 2: suri.license = License.PremiumVp; break;
+                    case 99: suri.license = License.Dev; break;
+                    default: suri.license = License.None; break;
+                }
+                return suri;
+            } catch (Exception) {/**/}
+            return new Suri { license = License.None };
         }
     }
     
@@ -99,7 +107,8 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
         public string AppLicense {get; set;}
         public string Name {get; set;}	
         public int LicenseType {get; set;}
-        public string Until {get; set;}	
+        public string Until {get; set;}
+        public License license {get; set;}
     }
 
     public enum License {

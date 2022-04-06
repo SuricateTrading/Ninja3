@@ -1,4 +1,4 @@
-/*#region Using declarations
+#region Using declarations
 
 using System.IO;
 using System.Linq;
@@ -12,7 +12,7 @@ using NinjaTrader.Gui.Tools;
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
-	public class VpMeta : Indicator {
+	public class DevVpMeta : Indicator {
 		private SuriVpIntraData suriVpIntraData;
 		private int lastBar;
 		
@@ -35,7 +35,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 				AddPlot(new Stroke(Brushes.CornflowerBlue, 2), PlotStyle.Bar, "0");
 			} else if (State == State.DataLoaded) {
 				string json = File.ReadAllText(SuriVpSerialization.dbPath + @"\" + Instrument.MasterInstrument.Name + ".vpintra");
-				suriVpIntraData = Newtonsoft.Json.JsonConvert.DeserializeObject<SuriVpIntraData>(json);
+				//suriVpIntraData = Newtonsoft.Json.JsonConvert.DeserializeObject<SuriVpIntraData>(json);
 			}
 		}
 		
@@ -114,5 +114,59 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 
 //
 
+#region NinjaScript generated code. Neither change nor remove.
 
-*/
+namespace NinjaTrader.NinjaScript.Indicators
+{
+	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
+	{
+		private Suri.dev.DevVpMeta[] cacheDevVpMeta;
+		public Suri.dev.DevVpMeta DevVpMeta()
+		{
+			return DevVpMeta(Input);
+		}
+
+		public Suri.dev.DevVpMeta DevVpMeta(ISeries<double> input)
+		{
+			if (cacheDevVpMeta != null)
+				for (int idx = 0; idx < cacheDevVpMeta.Length; idx++)
+					if (cacheDevVpMeta[idx] != null &&  cacheDevVpMeta[idx].EqualsInput(input))
+						return cacheDevVpMeta[idx];
+			return CacheIndicator<Suri.dev.DevVpMeta>(new Suri.dev.DevVpMeta(), input, ref cacheDevVpMeta);
+		}
+	}
+}
+
+namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
+{
+	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
+	{
+		public Indicators.Suri.dev.DevVpMeta DevVpMeta()
+		{
+			return indicator.DevVpMeta(Input);
+		}
+
+		public Indicators.Suri.dev.DevVpMeta DevVpMeta(ISeries<double> input )
+		{
+			return indicator.DevVpMeta(input);
+		}
+	}
+}
+
+namespace NinjaTrader.NinjaScript.Strategies
+{
+	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
+	{
+		public Indicators.Suri.dev.DevVpMeta DevVpMeta()
+		{
+			return indicator.DevVpMeta(Input);
+		}
+
+		public Indicators.Suri.dev.DevVpMeta DevVpMeta(ISeries<double> input )
+		{
+			return indicator.DevVpMeta(input);
+		}
+	}
+}
+
+#endregion

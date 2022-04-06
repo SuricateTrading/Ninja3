@@ -9,7 +9,7 @@ using NinjaTrader.Data;
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
-	public class TickExtractor : Indicator {
+	public class DevTickExtractor : Indicator {
 		private static readonly string dbPath = Globals.UserDataDir + @"db\suri\";
 		/*
 		protected override void OnStateChange() {
@@ -151,19 +151,19 @@ namespace NinjaTrader.NinjaScript.Indicators
 {
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
-		private Suri.dev.TickExtractor[] cacheTickExtractor;
-		public Suri.dev.TickExtractor TickExtractor()
+		private Suri.dev.DevTickExtractor[] cacheDevTickExtractor;
+		public Suri.dev.DevTickExtractor DevTickExtractor()
 		{
-			return TickExtractor(Input);
+			return DevTickExtractor(Input);
 		}
 
-		public Suri.dev.TickExtractor TickExtractor(ISeries<double> input)
+		public Suri.dev.DevTickExtractor DevTickExtractor(ISeries<double> input)
 		{
-			if (cacheTickExtractor != null)
-				for (int idx = 0; idx < cacheTickExtractor.Length; idx++)
-					if (cacheTickExtractor[idx] != null &&  cacheTickExtractor[idx].EqualsInput(input))
-						return cacheTickExtractor[idx];
-			return CacheIndicator<Suri.dev.TickExtractor>(new Suri.dev.TickExtractor(), input, ref cacheTickExtractor);
+			if (cacheDevTickExtractor != null)
+				for (int idx = 0; idx < cacheDevTickExtractor.Length; idx++)
+					if (cacheDevTickExtractor[idx] != null &&  cacheDevTickExtractor[idx].EqualsInput(input))
+						return cacheDevTickExtractor[idx];
+			return CacheIndicator<Suri.dev.DevTickExtractor>(new Suri.dev.DevTickExtractor(), input, ref cacheDevTickExtractor);
 		}
 	}
 }
@@ -172,14 +172,14 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.dev.TickExtractor TickExtractor()
+		public Indicators.Suri.dev.DevTickExtractor DevTickExtractor()
 		{
-			return indicator.TickExtractor(Input);
+			return indicator.DevTickExtractor(Input);
 		}
 
-		public Indicators.Suri.dev.TickExtractor TickExtractor(ISeries<double> input )
+		public Indicators.Suri.dev.DevTickExtractor DevTickExtractor(ISeries<double> input )
 		{
-			return indicator.TickExtractor(input);
+			return indicator.DevTickExtractor(input);
 		}
 	}
 }
@@ -188,14 +188,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.dev.TickExtractor TickExtractor()
+		public Indicators.Suri.dev.DevTickExtractor DevTickExtractor()
 		{
-			return indicator.TickExtractor(Input);
+			return indicator.DevTickExtractor(Input);
 		}
 
-		public Indicators.Suri.dev.TickExtractor TickExtractor(ISeries<double> input )
+		public Indicators.Suri.dev.DevTickExtractor DevTickExtractor(ISeries<double> input )
 		{
-			return indicator.TickExtractor(input);
+			return indicator.DevTickExtractor(input);
 		}
 	}
 }

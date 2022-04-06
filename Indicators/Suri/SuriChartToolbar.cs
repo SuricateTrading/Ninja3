@@ -9,6 +9,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using NinjaTrader.Cbi;
 using NinjaTrader.Custom.AddOns.SuriCommon;
+using NinjaTrader.NinjaScript.Indicators.Suri.dev;
 using VerticalAlignment = System.Windows.VerticalAlignment;
 #endregion
 
@@ -97,7 +98,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				ColumnDefinitions = {
 					new ColumnDefinition(), new ColumnDefinition(), new ColumnDefinition(), new ColumnDefinition(),
 					new ColumnDefinition(), new ColumnDefinition(), new ColumnDefinition(), new ColumnDefinition(),
-					new ColumnDefinition(), new ColumnDefinition {Width = new GridLength(200)},
+					new ColumnDefinition(), new ColumnDefinition(), new ColumnDefinition(), new ColumnDefinition {Width = new GridLength(200)},
 				},
 				RowDefinitions = { new RowDefinition() },
 			};
@@ -129,9 +130,11 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			AddCheckBox("SMA", IsIndicatorVisible(new[] {typeof(SuriSma)}), 0, 3, (sender, args) => OnCheckBoxClick(new[] {typeof(SuriSma)}));
 			AddCheckBox("Volumen", IsIndicatorVisible(new[] {typeof(SuriVolume)}), 0, 4, (sender, args) => OnCheckBoxClick(new[] {typeof(SuriVolume)}));
 			AddCheckBox("Bargröße", IsIndicatorVisible(new[] {typeof(SuriBarRange)}), 0, 5, (sender, args) => OnCheckBoxClick(new[] {typeof(SuriBarRange)}));
-			AddCheckBox("Trend Trader", IsIndicatorVisible(new []{typeof(SuriCot)}, SuriCotReportField.NoncommercialLong, SuriCotReportField.NoncommercialShort), 0, 6, (sender, args) => OnCheckBoxClick(new []{typeof(SuriCot)}, SuriCotReportField.NoncommercialLong, SuriCotReportField.NoncommercialShort));
-			AddCheckBox("Open Interest", IsIndicatorVisible(new []{typeof(ComShortOpenInterest), typeof(SuriCot)}, SuriCotReportField.OpenInterest), 0, 7, (sender, args) => OnCheckBoxClick(new []{typeof(ComShortOpenInterest), typeof(SuriCot)}, SuriCotReportField.OpenInterest));
-			AddCheckBox("VP groß", IsIndicatorVisible(new []{typeof(SuriVolumeProfileBig)}), 0, 8, (sender, args) => OnCheckBoxClick(new []{typeof(SuriVolumeProfileBig)}));
+			AddCheckBox("Mega", IsIndicatorVisible(new[] {typeof(SuriMega)}), 0, 6, (sender, args) => OnCheckBoxClick(new[] {typeof(SuriMega)}));
+			AddCheckBox("Trend Trader", IsIndicatorVisible(new []{typeof(SuriCot)}, SuriCotReportField.NoncommercialLong, SuriCotReportField.NoncommercialShort), 0, 7, (sender, args) => OnCheckBoxClick(new []{typeof(SuriCot)}, SuriCotReportField.NoncommercialLong, SuriCotReportField.NoncommercialShort));
+			AddCheckBox("Open Interest", IsIndicatorVisible(new []{typeof(ComShortOpenInterest), typeof(SuriCot)}, SuriCotReportField.OpenInterest), 0, 8, (sender, args) => OnCheckBoxClick(new []{typeof(ComShortOpenInterest), typeof(SuriCot)}, SuriCotReportField.OpenInterest));
+			AddCheckBox("VP groß", IsIndicatorVisible(new []{typeof(SuriVolumeProfileBig)}), 0, 9, (sender, args) => OnCheckBoxClick(new []{typeof(SuriVolumeProfileBig)}));
+			AddCheckBox("Produktionskosten", IsIndicatorVisible(new []{typeof(SuriProductionCost)}), 0, 10, (sender, args) => OnCheckBoxClick(new []{typeof(SuriProductionCost)}));
 			
 			var comList = new ComboBox();
 			foreach (KeyValuePair<Commodity,CommodityData> entry in SuriStrings.data) {
@@ -163,7 +166,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 					PresentationSource.FromVisual(ChartControl.OwnerChart), 0,  Key.Enter) { RoutedEvent = Keyboard.PreviewKeyDownEvent } );
 			};
 			Grid.SetRow(comList, 0);
-			Grid.SetColumn(comList, 9);
+			Grid.SetColumn(comList, 11);
 			menu.Children.Add(comList);
 		}
 		

@@ -9,7 +9,7 @@ using NinjaTrader.Gui.Chart;
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
-	public class Terminkurve : Indicator {
+	public class DevTerminkurve : Indicator {
 		private List<TkData> tkData;
 		private int nextIndex;
 		private int days = 250;
@@ -136,19 +136,19 @@ namespace NinjaTrader.NinjaScript.Indicators
 {
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
-		private Suri.dev.Terminkurve[] cacheTerminkurve;
-		public Suri.dev.Terminkurve Terminkurve()
+		private Suri.dev.DevTerminkurve[] cacheDevTerminkurve;
+		public Suri.dev.DevTerminkurve DevTerminkurve()
 		{
-			return Terminkurve(Input);
+			return DevTerminkurve(Input);
 		}
 
-		public Suri.dev.Terminkurve Terminkurve(ISeries<double> input)
+		public Suri.dev.DevTerminkurve DevTerminkurve(ISeries<double> input)
 		{
-			if (cacheTerminkurve != null)
-				for (int idx = 0; idx < cacheTerminkurve.Length; idx++)
-					if (cacheTerminkurve[idx] != null &&  cacheTerminkurve[idx].EqualsInput(input))
-						return cacheTerminkurve[idx];
-			return CacheIndicator<Suri.dev.Terminkurve>(new Suri.dev.Terminkurve(), input, ref cacheTerminkurve);
+			if (cacheDevTerminkurve != null)
+				for (int idx = 0; idx < cacheDevTerminkurve.Length; idx++)
+					if (cacheDevTerminkurve[idx] != null &&  cacheDevTerminkurve[idx].EqualsInput(input))
+						return cacheDevTerminkurve[idx];
+			return CacheIndicator<Suri.dev.DevTerminkurve>(new Suri.dev.DevTerminkurve(), input, ref cacheDevTerminkurve);
 		}
 	}
 }
@@ -157,14 +157,14 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.dev.Terminkurve Terminkurve()
+		public Indicators.Suri.dev.DevTerminkurve DevTerminkurve()
 		{
-			return indicator.Terminkurve(Input);
+			return indicator.DevTerminkurve(Input);
 		}
 
-		public Indicators.Suri.dev.Terminkurve Terminkurve(ISeries<double> input )
+		public Indicators.Suri.dev.DevTerminkurve DevTerminkurve(ISeries<double> input )
 		{
-			return indicator.Terminkurve(input);
+			return indicator.DevTerminkurve(input);
 		}
 	}
 }
@@ -173,14 +173,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.dev.Terminkurve Terminkurve()
+		public Indicators.Suri.dev.DevTerminkurve DevTerminkurve()
 		{
-			return indicator.Terminkurve(Input);
+			return indicator.DevTerminkurve(Input);
 		}
 
-		public Indicators.Suri.dev.Terminkurve Terminkurve(ISeries<double> input )
+		public Indicators.Suri.dev.DevTerminkurve DevTerminkurve(ISeries<double> input )
 		{
-			return indicator.Terminkurve(input);
+			return indicator.DevTerminkurve(input);
 		}
 	}
 }

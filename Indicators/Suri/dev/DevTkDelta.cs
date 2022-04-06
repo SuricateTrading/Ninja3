@@ -7,7 +7,7 @@ using NinjaTrader.Gui.Chart;
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
-	public class TkDelta : Indicator {
+	public class DevTkDelta : Indicator {
 		private List<TkData> tkData;
 		private int nextIndex;
 		
@@ -85,19 +85,19 @@ namespace NinjaTrader.NinjaScript.Indicators
 {
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
-		private Suri.dev.TkDelta[] cacheTkDelta;
-		public Suri.dev.TkDelta TkDelta()
+		private Suri.dev.DevTkDelta[] cacheDevTkDelta;
+		public Suri.dev.DevTkDelta DevTkDelta()
 		{
-			return TkDelta(Input);
+			return DevTkDelta(Input);
 		}
 
-		public Suri.dev.TkDelta TkDelta(ISeries<double> input)
+		public Suri.dev.DevTkDelta DevTkDelta(ISeries<double> input)
 		{
-			if (cacheTkDelta != null)
-				for (int idx = 0; idx < cacheTkDelta.Length; idx++)
-					if (cacheTkDelta[idx] != null &&  cacheTkDelta[idx].EqualsInput(input))
-						return cacheTkDelta[idx];
-			return CacheIndicator<Suri.dev.TkDelta>(new Suri.dev.TkDelta(), input, ref cacheTkDelta);
+			if (cacheDevTkDelta != null)
+				for (int idx = 0; idx < cacheDevTkDelta.Length; idx++)
+					if (cacheDevTkDelta[idx] != null &&  cacheDevTkDelta[idx].EqualsInput(input))
+						return cacheDevTkDelta[idx];
+			return CacheIndicator<Suri.dev.DevTkDelta>(new Suri.dev.DevTkDelta(), input, ref cacheDevTkDelta);
 		}
 	}
 }
@@ -106,14 +106,14 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.dev.TkDelta TkDelta()
+		public Indicators.Suri.dev.DevTkDelta DevTkDelta()
 		{
-			return indicator.TkDelta(Input);
+			return indicator.DevTkDelta(Input);
 		}
 
-		public Indicators.Suri.dev.TkDelta TkDelta(ISeries<double> input )
+		public Indicators.Suri.dev.DevTkDelta DevTkDelta(ISeries<double> input )
 		{
-			return indicator.TkDelta(input);
+			return indicator.DevTkDelta(input);
 		}
 	}
 }
@@ -122,14 +122,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.dev.TkDelta TkDelta()
+		public Indicators.Suri.dev.DevTkDelta DevTkDelta()
 		{
-			return indicator.TkDelta(Input);
+			return indicator.DevTkDelta(Input);
 		}
 
-		public Indicators.Suri.dev.TkDelta TkDelta(ISeries<double> input )
+		public Indicators.Suri.dev.DevTkDelta DevTkDelta(ISeries<double> input )
 		{
-			return indicator.TkDelta(input);
+			return indicator.DevTkDelta(input);
 		}
 	}
 }
