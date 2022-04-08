@@ -72,8 +72,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
                 }
                 switch (suri.LicenseType) {
                     case 0: suri.license = License.Basic; break;
-                    case 1: suri.license = License.PremiumCot; break;
-                    case 2: suri.license = License.PremiumVp; break;
+                    case 2: suri.license = License.Premium; break;
                     case 99: suri.license = License.Dev; break;
                     default: suri.license = License.None; break;
                 }
@@ -109,13 +108,13 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
         public int LicenseType {get; set;}
         public string Until {get; set;}
         public License license {get; set;}
+        public bool Vp {get; set;}
     }
 
     public enum License {
         None,
         Basic,
-        PremiumCot,
-        PremiumVp,
+        Premium,
         Dev
     }
     

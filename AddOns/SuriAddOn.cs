@@ -21,6 +21,8 @@ using Application = System.Windows.Application;
 using Button = System.Windows.Controls.Button;
 using HorizontalAlignment = System.Windows.HorizontalAlignment;
 using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
+using TabControl = System.Windows.Controls.TabControl;
+
 #endregion
 
 namespace NinjaTrader.Gui.NinjaScript {
@@ -129,6 +131,7 @@ namespace NinjaTrader.Gui.NinjaScript {
 					});
 				}*/
 			};
+			
 			cc.MainMenu.Add(startSuri);
 		}
 		
@@ -263,31 +266,27 @@ namespace NinjaTrader.Gui.NinjaScript {
 			
 			Button downloadWorkspace = LogicalTreeHelper.FindLogicalNode(page, "DownloadWorkspace") as Button;
 			if (downloadWorkspace != null) {
-				if (Cbi.License.MachineId.Equals("7965FF741129B8FA28B3CFD217B469B1")) {
-					try {
-						//downloadWorkspace.Click += (sender, args) => SuriAdmin.LoadVp();
-					} catch (Exception e) {
-						Code.Output.Process(e.ToString(), PrintTo.OutputTab1);
-					}
-				} else {
-					downloadWorkspace.Click += (sender, args) => {
-						using (WebClient webClient = new WebClient()) {
-							SaveFileDialog saveFileDialog = new SaveFileDialog {
-								Title = @"Workspace speichern",
-								Filter = @"Workspace (*.xml)|*.xml",
-								InitialDirectory = Globals.UserDataDir + @"workspaces\",
-								FileName = "Suri_Workspace.xml",
-							};
-							if (saveFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK) {
-								webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/Suri_Workspace.xml", saveFileDialog.FileName);
+				downloadWorkspace.Click += (sender, args) => {
+					using (WebClient webClient = new WebClient()) {
+						SaveFileDialog saveFileDialog = new SaveFileDialog {
+							Title = @"Workspace speichern",
+							Filter = @"Workspace (*.xml)|*.xml",
+							InitialDirectory = Globals.UserDataDir + @"workspaces\",
+							FileName = SuriAddOn.suri.Vp ? "VP_Workspace.xml" : "COT_Workspace.xml",
+						};
+						if (saveFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK) {
+							if (SuriAddOn.suri.Vp) {
+								webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/VP_Workspace.xml", saveFileDialog.FileName);
+							} else {
+								webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/COT_Workspace.xml", saveFileDialog.FileName);
 							}
 						}
-					};
-				}
+					}
+				};
 			}
 			
 			TextBlock licenseUntil = LogicalTreeHelper.FindLogicalNode(page, "LicenseUntil") as TextBlock;
-			if (licenseUntil != null) {
+			if (licenseUntil != null && SuriAddOn.suri.Until != null) {
 				licenseUntil.Text += " " + DateTime.Parse(SuriAddOn.suri.Until).ToString("dd.MM.yyyy");
 			}
 			Button extendLicense = LogicalTreeHelper.FindLogicalNode(page, "ExtendLicense") as Button;
@@ -296,8 +295,30 @@ namespace NinjaTrader.Gui.NinjaScript {
 					Process.Start("mailto:tools@suricate-trading.de?subject=Lizenz verlängern");
 				};
 			}
+			
+			if (SuriAddOn.suri.license == License.Dev) InitAdminMode(page);
 
 			//Redraw();
+		}
+
+		private void InitAdminMode(Page page) {
+			TabControl tabs = LogicalTreeHelper.FindLogicalNode(page, "tabs") as TabControl;
+			if (tabs == null) return;
+
+			Button downloadVpBig = new Button {
+				Content = "Download VP Big",
+			};
+			//downloadVpBig.Click += (sender, args) => SuriAdmin.LoadVp();
+			
+			tabs.Items.Insert(0, new TabItem {
+				Header = "Admin",
+				Padding = new Thickness(10.5),
+				Content = new ScrollViewer {
+					Content = new StackPanel {
+						Children = { downloadVpBig }
+					}
+				}
+			});
 		}
 		
 		public void Restore(XDocument document, XElement element) { }

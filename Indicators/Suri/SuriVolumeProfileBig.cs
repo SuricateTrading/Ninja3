@@ -104,7 +104,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				textBrush									= Brushes.White;
 			} else if (State == State.DataLoaded) {
 				dataLoaded = false;
-				if ((SuriAddOn.license == License.PremiumVp || SuriAddOn.license == License.Dev) && loadRecent) {
+				if ((SuriAddOn.license == License.Premium || SuriAddOn.license == License.Dev) && loadRecent) {
 					suriVpBigData = SuriVpSerialization.GetVpBig(Instrument);
 					if (suriVpBigData != null) dataLoaded = true;
 				}
@@ -144,7 +144,11 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		}
 		
 		protected override void OnRender(ChartControl chartControl, ChartScale chartScale) {
-			if (!dataLoaded || SuriAddOn.license == License.None || Bars == null || Bars.Instrument == null || IsInHitTest) {
+			if (SuriAddOn.license == License.None) {
+				SuriCommon.NoValidLicenseError(RenderTarget, ChartControl, ChartPanel);
+				return;
+			}
+			if (!dataLoaded || Bars == null || Bars.Instrument == null || IsInHitTest) {
 				return;
 			}
 			if (!suriVpBigData.isPrepared) {

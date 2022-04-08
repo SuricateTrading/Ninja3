@@ -6,6 +6,7 @@ using System.Windows.Media;
 using System.Xml.Serialization;
 using NinjaTrader.Custom.AddOns.SuriCommon;
 using NinjaTrader.Gui;
+using NinjaTrader.Gui.Chart;
 using NinjaTrader.Gui.NinjaScript;
 using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
 #endregion
@@ -39,6 +40,11 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			}
 		}
 		public override string DisplayName { get { return SuriStrings.DisplayName(Name, Instrument); } }
+		
+		protected override void OnRender(ChartControl chartControl, ChartScale chartScale) {
+			base.OnRender(chartControl, chartScale);
+			if (SuriAddOn.license == License.None) SuriCommon.NoValidLicenseError(RenderTarget, ChartControl, ChartPanel);
+		}
 		
 		protected override void OnBarUpdate() {
 			if (SuriAddOn.license == License.None) return;

@@ -7,6 +7,7 @@ using System.Xml.Serialization;
 using NinjaTrader.Cbi;
 using NinjaTrader.Custom.AddOns.SuriCommon;
 using NinjaTrader.Gui;
+using NinjaTrader.Gui.Chart;
 using NinjaTrader.Gui.NinjaScript;
 using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
 
@@ -80,6 +81,11 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
         public double Percentage() { return 100 * Values[0][0] / Values[1][0]; }
         public bool IsMegaVolume() { return Math.Abs(Values[0][0] - Values[1][0]) < 0.00001; }
 		
+        protected override void OnRender(ChartControl chartControl, ChartScale chartScale) {
+	        base.OnRender(chartControl, chartScale);
+	        if (SuriAddOn.license == License.None) SuriCommon.NoValidLicenseError(RenderTarget, ChartControl, ChartPanel);
+        }
+        
 		protected override void OnBarUpdate() {
 			if (SuriAddOn.license == License.None) return;
 			
@@ -105,7 +111,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				}
 			}
 			Values[1][0] = max;
-			if (SuriAddOn.license != License.Basic && IsMegaVolume()) PlotBrushes[0][0] = signalBrush;
+			if (SuriAddOn.license == License.Premium && IsMegaVolume()) PlotBrushes[0][0] = signalBrush;
 		}
 	}
 }

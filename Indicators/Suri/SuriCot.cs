@@ -156,6 +156,11 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			return value;
 		}
 
+		protected override void OnRender(ChartControl chartControl, ChartScale chartScale) {
+			base.OnRender(chartControl, chartScale);
+			if (SuriAddOn.license == License.None) SuriCommon.NoValidLicenseError(RenderTarget, ChartControl, ChartPanel);
+		}
+
 		protected override void OnBarUpdate() {
 			if (SuriAddOn.license == License.None) return;
 			

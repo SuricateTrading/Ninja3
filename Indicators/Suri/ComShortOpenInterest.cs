@@ -5,6 +5,7 @@ using NinjaTrader.Gui;
 using NinjaTrader.Gui.Chart;
 using System.ComponentModel.DataAnnotations;
 using System.Xml.Serialization;
+using NinjaTrader.Custom.AddOns.SuriCommon;
 using NinjaTrader.Gui.NinjaScript;
 using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
 
@@ -100,6 +101,11 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 					AddPlot(new Stroke(brush80, lineWidthSecondary), PlotStyle.Line, "80%");
 				}
 			}
+		}
+		
+		protected override void OnRender(ChartControl chartControl, ChartScale chartScale) {
+			base.OnRender(chartControl, chartScale);
+			if (SuriAddOn.license == License.None) SuriCommon.NoValidLicenseError(RenderTarget, ChartControl, ChartPanel);
 		}
 
 		protected override void OnBarUpdate() {

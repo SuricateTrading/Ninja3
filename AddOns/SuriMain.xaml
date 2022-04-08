@@ -4,7 +4,7 @@
         xmlns:templates="clr-namespace:NinjaTrader.NinjaScript.AddOns.Templates"
 		xmlns:system="clr-namespace:System;assembly=mscorlib" Height="1000" Width="800" >
     <Grid Background="Transparent">
-        <TabControl Background="Transparent">
+        <TabControl x:Name="tabs" Background="Transparent">
             <TabItem Header="Suricate" Padding="10,5">
                 <ScrollViewer>
                     <StackPanel Grid.ColumnSpan="2" Margin="0,0,0.334,0.333">
@@ -31,15 +31,6 @@
                         </TextBlock-->
                         <TextBlock TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Foreground="LightGray" FontSize="16" Margin="10,10,10,5" >
                             Termine
-                            <LineBreak/>
-                            <BulletDecorator  Margin="0,5,0,0" VerticalAlignment="Center">
-                                <BulletDecorator.Bullet>
-                                    <Ellipse Height="5" Width="5" Fill="#FF0096FF"/>
-                                </BulletDecorator.Bullet>
-                                <TextBlock TextWrapping="Wrap" HorizontalAlignment="Left" Foreground ="LightGray" FontSize="16" Margin="10,0">
-                                    05.04.22 um 19:00 Uhr Technisches Webinar
-                                </TextBlock>
-                            </BulletDecorator>
                             <LineBreak/>
                             <BulletDecorator  Margin="0,5,0,0" VerticalAlignment="Center">
                                 <BulletDecorator.Bullet>
@@ -89,7 +80,7 @@
                             <TextBlock HorizontalAlignment="Center"><Hyperlink x:Name="seasonals" FontSize="16" NavigateUri="https://www.suricate-trading.de/seasonal-charts/seasonal-cot-data-charts/"><Run Text="Saisonalitäten"/></Hyperlink></TextBlock>
                         </StackPanel>
                     </StackPanel>
-                    
+
                 </ScrollViewer>
             </TabItem>
 
@@ -372,16 +363,16 @@
                             Deine Lizenz läuft bis zum
                         </TextBlock>
                         <Button x:Name="ExtendLicense" Content="Lizenz verlängern" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,5" Padding="10" BorderBrush="#FF0B76C4" />
-                        
+
                         <TextBlock TextAlignment="Center" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" VerticalAlignment="Top" Foreground="LightGray" FontSize="16" Margin="20,70,20,20">
                         Falls Du eine Frage oder Verbesserungswünsche hast, schreibe uns bitte eine Mail an<LineBreak/>
                         <Hyperlink x:Name="contact" FontSize="16" NavigateUri="mailto:info@suricate-trading.de">
                             <Run Text="info@suricate-trading.de"/>
                         </Hyperlink>
                         </TextBlock>
-                        
+
                     </StackPanel>
-                 </ScrollViewer>
+                </ScrollViewer>
             </TabItem>
         </TabControl>
     </Grid>

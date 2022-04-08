@@ -178,7 +178,11 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		}
 
 		protected override void OnRender(ChartControl chartControl, ChartScale chartScale) {
-			if (Bars == null || Bars.Instrument == null || IsInHitTest || SuriAddOn.license == License.None || suriVpIntraData.barData.IsNullOrEmpty()) {
+			if (SuriAddOn.license == License.None) {
+				SuriCommon.NoValidLicenseError(RenderTarget, ChartControl, ChartPanel);
+				return;
+			}
+			if (Bars == null || Bars.Instrument == null || IsInHitTest || suriVpIntraData.barData.IsNullOrEmpty()) {
 				return;
 			}
 			if (!suriVpIntraData.isPrepared) suriVpIntraData.Prepare();

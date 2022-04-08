@@ -1,13 +1,17 @@
 ﻿using System;
 using System.Globalization;
 using NinjaTrader.Data;
-using System.Windows;
 using System.Windows.Media;
 using NinjaTrader.Cbi;
+using NinjaTrader.Gui;
 using NinjaTrader.Gui.Chart;
 using NinjaTrader.Gui.Tools;
 using NinjaTrader.NinjaScript;
 using NinjaTrader.NinjaScript.DrawingTools;
+using SharpDX;
+using SharpDX.Direct2D1;
+using SharpDX.DirectWrite;
+using TextAlignment = System.Windows.TextAlignment;
 
 namespace NinjaTrader.Custom.AddOns.SuriCommon {
     public abstract class SuriCommon {
@@ -49,6 +53,15 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
                 currency *= Account.All[0].ForexLotSize;
             }
             return currency;
+        }
+
+
+        public static void NoValidLicenseError(RenderTarget renderTarget, ChartControl chartControl, ChartPanel chartPanel) {
+            SimpleFont font = new SimpleFont { Size = 15 };
+            TextFormat textFormat		= font.ToDirectWriteTextFormat();
+            textFormat.TextAlignment	= SharpDX.DirectWrite.TextAlignment.Leading;
+            textFormat.WordWrapping		= WordWrapping.NoWrap;
+            renderTarget.DrawText("Deine Lizenz ist abgelaufen oder Deine Maschinen ID hat sich verändert.", textFormat, new RectangleF(10, chartPanel.Y + 30, 100, 100), chartControl.Properties.ChartText.ToDxBrush(renderTarget));
         }
         
     }

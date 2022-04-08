@@ -1,9 +1,10 @@
-#region Using declarations
+/*#region Using declarations
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.Windows.Media;
 using NinjaTrader.Cbi;
 using NinjaTrader.Custom.AddOns.SuriCommon;
+using NinjaTrader.Data;
 using NinjaTrader.Gui;
 using NinjaTrader.Gui.Chart;
 using NinjaTrader.NinjaScript.DrawingTools;
@@ -50,12 +51,13 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 				lineWidthSecondary							= 2;
 				days										= 125;
 			} else if (State == State.Configure) {
-				//suriCot1 = SuriCot1(days);
+				suriCot1 = SuriCot1(days);
 				AddPlot(new Stroke(regularLineBrush, lineWidth), PlotStyle.Line, "COT1");
 				AddPlot(new Stroke(shortBrush, lineWidthSecondary), PlotStyle.Line, "10%");
 				AddPlot(new Stroke(brush50Percent, lineWidthSecondary), PlotStyle.Line, "50%");
 				AddPlot(new Stroke(longBrush, lineWidthSecondary), PlotStyle.Line, "90%");
-				SuriServer.GetSuri(Cbi.License.MachineId);
+			} else if (State == State.DataLoaded) {
+				sessionIterator = new SessionIterator(Bars);
 			}
 		}
         public override string DisplayName { get { return SuriStrings.DisplayName(Name, Instrument); } }
@@ -63,12 +65,14 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
         #endregion
         
         public SuriCot1 suriCot1;
-        /** After there was a trading signal, we try to enter at this price. Null iff there was no signal the last 6 weeks. */
+        // After there was a trading signal, we try to enter at this price. Null iff there was no signal the last 6 weeks.
         public double? entry;
-        /** The Date when the last signal occured. Null iff there was no signal the last 6 weeks. */
+        // The Date when the last signal occured. Null iff there was no signal the last 6 weeks.
         public DateTime? signalDate;
-        /** The stop of the last signal. Null iff there was no signal the last 6 weeks. */
+        // The stop of the last signal. Null iff there was no signal the last 6 weeks.
         public double? stop;
+
+        private SessionIterator sessionIterator;
 
         public bool IsLong()  { return Value[0] >= 90; }
         public bool IsShort() { return Value[0] <= 10; }
@@ -91,48 +95,59 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 		protected override void OnBarUpdate() {
 			if (CurrentBar <= days) return;
 			suriCot1.Update();
-			
-			// Check if signal has expired and clean it up.
-			if (signalDate != null && suriTest.cot1SuriOrder != null && suriTest.cot1SuriOrder.order.OrderState != OrderState.Filled && (Time[0] - signalDate.Value.AddDays(42)).Days > 0) {
-				suriTest.cot1SuriOrder.Cancel();
-				Clean();
-			}
-			
-			// check if report was released today
-			if (SuriCotStrategy.releaseToReportDates.ContainsKey(Time[0].ToString("yyyy-MM-dd"))) {
-				DateTime reportDate = DateTime.Parse(SuriCotStrategy.releaseToReportDates[Time[0].ToString("yyyy-MM-dd")]);
 
-				bool found = false;
-				for (int barsAgo = 0; barsAgo < 20; barsAgo++) {
-					if (Time[barsAgo].Date == reportDate.Date) {
-						found = true;
-						Value[0] = suriCot1[barsAgo];
-						if (Value[0] >= 90 && Value[1] < 90 || Value[0] <= 10 && Value[1] > 10) {
-							PlotBrushes[0][0] = suriCot1.PlotBrushes[0][barsAgo];
-							if (PlotBrushes[0][0] == Brushes.Yellow) {
-								if (suriTest.cot1SuriOrder != null) suriTest.cot1SuriOrder.Cancel();
-								Clean();
-							} else if (PlotBrushes[0][0] == Brushes.Green) {
-								SetEntry(barsAgo);
-							} else if (PlotBrushes[0][0] == Brushes.Red) {
-								SetEntry(barsAgo);
-							} else if (PlotBrushes[0][0] == Brushes.DarkGray || PlotBrushes[0][0] == null) {
-								// nothing to do
-							} else {
-								Print("Error: Der COT 1 Zustand konnte nicht ermittelt werden. " + Time[0] + " " + PlotBrushes[0][0]);
-							}
-						}
-						break;
-					}
+			try {
+				// Check if signal has expired and clean it up.
+				if (signalDate != null && suriTest.cot1SuriOrder != null && suriTest.cot1SuriOrder.order.OrderState != OrderState.Filled && (Time[0] - signalDate.Value.AddDays(42)).Days > 0) {
+					suriTest.cot1SuriOrder.Cancel();
+					Clean();
 				}
-				if (!found) Print("Error: Es wurde kein Handelstag für das COT-Report-Datum gefunden " + reportDate);
-			} else {
-				Values[0][0] = Values[0][1];
-			}
-			
-			// set stop if we reached entry
-			if (suriTest.cot1SuriOrder != null && suriTest.cot1SuriOrder.order.OrderState == OrderState.Filled && suriTest.cot1SuriOrder.stopOrder == null) {
-				SetStop();
+				
+				// check if report was released today
+				if (SuriCotStrategy.releaseToReportDates.ContainsKey(Time[0].ToString("yyyy-MM-dd"))) {
+					DateTime reportDate = DateTime.Parse(SuriCotStrategy.releaseToReportDates[Time[0].ToString("yyyy-MM-dd")]);
+
+					bool found = false;
+					for (int barsAgo = 0; barsAgo < 20; barsAgo++) {
+						if (Time[barsAgo].Date == reportDate.Date) {
+							found = true;
+							Value[0] = suriCot1[barsAgo];
+							if (Value[0] >= 90 && Value[1] < 90 || Value[0] <= 10 && Value[1] > 10) {
+								PlotBrushes[0][0] = suriCot1.PlotBrushes[0][barsAgo];
+								if (PlotBrushes[0][0] == Brushes.Yellow) {
+									if (suriTest.cot1SuriOrder != null) suriTest.cot1SuriOrder.Cancel();
+									Clean();
+								} else if (PlotBrushes[0][0] == Brushes.Green) {
+									SetEntry(barsAgo);
+								} else if (PlotBrushes[0][0] == Brushes.Red) {
+									SetEntry(barsAgo);
+								} else if (PlotBrushes[0][0] == Brushes.DarkGray || PlotBrushes[0][0] == null) {
+									// nothing to do
+								} else {
+									Print("Error: Der COT 1 Zustand konnte nicht ermittelt werden. " + Time[0] + " " + PlotBrushes[0][0]);
+								}
+							}
+							break;
+						}
+					}
+					if (!found) Print("Error: Es wurde kein Handelstag für das COT-Report-Datum gefunden " + reportDate);
+				} else {
+					Values[0][0] = Values[0][1];
+				}
+				
+				// check if we would reach the entry tomorrow. If yes, set the stop
+				//if (entry != null && suriTest.cot1SuriOrder != null && suriTest.cot1SuriOrder.order.OrderState != OrderState.Filled && suriTest.cot1SuriOrder.stopOrder == null) {
+				//	if (suriTest.cot1SuriOrder.ReachesLimitTomorrow(Bars, CurrentBar, entry.Value)) {
+				//		
+				//	}
+				//}
+				
+				// set stop if we reached entry
+				if (suriTest.cot1SuriOrder != null && suriTest.cot1SuriOrder.order.OrderState == OrderState.Filled && suriTest.cot1SuriOrder.stopOrder == null) {
+					SetStop();
+				}
+			} catch (Exception e) {
+				Print(e);
 			}
 			
 			Values[1][0] = 10;
@@ -141,7 +156,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 		}
 		
 
-		/** Expects to be called on the bar of the cot release date. BarsAgo should be the bar of the cot report date. */
+		// Expects to be called on the bar of the cot release date. BarsAgo should be the bar of the cot report date.
 		private void SetEntry(int barsAgo) {
 			if (suriTest.cot1SuriOrder != null) suriTest.cot1SuriOrder.Cancel();
 			Clean();
@@ -192,7 +207,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 			if (suriTest.cot1SuriOrder.IsLong())  stop = min - TickSize;
 			if (suriTest.cot1SuriOrder.IsShort()) stop = max + TickSize;
 			
-			if (SuriCommon.PriceToCurrency(Instrument, Math.Abs(entry.Value - stop.Value)) > 2000) {
+			if (false && SuriCommon.PriceToCurrency(Instrument, Math.Abs(entry.Value - stop.Value)) > 2000) {
 				SuriCommon.DrawText(this, "Stop zu groß ", "X", 0, stop.Value, 0);
 			} else {
 				suriTest.cot1SuriOrder.SetStopLoss(stop.Value);
@@ -238,59 +253,5 @@ public enum StrategyState {
 
 //
 
-#region NinjaScript generated code. Neither change nor remove.
 
-namespace NinjaTrader.NinjaScript.Indicators
-{
-	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
-	{
-		private Suri.dev.DevCot1Strategy[] cacheDevCot1Strategy;
-		public Suri.dev.DevCot1Strategy DevCot1Strategy(int days, SuriTest suriTest)
-		{
-			return DevCot1Strategy(Input, days, suriTest);
-		}
-
-		public Suri.dev.DevCot1Strategy DevCot1Strategy(ISeries<double> input, int days, SuriTest suriTest)
-		{
-			if (cacheDevCot1Strategy != null)
-				for (int idx = 0; idx < cacheDevCot1Strategy.Length; idx++)
-					if (cacheDevCot1Strategy[idx] != null && cacheDevCot1Strategy[idx].days == days && cacheDevCot1Strategy[idx].suriTest == suriTest && cacheDevCot1Strategy[idx].EqualsInput(input))
-						return cacheDevCot1Strategy[idx];
-			return CacheIndicator<Suri.dev.DevCot1Strategy>(new Suri.dev.DevCot1Strategy(){ days = days, suriTest = suriTest }, input, ref cacheDevCot1Strategy);
-		}
-	}
-}
-
-namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
-{
-	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
-	{
-		public Indicators.Suri.dev.DevCot1Strategy DevCot1Strategy(int days, SuriTest suriTest)
-		{
-			return indicator.DevCot1Strategy(Input, days, suriTest);
-		}
-
-		public Indicators.Suri.dev.DevCot1Strategy DevCot1Strategy(ISeries<double> input , int days, SuriTest suriTest)
-		{
-			return indicator.DevCot1Strategy(input, days, suriTest);
-		}
-	}
-}
-
-namespace NinjaTrader.NinjaScript.Strategies
-{
-	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
-	{
-		public Indicators.Suri.dev.DevCot1Strategy DevCot1Strategy(int days, SuriTest suriTest)
-		{
-			return indicator.DevCot1Strategy(Input, days, suriTest);
-		}
-
-		public Indicators.Suri.dev.DevCot1Strategy DevCot1Strategy(ISeries<double> input , int days, SuriTest suriTest)
-		{
-			return indicator.DevCot1Strategy(input, days, suriTest);
-		}
-	}
-}
-
-#endregion
+*/

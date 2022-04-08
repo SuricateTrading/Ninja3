@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Windows.Media;
+using NinjaTrader.Custom.AddOns.SuriCommon;
 using NinjaTrader.Gui.Chart;
 using NinjaTrader.Gui.NinjaScript;
 using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
@@ -27,6 +28,11 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			}
 		}
 		
+		protected override void OnRender(ChartControl chartControl, ChartScale chartScale) {
+			base.OnRender(chartControl, chartScale);
+			if (SuriAddOn.license == License.None) SuriCommon.NoValidLicenseError(RenderTarget, ChartControl, ChartPanel);
+		}
+
 		protected override void OnBarUpdate() {
 			if (CurrentBar < Days || SuriAddOn.license == License.None) return;
 			

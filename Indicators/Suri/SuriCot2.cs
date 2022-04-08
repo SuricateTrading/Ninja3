@@ -120,6 +120,9 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			chartScale.Properties.AutoScaleMarginType = AutoScaleMarginType.Percent;
 			chartScale.Properties.AutoScaleMarginUpper = 30;
 			chartScale.Properties.AutoScaleMarginLower = 30;
+			
+			base.OnRender(chartControl, chartScale);
+			if (SuriAddOn.license == License.None) SuriCommon.NoValidLicenseError(RenderTarget, ChartControl, ChartPanel);
 		}
 		
 		protected override void OnBarUpdate() {
@@ -194,6 +197,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				PlotBrushes[3][0] = longBrush;
 			}
 		}
+		
 		
 		
 		

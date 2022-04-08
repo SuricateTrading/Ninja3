@@ -7,6 +7,9 @@ using System.Xml.Serialization;
 using NinjaTrader.Custom.AddOns.SuriCommon;
 using NinjaTrader.Gui;
 using NinjaTrader.Gui.Chart;
+using NinjaTrader.Gui.NinjaScript;
+using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
+
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
@@ -41,7 +44,13 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
         public double Percentage() { return 100 * Values[0][0] / Values[1][0]; }
         public bool IsMegaRange() { return CurrentBar > days && Math.Abs(Values[0][0] - Values[1][0]) < 0.00000001; }
 
+        protected override void OnRender(ChartControl chartControl, ChartScale chartScale) {
+	        base.OnRender(chartControl, chartScale);
+	        if (SuriAddOn.license == License.None) SuriCommon.NoValidLicenseError(RenderTarget, ChartControl, ChartPanel);
+        }
+
         protected override void OnBarUpdate() {
+	        if (SuriAddOn.license == License.None) return;
 	        if (CurrentBar != 0) {
 		        Values[0][0] = Math.Max(Close[1], High[0]) - Math.Min(Close[1], Low[0]);
 	        } else {
@@ -64,7 +73,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		        }
 	        }
 	        Values[1][0] = max;
-	        if(IsMegaRange()) PlotBrushes[0][0] = signalBrush;
+	        if(SuriAddOn.license == License.Premium && IsMegaRange()) PlotBrushes[0][0] = signalBrush;
         }
 		
 		#region Properties

@@ -1,5 +1,6 @@
 ﻿using System;
 using NinjaTrader.Cbi;
+using NinjaTrader.Data;
 using NinjaTrader.NinjaScript.Strategies;
 
 namespace NinjaTrader.Custom.AddOns.SuriCommon {
@@ -45,6 +46,11 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
         }
         public bool IsShort() {
             return orderAction == OrderAction.Sell;
+        }
+
+        /** Returns true if the entry limit order is reached tomorrow */
+        public bool ReachesLimitTomorrow(Bars bars, int currentBar, double entry) {
+            return IsLong() && bars.GetHigh(currentBar + 1) >= entry - 0.00000000001 || IsShort() && bars.GetLow(currentBar + 1) <= entry + 0.00000000001;
         }
         
     }
