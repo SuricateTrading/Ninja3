@@ -89,6 +89,9 @@
     <Reference Include="NinjaTrader.Vendor">
       <HintPath>C:\Users\Bo\Documents\NinjaTrader 8\bin\Custom\NinjaTrader.Vendor.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>C:\Users\Bo\Documents\NinjaTrader 8\bin\Custom\Newtonsoft.Json.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AddOns\SuriCommon\IStrategyInterface.cs" />

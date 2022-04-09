@@ -305,17 +305,17 @@ namespace NinjaTrader.Gui.NinjaScript {
 			TabControl tabs = LogicalTreeHelper.FindLogicalNode(page, "tabs") as TabControl;
 			if (tabs == null) return;
 
-			Button downloadVpBig = new Button {
-				Content = "Download VP Big",
-			};
-			//downloadVpBig.Click += (sender, args) => SuriAdmin.LoadVp();
+			Button downloadVpBig		= new Button { Content = "Download VP Big"		, Padding = new Thickness(15), Margin = new Thickness(5) };
+			Button downloadVpIntra		= new Button { Content = "Download VP Intra"	, Padding = new Thickness(15), Margin = new Thickness(5) };
+			downloadVpBig.Click += (sender, args) => SuriAdmin.StoreVpBigToFile();
+			downloadVpIntra.Click += (sender, args) => SuriAdmin.LoadVpIntra();
 			
 			tabs.Items.Insert(0, new TabItem {
 				Header = "Admin",
 				Padding = new Thickness(10.5),
 				Content = new ScrollViewer {
 					Content = new StackPanel {
-						Children = { downloadVpBig }
+						Children = { downloadVpBig, downloadVpIntra }
 					}
 				}
 			});

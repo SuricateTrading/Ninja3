@@ -1,4 +1,4 @@
-﻿/*#region Using declarations
+﻿#region Using declarations
 using System;
 using System.Collections.Generic;
 using NinjaTrader.NinjaScript;
@@ -12,11 +12,7 @@ using Instrument = NinjaTrader.Cbi.Instrument;
 namespace NinjaTrader.Custom.AddOns.SuriCommon {
     public class SuriAdmin : SuriVpSerialization {
         
-	    public static void LoadVp() {
-		    StoreVpBigToFile();
-	    }
-	    
-	    private static void LoadVpIntra() {
+	    public static void LoadVpIntra() {
 			try {
 				foreach (KeyValuePair<Commodity,CommodityData> entry in SuriStrings.data) {
 					if (entry.Key != Commodity.BrazilianReal) continue;
@@ -56,7 +52,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 		}
 		
 		
-		private static void StoreVpBigToFile(int commodityIndex = 0, bool onlyRecent = true) {
+	    public static void StoreVpBigToFile(int commodityIndex = 0, bool onlyRecent = true) {
 			KeyValuePair<Commodity, CommodityData> entry;
 			try {
 				entry = SuriStrings.data.ElementAt(commodityIndex);
@@ -138,4 +134,3 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 		
     }
 }
-*/

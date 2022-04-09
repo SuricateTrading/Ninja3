@@ -9,10 +9,7 @@ using NinjaTrader.Data;
 using NinjaTrader.Gui;
 using NinjaTrader.Gui.Chart;
 using NinjaTrader.Gui.NinjaScript;
-using NinjaTrader.Gui.Tools;
 using NinjaTrader.NinjaScript.DrawingTools;
-using SharpDX;
-using SharpDX.DirectWrite;
 using Brush = System.Windows.Media.Brush;
 using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
 #endregion

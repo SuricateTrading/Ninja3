@@ -7,12 +7,17 @@ using NinjaTrader.Custom.AddOns.SuriCommon;
 using NinjaTrader.Gui;
 using NinjaTrader.Gui.Chart;
 using NinjaTrader.Gui.NinjaScript;
-
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+using System.Xml.Serialization;
+using Brush = System.Windows.Media.Brush;
+using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
 	public class SuriProductionCost : Indicator {
 		private ProductionCostData data;
+		private Commodity? commodity;
 		
 		private static readonly Dictionary<Commodity, ProductionCostData> costs = new Dictionary<Commodity, ProductionCostData> {
 			{Commodity.Corn,		new ProductionCostData(new Dictionary<int, ProductionSingleData> {
@@ -41,10 +46,36 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			})},*/
 		};
 		
+		
+		[XmlIgnore]
+		[Range(1, int.MaxValue)]
+		[Display(Name="Breite der Linie", Order=2, GroupName="Parameter")]
+		public int lineWidth
+		{ get; set; }
+		
+		#region Colors
+		[XmlIgnore]
+		[Display(Name = "Genauer Wert", Order = 0, GroupName = "Farben")]
+		public Brush exactLineBrush { get; set; }
+		[Browsable(false)]
+		public string exactBrushSerialize {
+			get { return Serialize.BrushToString(exactLineBrush); }
+			set { exactLineBrush = Serialize.StringToBrush(value); }
+		}
+		[XmlIgnore]
+		[Display(Name = "Geschätzter Wert", Order = 1, GroupName = "Farben")]
+		public Brush estimatedLineBrush { get; set; }
+		[Browsable(false)]
+		public string estimatedLineBrushSerialize {
+			get { return Serialize.BrushToString(estimatedLineBrush); }
+			set { estimatedLineBrush = Serialize.StringToBrush(value); }
+		}
+		#endregion
+		
 		protected override void OnStateChange() {
 			if (State == State.SetDefaults) {
 				Description									= @"";
-				Name										= "ProductionCost";
+				Name										= "Produktionskosten";
 				Calculate									= Calculate.OnBarClose;
 				IsOverlay									= true;
 				DisplayInDataBox							= true;
@@ -55,11 +86,13 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				ScaleJustification							= ScaleJustification.Right;
 				IsSuspendedWhileInactive					= true;
 				BarsRequiredToPlot							= 0;
+				lineWidth									= 2;
+				exactLineBrush								= Brushes.Red;
+				estimatedLineBrush							= Brushes.Gray;
 			} else if (State == State.Configure) {
-				AddPlot(new Stroke(Brushes.Red, 2), PlotStyle.Line, "Kosten");
-				//AddPlot(new Stroke(Brushes.CornflowerBlue, 2), PlotStyle.Line, "Bruttowert");
+				AddPlot(new Stroke(exactLineBrush, lineWidth), PlotStyle.Line, "Kosten");
 			} else if (State == State.DataLoaded) {
-				Commodity? commodity = SuriStrings.GetComm(Instrument.MasterInstrument.Name);
+				commodity = SuriStrings.GetComm(Instrument.MasterInstrument.Name);
 				if (commodity == Commodity.WheatKe) commodity = Commodity.WheatZw;
 				if (commodity == Commodity.LiveCattle) commodity = Commodity.FeederCattle;
 				if (commodity != null && costs.ContainsKey(commodity.Value)) {
@@ -72,18 +105,42 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			base.OnRender(chartControl, chartScale);
 			if (SuriAddOn.license == License.None) SuriCommon.NoValidLicenseError(RenderTarget, ChartControl, ChartPanel);
 		}
-
+		
 		protected override void OnBarUpdate() {
-			if (data == null || SuriAddOn.license == License.None) return;
+			if (SuriAddOn.license == License.None) return;
 			try {
-				if (Time[0].Year < data.grossValues.Last().Key) {
-					Values[0][0] = data.grossValues.Last().Value.costs;
-					PlotBrushes[0][0] = Brushes.Gray;
-				} else if (Time[0].Year <= data.grossValues.First().Key) {
-					Values[0][0] = data.grossValues[Time[0].Year].costs;
-				} else {
-					Values[0][0] = data.grossValues.First().Value.costs;
-					PlotBrushes[0][0] = Brushes.Gray;
+				switch (commodity) {
+					case Commodity.Sugar: Values[0][0] = 16; break;
+					case Commodity.LiveHogs: Values[0][0] = 50; break;
+					case Commodity.Coffee: Values[0][0] = 150; break;
+					case Commodity.OrangeJuice: Values[0][0] = 80; break;
+					case Commodity.SoybeanOil: Values[0][0] = 30; break;
+					case Commodity.Gold: Values[0][0] = 870; break;
+					case Commodity.Silver: Values[0][0] = 15; break;
+					case Commodity.Platinum: Values[0][0] = 950; break;
+					case Commodity.Copper: Values[0][0] = 2; break;
+					case Commodity.CrudeOil: Values[0][0] = 25; break;
+					case Commodity.Palladium: Values[0][0] = 650; break;
+					case Commodity.Cacao: Values[0][0] = 1900; break;
+					case Commodity.SoybeanMeal: Values[0][0] = 344; break;
+					case null: break;
+					
+					case Commodity.Corn:
+					case Commodity.Cotton:
+					case Commodity.Soybeans:
+					case Commodity.WheatZw:
+					case Commodity.Oats:
+					case Commodity.Rice:
+						if (Time[0].Year < data.grossValues.Last().Key) {
+							Values[0][0] = data.grossValues.Last().Value.costs;
+							PlotBrushes[0][0] = estimatedLineBrush;
+						} else if (Time[0].Year <= data.grossValues.First().Key) {
+							Values[0][0] = data.grossValues[Time[0].Year].costs;
+						} else {
+							Values[0][0] = data.grossValues.First().Value.costs;
+							PlotBrushes[0][0] = estimatedLineBrush;
+						}
+						break;
 				}
 			} catch (Exception) {/**/}
 		}

@@ -1,6 +1,4 @@
 #region Using declarations
-
-using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -43,6 +41,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 				AddPlot(new Stroke(Brushes.CornflowerBlue, 2), PlotStyle.Line, "Status");
 				AddPlot(new Stroke(Brushes.DarkGray, 2), PlotStyle.Line, "Delta");
 				AddPlot(new Stroke(Brushes.Green, 2), PlotStyle.Line, "Oszillator");
+				AddLine(new Stroke(Brushes.DimGray, 1), 50, "Oszillator");
 			} else if (State == State.DataLoaded) {
 				int? id = SuriStrings.GetId(Instrument);
 				if (id != null) {
@@ -54,7 +53,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 		}
 		
 		//public override void OnCalculateMinMax() { MinValue = -2; MaxValue = 2; }
-		public override void OnCalculateMinMax() { MinValue = 0; MaxValue = 100; }
+		public override void OnCalculateMinMax() { MinValue = -25; MaxValue = 125; }
 		
 		protected override void OnBarUpdate() {
 			if (tkData == null) return;
@@ -63,18 +62,18 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 					Values[0][0] = (tkData[i].TkState+2)*25;
 
 					if (i >= 1) {
-						if (tkData[i-1].TkState >=  1 && tkData[i].TkState <= -1) ExitShort();
-						if (tkData[i-1].TkState <= -1 && tkData[i].TkState >=  1) ExitLong();
+						if (tkData[i-1].TkState >=  1 && tkData[i].TkState <= -2) ExitShort();
+						if (tkData[i-1].TkState <= -1 && tkData[i].TkState >=  2) ExitLong();
 					}
 					
 					if (comesFromContango      && tkData[i].TkState <= -1) EnterLong();
-					if (comesFromBackwardation && tkData[i].TkState >= 1)  EnterShort();
+					if (comesFromBackwardation && tkData[i].TkState >=  1) EnterShort();
 					
 					switch (tkData[i].TkState) {
-						case  2: comesFromContango = true;  comesFromBackwardation = false; break;
-						case -2: comesFromContango = false; comesFromBackwardation = true;  break;
-						case  1:                            comesFromBackwardation = false; break;
-						case -1: comesFromContango = false;                                 break;
+						case  3: comesFromContango = true;  comesFromBackwardation = false; break;
+						case -3: comesFromContango = false; comesFromBackwardation = true;  break;
+						case  1: case  2:                   comesFromBackwardation = false; break;
+						case -1: case -2: comesFromContango = false;                        break;
 					}
 					
 					Values[1][0] = tkData[i].Delta;
@@ -109,6 +108,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 
 		private void EnterLong() {
 			Draw.VerticalLine(this, "ToBackwardationSignal " + SuriCommon.random, 0, Brushes.LimeGreen, DashStyleHelper.Solid, 1);
+			if (suriTest == null) return;
 			ExitShort();
 			double stop = GetStop(true);
 			if (stop < 2000) {
@@ -118,6 +118,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 		}
 		private void EnterShort() {
 			Draw.VerticalLine(this, "ToContangoSignal " + SuriCommon.random, 0, Brushes.LimeGreen, DashStyleHelper.Solid, 1);
+			if (suriTest == null) return;
 			ExitLong();
 			double stop = GetStop(false);
 			if (CurrentBar > 1000 && stop < 2000) {
@@ -127,6 +128,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 		}
 
 		private void ExitLong() {
+			if (suriTest == null) return;
 			if (suriTest.tkOrder != null && suriTest.tkOrder.IsLong && suriTest.tkStopLossOrder.OrderState != OrderState.Filled) {
 				suriTest.SubmitOrderUnmanaged(0, OrderAction.SellShort, OrderType.Market, 1, 0, 0, null,"TK SellShort");
 			}
@@ -135,6 +137,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 			suriTest.tkStopLossOrder = null;
 		}
 		private void ExitShort() {
+			if (suriTest == null) return;
 			if (suriTest.tkOrder != null && suriTest.tkOrder.IsShort && suriTest.tkStopLossOrder.OrderState != OrderState.Filled) {
 				suriTest.SubmitOrderUnmanaged(0, OrderAction.BuyToCover, OrderType.Market, 1, 0, 0, null,"TK BuyToCover");
 			}

@@ -17,7 +17,6 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 		    return Instrument.GetInstrument(commodity.shortName + Instrument.GetInstrument(commodity.shortName+" ##-##").MasterInstrument.GetNextExpiry(DateTime.Now).ToString(" MM-yy"));
 	    }
 	    
-
 		public static SuriVpBigData GetVpBig(Instrument instrument, DateTime? date = null) {
 			int? year = null, week = null;
 			if (date != null) {
@@ -28,10 +27,8 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			string fileName = GetVpBigFilePath(instrument, year, week);
 			bool updateVpFile = true;
 			if (File.Exists(fileName)) {
-				DateTime fileCreation = File.GetCreationTime(fileName);
-				int fileWeek = Week(fileCreation);
-				int currentWeek = Week(DateTime.Now);
-				if (currentWeek == fileWeek && DateTime.Now.Year == fileCreation.Year && (DateTime.Now - fileCreation).TotalDays <= 3) {
+				TimeSpan timeSpan = DateTime.Now - File.GetCreationTime(fileName);
+				if (timeSpan.TotalDays <= 2 || timeSpan.TotalDays <= 1 && DateTime.Now.DayOfWeek == DayOfWeek.Saturday) {
 					updateVpFile = false;
 				}
 			}
