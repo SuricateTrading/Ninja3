@@ -137,9 +137,9 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 	        base.OnRender(chartControl, chartScale);
 	        //if (IsInHitTest && !IsSelected) return;
 	        
-	        chartScale.Properties.AutoScaleMarginType = AutoScaleMarginType.Percent;
+	        /*chartScale.Properties.AutoScaleMarginType = AutoScaleMarginType.Percent;
 	        chartScale.Properties.AutoScaleMarginUpper = 30;
-	        chartScale.Properties.AutoScaleMarginLower = 30;
+	        chartScale.Properties.AutoScaleMarginLower = 30;*/
 	        
 	        /*RectangleF rect = new RectangleF {
 		        X = 0,

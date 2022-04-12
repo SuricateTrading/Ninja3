@@ -86,11 +86,20 @@
     <Reference Include="SharpDX.Direct2D1">
       <HintPath>C:\Program Files (x86)\NinjaTrader 8\bin64\SharpDX.Direct2D1.dll</HintPath>
     </Reference>
-    <Reference Include="NinjaTrader.Vendor">
-      <HintPath>C:\Users\Bo\Documents\NinjaTrader 8\bin\Custom\NinjaTrader.Vendor.dll</HintPath>
-    </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>C:\Users\Bo\Documents\NinjaTrader 8\bin\Custom\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="AcmeIntradayVP8.1.3.0">
+      <HintPath>C:\Users\Bo\Documents\NinjaTrader 8\bin\Custom\AcmeIntradayVP8.1.3.0.dll</HintPath>
+    </Reference>
+    <Reference Include="AcmeCompositeVP8.1.3.0">
+      <HintPath>C:\Users\Bo\Documents\NinjaTrader 8\bin\Custom\AcmeCompositeVP8.1.3.0.dll</HintPath>
+    </Reference>
+    <Reference Include="AcmeLicenseManager8.1.3.0">
+      <HintPath>C:\Users\Bo\Documents\NinjaTrader 8\bin\Custom\AcmeLicenseManager8.1.3.0.dll</HintPath>
+    </Reference>
+    <Reference Include="NinjaTrader.Vendor">
+      <HintPath>C:\Users\Bo\Documents\NinjaTrader 8\bin\Custom\NinjaTrader.Vendor.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -190,6 +199,8 @@
     <Compile Include="Indicators\Suri\dev\DevTkDelta.cs" />
     <Compile Include="Indicators\Suri\dev\DevVpMeta.cs" />
     <Compile Include="Indicators\Suri\dev\DevWasde.cs" />
+    <Compile Include="Indicators\Suri\dev\SuriSwing.cs" />
+    <Compile Include="Indicators\Suri\dev\SuriSwing2.cs" />
     <Compile Include="Indicators\Suri\SuriMega.cs" />
     <Compile Include="Indicators\Suri\SuriDrawingToolTile.cs" />
     <Compile Include="Indicators\Suri\SuriProductionCost.cs" />
@@ -402,6 +413,7 @@
     <Compile Include="Strategies\%40SampleMultiInstrument.cs" />
     <Compile Include="Strategies\%40SampleMultiTimeFrame.cs" />
     <Compile Include="Strategies\%40Strategy.cs" />
+    <Compile Include="Strategies\MyStrategy.cs" />
     <Compile Include="SuperDomColumns\%40APQ.cs" />
     <Compile Include="SuperDomColumns\%40Notes.cs" />
     <Compile Include="SuperDomColumns\%40ProfitLoss.cs" />
@@ -420,6 +432,9 @@
     <Compile Include="Strategies\StrategyCOT2.cs" />
     <Compile Include="DrawingTools\DrawRange.cs" />
     <Compile Include="Indicators\Suri\ComShortOpenInterest.cs" />
+    <Compile Include="AcmeIntradayVP8.1.3.0.cs" />
+    <Compile Include="AcmeCompositeVP8.1.3.0.cs" />
+    <Compile Include="AcmeLicenseManager8.1.3.0.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resource.resx">

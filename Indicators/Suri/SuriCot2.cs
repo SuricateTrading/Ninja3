@@ -116,10 +116,10 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		private double ValueOf(double percent) { return min + percent * (max - min); }
 		
 		protected override void OnRender(ChartControl chartControl, ChartScale chartScale) {
-			base.OnRender(chartControl, chartScale);
-			chartScale.Properties.AutoScaleMarginType = AutoScaleMarginType.Percent;
+			//base.OnRender(chartControl, chartScale);
+			/*chartScale.Properties.AutoScaleMarginType = AutoScaleMarginType.Percent;
 			chartScale.Properties.AutoScaleMarginUpper = 30;
-			chartScale.Properties.AutoScaleMarginLower = 30;
+			chartScale.Properties.AutoScaleMarginLower = 30;*/
 			
 			base.OnRender(chartControl, chartScale);
 			if (SuriAddOn.license == License.None) SuriCommon.NoValidLicenseError(RenderTarget, ChartControl, ChartPanel);

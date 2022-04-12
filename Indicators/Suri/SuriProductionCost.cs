@@ -125,12 +125,12 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 					case Commodity.SoybeanMeal: Values[0][0] = 344; break;
 					case null: break;
 					
+					case Commodity.Rice:
 					case Commodity.Corn:
 					case Commodity.Cotton:
 					case Commodity.Soybeans:
 					case Commodity.WheatZw:
 					case Commodity.Oats:
-					case Commodity.Rice:
 						if (Time[0].Year < data.grossValues.Last().Key) {
 							Values[0][0] = data.grossValues.Last().Value.costs;
 							PlotBrushes[0][0] = estimatedLineBrush;
@@ -140,6 +140,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 							Values[0][0] = data.grossValues.First().Value.costs;
 							PlotBrushes[0][0] = estimatedLineBrush;
 						}
+						if (commodity != Commodity.Rice) Values[0][0] *= 100;
 						break;
 				}
 			} catch (Exception) {/**/}
@@ -168,7 +169,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			this.costsPerAcre = costsPerAcre;
 			this.allocatedOverhead = allocatedOverhead;
 			this.yield = yield;
-			costs = 100 * costsPerAcre / yield;
+			costs = costsPerAcre / yield;
 		}
 	}
 	

@@ -49,6 +49,10 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		[Display(Name = "Breite", Order = 3, GroupName = "Parameter", Description = "Wenn leer, dann wird die Breite automatisch berechnet. Ansonsten werden die VP-Bars maximal so breit wie hier angegeben.")]
 		public int? maxWidth { get; set; }
 		
+		[NinjaScriptProperty]
+		[Display(Name = "Dynamische Breite", Order = 4, GroupName = "Parameter", Description = "Wenn aktiv, dann wird die Breite des VPs ausgehend von dem breitesten aktuell sichtbaren Tick berechnet.\nWenn nicht aktiv, wird die Breite des VPs ausgehend vom Haupt-POC berechnet. \nDie Berechnung mit aktivierter Checkbox ist rechenintensiv! Schalte es aus, wenn es bei Dir hängt.")]
+		public bool dynamicWidth { get; set; }
+		
 		#region Colors
 		[XmlIgnore]
 		[Display(Name = "Volumen", Order = 1, GroupName = "Farben")]
@@ -94,6 +98,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				BarsRequiredToPlot							= 0;
 				ZOrder										= 0;
 
+				dynamicWidth								= false;
 				loadRecent									= true;
 				years										= 20;
 				dateTo										= DateTime.Now;
@@ -159,7 +164,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			int lowestValue  = (int) Math.Floor(chartScale.MinValue / TickSize);
 			int tickCount = highestValue - lowestValue;
 
-			float rectHeight = (chartScale.GetYByValue(0) - chartScale.GetYByValue(1000 * TickSize)) / 1000f;
+			float rectHeight = (chartScale.GetYByValue(0) - chartScale.GetYByValue(1000000 * TickSize)) / 1000000f;
 			RectangleF rect = new RectangleF {
 				X = 0,
 				Height = rectHeight,
@@ -177,12 +182,24 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				textFormat.WordWrapping = SharpDX.DirectWrite.WordWrapping.NoWrap;
 			}
 
+			double? highestVisibleTick = null;
+			if (dynamicWidth) {
+				highestVisibleTick = double.MinValue;
+				for (int i = 0; i < tickCount; i++) {
+					int tick = highestValue - i;
+					if (suriVpBigData.tickData.ContainsKey(tick)) {
+						SuriVpTickData tickData = suriVpBigData.tickData[tick];
+						if (highestVisibleTick < tickData.volume) highestVisibleTick = tickData.volume;
+					}
+				}
+			}
+			
 			for (int i = 0; i < tickCount; i++) {
 				int tick = highestValue - i;
 				if (suriVpBigData.tickData.ContainsKey(tick)) {
 					SuriVpTickData tickData = suriVpBigData.tickData[tick];
 
-					rect.Width = (float) ((maxWidth ?? ChartPanel.W * 0.6) * tickData.volume / suriVpBigData.pocVolume);
+					rect.Width = (float) ((maxWidth ?? ChartPanel.W * 0.6) * tickData.volume / (highestVisibleTick ?? suriVpBigData.pocVolume));
 					rect.Y += rect.Height;
 					rect.Height = tickData.isMainPoc ? Math.Max(1, rectHeight) : rectHeight;
 					
@@ -240,18 +257,18 @@ namespace NinjaTrader.NinjaScript.Indicators
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
 		private Suri.SuriVolumeProfileBig[] cacheSuriVolumeProfileBig;
-		public Suri.SuriVolumeProfileBig SuriVolumeProfileBig(bool loadRecent, int years, DateTime dateTo)
+		public Suri.SuriVolumeProfileBig SuriVolumeProfileBig(bool loadRecent, int years, DateTime dateTo, bool dynamicWidth)
 		{
-			return SuriVolumeProfileBig(Input, loadRecent, years, dateTo);
+			return SuriVolumeProfileBig(Input, loadRecent, years, dateTo, dynamicWidth);
 		}
 
-		public Suri.SuriVolumeProfileBig SuriVolumeProfileBig(ISeries<double> input, bool loadRecent, int years, DateTime dateTo)
+		public Suri.SuriVolumeProfileBig SuriVolumeProfileBig(ISeries<double> input, bool loadRecent, int years, DateTime dateTo, bool dynamicWidth)
 		{
 			if (cacheSuriVolumeProfileBig != null)
 				for (int idx = 0; idx < cacheSuriVolumeProfileBig.Length; idx++)
-					if (cacheSuriVolumeProfileBig[idx] != null && cacheSuriVolumeProfileBig[idx].loadRecent == loadRecent && cacheSuriVolumeProfileBig[idx].years == years && cacheSuriVolumeProfileBig[idx].dateTo == dateTo && cacheSuriVolumeProfileBig[idx].EqualsInput(input))
+					if (cacheSuriVolumeProfileBig[idx] != null && cacheSuriVolumeProfileBig[idx].loadRecent == loadRecent && cacheSuriVolumeProfileBig[idx].years == years && cacheSuriVolumeProfileBig[idx].dateTo == dateTo && cacheSuriVolumeProfileBig[idx].dynamicWidth == dynamicWidth && cacheSuriVolumeProfileBig[idx].EqualsInput(input))
 						return cacheSuriVolumeProfileBig[idx];
-			return CacheIndicator<Suri.SuriVolumeProfileBig>(new Suri.SuriVolumeProfileBig(){ loadRecent = loadRecent, years = years, dateTo = dateTo }, input, ref cacheSuriVolumeProfileBig);
+			return CacheIndicator<Suri.SuriVolumeProfileBig>(new Suri.SuriVolumeProfileBig(){ loadRecent = loadRecent, years = years, dateTo = dateTo, dynamicWidth = dynamicWidth }, input, ref cacheSuriVolumeProfileBig);
 		}
 	}
 }
@@ -260,14 +277,14 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.SuriVolumeProfileBig SuriVolumeProfileBig(bool loadRecent, int years, DateTime dateTo)
+		public Indicators.Suri.SuriVolumeProfileBig SuriVolumeProfileBig(bool loadRecent, int years, DateTime dateTo, bool dynamicWidth)
 		{
-			return indicator.SuriVolumeProfileBig(Input, loadRecent, years, dateTo);
+			return indicator.SuriVolumeProfileBig(Input, loadRecent, years, dateTo, dynamicWidth);
 		}
 
-		public Indicators.Suri.SuriVolumeProfileBig SuriVolumeProfileBig(ISeries<double> input , bool loadRecent, int years, DateTime dateTo)
+		public Indicators.Suri.SuriVolumeProfileBig SuriVolumeProfileBig(ISeries<double> input , bool loadRecent, int years, DateTime dateTo, bool dynamicWidth)
 		{
-			return indicator.SuriVolumeProfileBig(input, loadRecent, years, dateTo);
+			return indicator.SuriVolumeProfileBig(input, loadRecent, years, dateTo, dynamicWidth);
 		}
 	}
 }
@@ -276,14 +293,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.SuriVolumeProfileBig SuriVolumeProfileBig(bool loadRecent, int years, DateTime dateTo)
+		public Indicators.Suri.SuriVolumeProfileBig SuriVolumeProfileBig(bool loadRecent, int years, DateTime dateTo, bool dynamicWidth)
 		{
-			return indicator.SuriVolumeProfileBig(Input, loadRecent, years, dateTo);
+			return indicator.SuriVolumeProfileBig(Input, loadRecent, years, dateTo, dynamicWidth);
 		}
 
-		public Indicators.Suri.SuriVolumeProfileBig SuriVolumeProfileBig(ISeries<double> input , bool loadRecent, int years, DateTime dateTo)
+		public Indicators.Suri.SuriVolumeProfileBig SuriVolumeProfileBig(ISeries<double> input , bool loadRecent, int years, DateTime dateTo, bool dynamicWidth)
 		{
-			return indicator.SuriVolumeProfileBig(input, loadRecent, years, dateTo);
+			return indicator.SuriVolumeProfileBig(input, loadRecent, years, dateTo, dynamicWidth);
 		}
 	}
 }

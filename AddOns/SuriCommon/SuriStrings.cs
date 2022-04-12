@@ -104,7 +104,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			{Commodity.SwissFranc,			new CommodityData(51, "6S", "", "Schweizer Franken")},
 			{Commodity.UsDollar,			new CommodityData(52, "DX", "", "US Dollar")},
 			{Commodity.Eurodollar,			new CommodityData(53, "GE", "", "Euro-Dollar")},
-			{Commodity.BitcoinMicro,		new CommodityData(54, "BA", "", "Bitcoin")},
+			{Commodity.BitcoinMicro,		new CommodityData(54, "BTC", "", "Bitcoin")},
 		};
 		
 	}

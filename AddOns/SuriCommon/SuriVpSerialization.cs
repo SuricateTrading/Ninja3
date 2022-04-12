@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Web.Script.Serialization;
+using Newtonsoft.Json;
 using NinjaTrader.Core;
 using Instrument = NinjaTrader.Cbi.Instrument;
 #endregion
@@ -15,6 +16,23 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 
 	    public static Instrument GetInstrument(CommodityData commodity) {
 		    return Instrument.GetInstrument(commodity.shortName + Instrument.GetInstrument(commodity.shortName+" ##-##").MasterInstrument.GetNextExpiry(DateTime.Now).ToString(" MM-yy"));
+	    }
+
+	    public static SuriVpIntraData GetVpIntra(Instrument instrument, DateTime start, DateTime end) {
+		    int monthsCount = 1 + (end.Month - start.Month) + (end.Year - start.Year) * 12;
+		    int month, year;
+		    SuriVpIntraData vpIntra = new SuriVpIntraData();
+		    for (int i = 0; i < monthsCount; i++) {
+			    month = ((start.Month + i - 1) % 12) + 1;
+			    year = start.Year + (int) Math.Floor((start.Month + i - 1) / 12.0);
+			    
+			    string json = File.ReadAllText(@"C:\Users\Bo\Documents\NinjaTrader 8\db\suri\" + instrument.MasterInstrument.Name + "_" + year + "_" + month + ".vpintra");
+			    SuriVpIntraData vpIntraMonth = JsonConvert.DeserializeObject<SuriVpIntraData>(json);
+			    vpIntra.barData.AddRange(vpIntraMonth.barData);
+		    }
+		    vpIntra.barData.RemoveAll(bar => bar.dateTime.Date < start || bar.dateTime.Date > end);
+		    vpIntra.Prepare();
+		    return vpIntra;
 	    }
 	    
 		public static SuriVpBigData GetVpBig(Instrument instrument, DateTime? date = null) {
@@ -104,6 +122,23 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 	    public double totalVolume;
 	    public double tickSize;
 	    public DateTime date;
+    }
+    
+    public sealed class SuriVpIntraSingleSerialized {
+	    public List<SuriVpIntraTickSerialized> tickData;
+	    public DateTime date;
+	    public int high;
+	    public int low;
+	    public double totalVolume;
+	    public double tickSize;
+	    public int totalAsks;
+	    public int totalBids;
+    }
+    
+    public sealed class SuriVpIntraTickSerialized {
+	    public long tick;
+	    public long bid;
+	    public long ask;
     }
     
 }

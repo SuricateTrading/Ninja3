@@ -1,9 +1,10 @@
-﻿#region Using declarations
+#region Using declarations
 using System;
 using System.Collections.Generic;
 using NinjaTrader.NinjaScript;
 using System.IO;
 using System.Linq;
+using Newtonsoft.Json;
 using NinjaTrader.Cbi;
 using NinjaTrader.Data;
 using Instrument = NinjaTrader.Cbi.Instrument;
@@ -15,34 +16,44 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 	    public static void LoadVpIntra() {
 			try {
 				foreach (KeyValuePair<Commodity,CommodityData> entry in SuriStrings.data) {
-					if (entry.Key != Commodity.BrazilianReal) continue;
+					if (entry.Key != Commodity.Cotton) continue;
 					Instrument instrument = GetInstrument(entry.Value);
-					DateTime from = DateTime.Parse("2017-07-30");
+					DateTime from = DateTime.Parse("2021-10-01");
 					DateTime to = DateTime.Now.AddDays(-1).Date;
-					Code.Output.Process("Loading from " + from + " to " + to, PrintTo.OutputTab1);
+					Code.Output.Process("Loading " + instrument.MasterInstrument.Name + " from " + from + " to " + to, PrintTo.OutputTab1);
 					
 					new BarsRequest(instrument, from, to) {
 						MergePolicy = MergePolicy.MergeBackAdjusted,
 						BarsPeriod = new BarsPeriod {BarsPeriodType = BarsPeriodType.Tick, Value = 1},
 						TradingHours = instrument.MasterInstrument.TradingHours,
+						/*IsResetOnNewTradingDay = true,
+						LookupPolicy = LookupPolicies.Repository,
+						IsDividendAdjusted = true,
+						IsSplitAdjusted = true,*/
 					}.Request((bars, errorCode, errorMessage) => {
 						if (errorCode != ErrorCode.NoError) return;
-						StreamWriter stream = File.AppendText(dbPath + instrument.MasterInstrument.Name + ".vpintra");
-
+						SessionIterator session = new SessionIterator(bars.Bars);
+						
 						SuriVpIntraData suriVpIntraData = new SuriVpIntraData();
-						int lastDayOfYear = -1;
+						int prevMonth = bars.Bars.GetTime(0).Month;
 						for (int i = 0; i < bars.Bars.Count; i++) {
-							DateTime time = bars.Bars.GetTime(i);
-							if (lastDayOfYear != time.DayOfYear) {
-								if (i != 0) suriVpIntraData.barData.Last().Prepare();
-								suriVpIntraData.barData.Add(new SuriVpBarData(instrument.MasterInstrument.TickSize, time.Date));
+							if (bars.Bars.IsFirstBarOfSessionByIndex(i)) {
+								DateTime time = bars.Bars.GetTime(i);
+								
+								if (prevMonth != time.Month) {
+									File.WriteAllText(dbPath + instrument.MasterInstrument.Name + "_" + (prevMonth == 12 ? time.Year-1 : time.Year) + "_" + prevMonth + ".vpintra", JsonConvert.SerializeObject(suriVpIntraData));
+									prevMonth = time.Month;
+									suriVpIntraData = new SuriVpIntraData();
+								}
+								
+								session.GetNextSession(time, true);
+								DateTime closeTime = session.ActualSessionEnd;
+								suriVpIntraData.barData.Add(new SuriVpBarData(instrument.MasterInstrument.TickSize, closeTime.Date));
 							}
-							lastDayOfYear  = time.DayOfYear;
-							suriVpIntraData.barData.Last().AddTick(bars.Bars.GetClose(i), bars.Bars.GetVolume(i), bars.Bars.GetAsk(i), bars.Bars.GetBid(i));
+							suriVpIntraData.barData.Last().AddTick(bars.Bars.GetTime(i), bars.Bars.GetClose(i), bars.Bars.GetVolume(i), bars.Bars.GetAsk(i), bars.Bars.GetBid(i));
 						}
-						suriVpIntraData.barData.Last().Prepare();
-						stream.Write("\n" + Newtonsoft.Json.JsonConvert.SerializeObject(suriVpIntraData));
-						stream.Close();
+						DateTime lastDate = bars.Bars.GetTime(bars.Bars.Count - 1);
+						File.WriteAllText(dbPath + instrument.MasterInstrument.Name + "_" + lastDate.Year + "_" + lastDate.Month + ".vpintra", JsonConvert.SerializeObject(suriVpIntraData));
 						Code.Output.Process("Done", PrintTo.OutputTab1);
 					});
 				}
@@ -50,8 +61,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 				Code.Output.Process(e.ToString(), PrintTo.OutputTab1);
 			}
 		}
-		
-		
+	    
 	    public static void StoreVpBigToFile(int commodityIndex = 0, bool onlyRecent = true) {
 			KeyValuePair<Commodity, CommodityData> entry;
 			try {
@@ -95,7 +105,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 									suriVpBigData.AddMissingValues();
 									SuriVpBigDataSerialized suriVp = FromVpBig(suriVpBigData);
 									suriVp.date = new DateTime(date.Year, 1, 1);
-									stream.Write(Newtonsoft.Json.JsonConvert.SerializeObject(suriVp));
+									stream.Write(JsonConvert.SerializeObject(suriVp));
 								}
 							}
 							
@@ -104,7 +114,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 									suriVpBigData.AddMissingValues();
 									SuriVpBigDataSerialized suriVp = FromVpBig(suriVpBigData);
 									suriVp.date = date.Date;
-									stream.Write(Newtonsoft.Json.JsonConvert.SerializeObject(suriVp));
+									stream.Write(JsonConvert.SerializeObject(suriVp));
 								}
 							}
 						}
@@ -118,7 +128,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 							suriVpBigData.AddMissingValues();
 							SuriVpBigDataSerialized suriVp = FromVpBig(suriVpBigData);
 							suriVp.date = now.Date;
-							stream.Write(Newtonsoft.Json.JsonConvert.SerializeObject(suriVp));
+							stream.Write(JsonConvert.SerializeObject(suriVp));
 						}
 					}
 

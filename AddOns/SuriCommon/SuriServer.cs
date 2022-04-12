@@ -5,8 +5,6 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Web.Script.Serialization;
-using NinjaTrader.NinjaScript;
-
 #endregion
 
 namespace NinjaTrader.Custom.AddOns.SuriCommon {
@@ -77,8 +75,9 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
                     default: suri.license = License.None; break;
                 }
                 return suri;
-            } catch (Exception) {/**/}
-            return new Suri { license = License.None };
+            } catch (Exception) {
+                return new Suri { license = License.None };
+            }
         }
     }
     
