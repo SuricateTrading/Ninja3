@@ -88,9 +88,13 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		}
 		
 		[XmlIgnore]
-		[Display(Name="Begradige Linien", Order=3, GroupName="Parameter")]
-		public bool straightenLines
-		{ get; set; }
+		[Display(Name = "Keine neuen COT Daten", Order = 3, GroupName = "Farben", Description = "Wird benutzt, wenn die CFTC keinen aktuellen COT Report veröffentlicht hat.")]
+		public Brush noNewCotBrush { get; set; }
+		[Browsable(false)]
+		public string noNewCotBrushSerialize {
+			get { return Serialize.BrushToString(noNewCotBrush); }
+			set { noNewCotBrush = Serialize.StringToBrush(value); }
+		}
 		#endregion
 		
 		protected override void OnStateChange() {
@@ -112,15 +116,14 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				brush20										= Brushes.RoyalBlue;
 				brush80										= Brushes.RoyalBlue;
 				regularLineBrush							= Brushes.DarkGray;
+				noNewCotBrush								= Brushes.Orange;
 				lineWidth									= 2;
 				lineWidthSecondary							= 1;
 				days										= 1000;
-				straightenLines								= false;
 				reportField									= SuriCotReportField.CommercialLong;
 			} else if (State == State.Configure) {
 				sCot = new CotReport { ReportType = CotReportType.Futures, Field = CotReportMaper.SuriToCotReport(reportField) };
-				AddPlot(new Stroke(straightenLines ? Brushes.Transparent : regularLineBrush, lineWidth), PlotStyle.Line, "CoT-Daten In");
-				AddPlot(new Stroke(!straightenLines ? Brushes.Transparent : regularLineBrush, lineWidth), PlotStyle.Line, "CoT-Daten");
+				AddPlot(new Stroke(regularLineBrush, lineWidth), PlotStyle.Line, "CoT-Daten");
 				
 				if (drawLines) {
 					AddPlot(new Stroke(brush20, lineWidthSecondary), PlotStyle.Line, "20%");
@@ -161,6 +164,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			if (SuriAddOn.license == License.None) SuriCommon.NoValidLicenseError(RenderTarget, ChartControl, ChartPanel);
 		}
 
+		private int noNewCotSince;
 		protected override void OnBarUpdate() {
 			if (SuriAddOn.license == License.None) return;
 			
@@ -176,38 +180,22 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				return;
 			}
 
-			double value = sCot.Calculate(Instrument.MasterInstrument.Name, Time[0]);
-			if (!double.IsNaN(value)) {
-				Value[0] = value;
-				if (straightenLines) {
-					try {
-						int startIndex = -1;
-						if (Math.Abs(Value[0] - Value[1]) > 0.0000001) {
-							for (int i = 1; i < 100; i++) {
-								if (Math.Abs(Value[i] - Value[i+1]) > 0.0000001) {
-									startIndex = i;
-									break;
-								}
-							}
-						}
-						if (startIndex != -1) {
-							Vector2 v1 = new Vector2(startIndex, (float) Value[startIndex]);
-							Vector2 v2 = new Vector2(0, (float) Value[0]);
-							for (int i = startIndex; i >= 0; i--) {
-								Values[1][i] = GetY(v1, v2, i);
-							}
-						}
-					} catch (Exception) {
-						// ignored
-					}
-				}
-				
-				if (drawLines) {
-					SetMinMax();
-					if (CurrentBar < days) return;
+			Value[0] = sCot.Calculate(Instrument.MasterInstrument.Name, Time[0]);
+			if (drawLines) {
+				SetMinMax();
+				if (CurrentBar >= days) {
 					Values[2][0] = ValueOf(0.2);
 					Values[3][0] = ValueOf(0.8);
 				}
+			}
+			
+			if (CurrentBar > 0 && Math.Abs(Value[0] - Value[1]) < 0.00000000001) {
+				noNewCotSince++;
+			} else {
+				noNewCotSince = 0;
+			}
+			if (noNewCotSince > 12) {
+				PlotBrushes[0][0] = noNewCotBrush;
 			}
 		}
 		
@@ -225,14 +213,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 					if (max < Value[i]) { max = Value[i]; maxIndex = CurrentBar-i; }
 				}
 			}
-		}
-		
-		private static float GetY(Vector2 point1, Vector2 point2, float x) {
-			var dx = point2.X - point1.X;
-			if (dx == 0) return float.NaN;
-			var m = (point2.Y - point1.Y) / dx;
-			var b = point1.Y - m * point1.X;
-			return m*x + b;
 		}
 
 	}

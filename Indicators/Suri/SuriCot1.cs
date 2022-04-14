@@ -88,6 +88,14 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			get { return Serialize.BrushToString(noSignalBrush); }
 			set { noSignalBrush = Serialize.StringToBrush(value); }
 		}
+		[XmlIgnore]
+		[Display(Name = "Keine neuen COT Daten", Order = 5, GroupName = "Farben", Description = "Wird benutzt, wenn die CFTC keinen aktuellen COT Report veröffentlicht hat.")]
+		public Brush noNewCotBrush { get; set; }
+		[Browsable(false)]
+		public string noNewCotBrushSerialize {
+			get { return Serialize.BrushToString(noNewCotBrush); }
+			set { noNewCotBrush = Serialize.StringToBrush(value); }
+		}
 		#endregion
 
 		protected override void OnStateChange() {
@@ -110,6 +118,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				brush50Percent								= Brushes.DimGray;
 				noSignalBrush								= Brushes.Yellow;
 				regularLineBrush							= Brushes.DarkGray;
+				noNewCotBrush								= Brushes.Orange;
 				lineWidth									= 4;
 				lineWidthSecondary							= 2;
 				days										= 125;
@@ -157,6 +166,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
         #endregion
 
         private bool hasStarted;
+        private int noNewCotSince;
 		protected override void OnBarUpdate() {
 			if (SuriAddOn.license == License.None || CurrentBar <= days) return;
 			
@@ -166,6 +176,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			}
 
 			if (Math.Abs(suriCotData[0] - suriCotData[1]) > 0.0001) {
+				noNewCotSince = 0;
 				hasStarted = true;
 				double min = double.MaxValue;
 				double max = double.MinValue;
@@ -186,13 +197,18 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			} else if (!hasStarted) {
 				return;
 			} else {
+				// the values are the same. Check wether there are no new cot data since 2 weeks.
 				Value[0] = Value[1];
+				noNewCotSince++;
 			}
 
 			if (!isCurrentlyASignal || Value[0] < 90 && Value[0] > 10 ) {
 				isCurrentlyASignal = IsSignal();
 			}
-			if (isCurrentlyASignal) {
+			
+			if (noNewCotSince > 12) {
+				PlotBrushes[0][0] = noNewCotBrush;
+			} else if (isCurrentlyASignal) {
 				if (SuriAddOn.license != License.Basic) {
 					if      (suriSma[0] > suriSma[1] && Value[0] >= 90) PlotBrushes[0][0] = longBrush;
 					else if (suriSma[0] < suriSma[1] && Value[0] <= 10) PlotBrushes[0][0] = shortBrush;

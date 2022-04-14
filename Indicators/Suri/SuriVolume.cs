@@ -111,7 +111,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				}
 			}
 			Values[1][0] = max;
-			if (SuriAddOn.license == License.Premium && IsMegaVolume()) PlotBrushes[0][0] = signalBrush;
+			if (SuriAddOn.license != License.Basic && IsMegaVolume()) PlotBrushes[0][0] = signalBrush;
 		}
 	}
 }

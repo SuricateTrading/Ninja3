@@ -32,9 +32,10 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				IsSuspendedWhileInactive					= true;
 				BarsRequiredToPlot							= 0;
 				days										= 125;
-				signalBrush									= Brushes.Yellow;
+				signalUpBrush								= Brushes.Green;
+				signalDownBrush								= Brushes.Red;
 				maxBrush									= Brushes.DarkCyan;
-				barBrush									= Brushes.OrangeRed;
+				barBrush									= Brushes.RoyalBlue;
 			} else if (State == State.Configure) {
 				AddPlot(new Stroke(barBrush, 2), PlotStyle.Bar, "Bargröße");
 				AddPlot(new Stroke(maxBrush, 1), PlotStyle.Line, "Max");
@@ -73,7 +74,13 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		        }
 	        }
 	        Values[1][0] = max;
-	        if(SuriAddOn.license == License.Premium && IsMegaRange()) PlotBrushes[0][0] = signalBrush;
+	        if(SuriAddOn.license != License.Basic && IsMegaRange()) {
+		        if (Open[0] <= Close[0]) {
+			        PlotBrushes[0][0] = signalUpBrush;
+		        } else {
+			        PlotBrushes[0][0] = signalDownBrush;
+		        }
+	        }
         }
 		
 		#region Properties
@@ -92,16 +99,26 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			get { return Serialize.BrushToString(barBrush); }
 			set { barBrush = Serialize.StringToBrush(value); }
 		}
+		
 		[XmlIgnore]
-		[Display(Name = "Megabar", Order = 1, GroupName = "Farben")]
-		public Brush signalBrush { get; set; }
+		[Display(Name = "Megabar steigend", Order = 2, GroupName = "Farben")]
+		public Brush signalUpBrush { get; set; }
 		[Browsable(false)]
-		public string signalBrushSerialize {
-			get { return Serialize.BrushToString(signalBrush); }
-			set { signalBrush = Serialize.StringToBrush(value); }
+		public string signalUpBrushSerialize {
+			get { return Serialize.BrushToString(signalUpBrush); }
+			set { signalUpBrush = Serialize.StringToBrush(value); }
 		}
 		[XmlIgnore]
-		[Display(Name = "Max", Order = 2, GroupName = "Farben")]
+		[Display(Name = "Megabar fallend", Order = 3, GroupName = "Farben")]
+		public Brush signalDownBrush { get; set; }
+		[Browsable(false)]
+		public string signalDownBrushSerialize {
+			get { return Serialize.BrushToString(signalDownBrush); }
+			set { signalDownBrush = Serialize.StringToBrush(value); }
+		}
+		
+		[XmlIgnore]
+		[Display(Name = "Max", Order = 1, GroupName = "Farben")]
 		public Brush maxBrush { get; set; }
 		[Browsable(false)]
 		public string maxBrushSerialize {

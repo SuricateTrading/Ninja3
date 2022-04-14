@@ -199,6 +199,7 @@
     <Compile Include="Indicators\Suri\dev\DevTkDelta.cs" />
     <Compile Include="Indicators\Suri\dev\DevVpMeta.cs" />
     <Compile Include="Indicators\Suri\dev\DevWasde.cs" />
+    <Compile Include="Indicators\Suri\dev\SuriDailyOpenInterest.cs" />
     <Compile Include="Indicators\Suri\dev\SuriSwing.cs" />
     <Compile Include="Indicators\Suri\dev\SuriSwing2.cs" />
     <Compile Include="Indicators\Suri\SuriMega.cs" />

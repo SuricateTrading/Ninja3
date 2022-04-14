@@ -26,7 +26,10 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			    month = ((start.Month + i - 1) % 12) + 1;
 			    year = start.Year + (int) Math.Floor((start.Month + i - 1) / 12.0);
 			    
-			    string json = File.ReadAllText(@"C:\Users\Bo\Documents\NinjaTrader 8\db\suri\" + instrument.MasterInstrument.Name + "_" + year + "_" + month + ".vpintra");
+			    // TODO: LOAD FROM SERVER ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
+			    // TODO: LOAD FROM SERVER ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
+			    
+			    string json = File.ReadAllText(@"C:\Users\Bo\Documents\NinjaTrader 8\db\suri\vpintra\" + instrument.MasterInstrument.Name + "_" + year + "_" + month + ".vpintra");
 			    SuriVpIntraData vpIntraMonth = JsonConvert.DeserializeObject<SuriVpIntraData>(json);
 			    vpIntra.barData.AddRange(vpIntraMonth.barData);
 		    }

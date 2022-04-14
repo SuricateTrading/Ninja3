@@ -1,4 +1,6 @@
 #region Using declarations
+
+using System;
 using System.ComponentModel;
 using System.Windows.Media;
 using NinjaTrader.Gui;
@@ -68,6 +70,14 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			get { return Serialize.BrushToString(brush80); }
 			set { brush80 = Serialize.StringToBrush(value); }
 		}
+		[XmlIgnore]
+		[Display(Name = "Keine neuen COT Daten", Order = 3, GroupName = "Farben", Description = "Wird benutzt, wenn die CFTC keinen aktuellen COT Report veröffentlicht hat.")]
+		public Brush noNewCotBrush { get; set; }
+		[Browsable(false)]
+		public string noNewCotBrushSerialize {
+			get { return Serialize.BrushToString(noNewCotBrush); }
+			set { noNewCotBrush = Serialize.StringToBrush(value); }
+		}
 		#endregion
 
 		protected override void OnStateChange() {
@@ -89,6 +99,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				brush20										= Brushes.RoyalBlue;
 				brush80										= Brushes.RoyalBlue;
 				regularLineBrush							= Brushes.DarkGray;
+				noNewCotBrush								= Brushes.Orange;
 				lineWidth									= 2;
 				lineWidthSecondary							= 1;
 				days										= 1000;
@@ -108,15 +119,26 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			if (SuriAddOn.license == License.None) SuriCommon.NoValidLicenseError(RenderTarget, ChartControl, ChartPanel);
 		}
 
+		private int noNewCotSince;
 		protected override void OnBarUpdate() {
 			if (SuriAddOn.license == License.None) return;
 			
 			Values[0][0] = 100 * comShort.Value[0] / openInterest.Value[0];
 			if (drawLines) {
 				SetMinMax();
-				if (CurrentBar < days) return;
-				Values[1][0] = ValueOf(0.2);
-				Values[2][0] = ValueOf(0.8);
+				if (CurrentBar >= days) {
+					Values[1][0] = ValueOf(0.2);
+					Values[2][0] = ValueOf(0.8);
+				}
+			}
+			
+			if (CurrentBar > 0 && Math.Abs(Value[0] - Value[1]) < 0.00000000001) {
+				noNewCotSince++;
+			} else {
+				noNewCotSince = 0;
+			}
+			if (noNewCotSince > 12) {
+				PlotBrushes[0][0] = noNewCotBrush;
 			}
 		}
 		private double ValueOf(double percent) { return min + percent * (max - min); }

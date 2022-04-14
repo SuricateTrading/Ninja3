@@ -79,6 +79,14 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			get { return Serialize.BrushToString(notReadyBrush); }
 			set { notReadyBrush = Serialize.StringToBrush(value); }
 		}
+		[XmlIgnore]
+		[Display(Name = "Keine neuen COT Daten", Order = 5, GroupName = "Farben", Description = "Wird benutzt, wenn die CFTC keinen aktuellen COT Report veröffentlicht hat.")]
+		public Brush noNewCotBrush { get; set; }
+		[Browsable(false)]
+		public string noNewCotBrushSerialize {
+			get { return Serialize.BrushToString(noNewCotBrush); }
+			set { noNewCotBrush = Serialize.StringToBrush(value); }
+		}
 		#endregion
 		#endregion
 
@@ -101,6 +109,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				brush50Percent								= Brushes.DimGray;
 				regularLineBrush							= Brushes.DarkGray;
 				notReadyBrush								= Brushes.Transparent;
+				noNewCotBrush								= Brushes.Orange;
 				lineWidth									= 4;
 				lineWidthSecondary							= 2;
 				days										= 1000;
@@ -125,6 +134,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			if (SuriAddOn.license == License.None) SuriCommon.NoValidLicenseError(RenderTarget, ChartControl, ChartPanel);
 		}
 		
+		private int noNewCotSince;
 		protected override void OnBarUpdate() {
 			if (SuriAddOn.license == License.None) return;
 			Values[3][0] = suriCotData.Value[0];
@@ -134,6 +144,15 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			Values[2][0] = ValueOf(0.25);
 			MoveLines();
 			Analyze();
+
+			if (CurrentBar > 0 && Math.Abs(Values[3][0] - Values[3][1]) < 0.00000000001) {
+				noNewCotSince++;
+			} else {
+				noNewCotSince = 0;
+			}
+			if (noNewCotSince > 12) {
+				PlotBrushes[3][0] = noNewCotBrush;
+			}
 		}
 
 		private void SetMinMax() {
