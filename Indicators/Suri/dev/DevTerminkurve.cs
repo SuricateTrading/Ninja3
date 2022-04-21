@@ -8,6 +8,7 @@ using NinjaTrader.Cbi;
 using NinjaTrader.Custom.AddOns.SuriCommon;
 using NinjaTrader.Gui;
 using NinjaTrader.Gui.Chart;
+using NinjaTrader.Gui.Tools;
 using NinjaTrader.NinjaScript.DrawingTools;
 using NinjaTrader.NinjaScript.Strategies;
 #endregion
@@ -16,7 +17,8 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 	public class DevTerminkurve : Indicator {
 		private List<TkData> tkData;
 		private int nextIndex;
-		private int days = 250;
+		[Display(Name = "Tage", Order = 0)]
+		public int days { get; set; }
 		private bool comesFromContango;
 		private bool comesFromBackwardation;
 		
@@ -37,11 +39,14 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 				ScaleJustification							= ScaleJustification.Right;
 				IsSuspendedWhileInactive					= true;
 				BarsRequiredToPlot							= 0;
+				days = 250;
 			} else if (State == State.Configure) {
 				AddPlot(new Stroke(Brushes.CornflowerBlue, 2), PlotStyle.Line, "Status");
 				AddPlot(new Stroke(Brushes.DarkGray, 2), PlotStyle.Line, "Delta");
 				AddPlot(new Stroke(Brushes.Green, 2), PlotStyle.Line, "Oszillator");
-				AddLine(new Stroke(Brushes.DimGray, 1), 50, "Oszillator");
+				AddLine(new Stroke(Brushes.DimGray, 1), 10, "0");
+				AddLine(new Stroke(Brushes.DimGray, 1), 50, "50");
+				AddLine(new Stroke(Brushes.DimGray, 1), 90, "100");
 			} else if (State == State.DataLoaded) {
 				int? id = SuriStrings.GetId(Instrument);
 				if (id != null) {
@@ -56,7 +61,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 		public override void OnCalculateMinMax() { MinValue = -25; MaxValue = 125; }
 		
 		protected override void OnBarUpdate() {
-			if (tkData == null) return;
+			if (tkData.IsNullOrEmpty()) return;
 			for (int i = nextIndex; i < tkData.Count; i++) {
 				if (tkData[i].Date.Date.Equals(Time[0].Date)) {
 					Values[0][0] = (tkData[i].TkState+2)*25;

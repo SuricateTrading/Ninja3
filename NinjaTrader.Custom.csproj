@@ -92,6 +92,12 @@
     <Reference Include="System.Memory">
       <HintPath>C:\Program Files (x86)\NinjaTrader 8\bin64\System.Memory.dll</HintPath>
     </Reference>
+    <Reference Include="System.Json">
+      <HintPath>C:\Program Files (x86)\NinjaTrader 8\bin64\System.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>C:\Users\Bo\Documents\NinjaTrader 8\bin\Custom\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="NinjaTrader.Vendor">
       <HintPath>C:\Users\Bo\Documents\NinjaTrader 8\bin\Custom\NinjaTrader.Vendor.dll</HintPath>
     </Reference>

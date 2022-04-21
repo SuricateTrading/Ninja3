@@ -2,6 +2,7 @@
 
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Windows.Media;
 using NinjaTrader.Custom.AddOns.SuriCommon;
 using NinjaTrader.Data;
@@ -36,8 +37,9 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				AddPlot(new Stroke(Brushes.CornflowerBlue, 2), PlotStyle.Bar, "Delta %");
 				AddPlot(new Stroke(Brushes.Gray, 1), PlotStyle.Line, "0");
 			} else if (State == State.DataLoaded && !Bars.IsTickReplay && SuriAddOn.license == License.Dev) {
-				string json = File.ReadAllText(SuriVpSerialization.dbPath + @"\" + Instrument.MasterInstrument.Name + ".vpintra");
-				//suriVpIntraData = Newtonsoft.Json.JsonConvert.DeserializeObject<SuriVpIntraData>(json);
+				//string json = File.ReadAllText(SuriVpSerialization.dbPath + @"\" + Instrument.MasterInstrument.Name + ".vpintra");
+				//suriVpIntraData = JsonSerializer.Deserialize<SuriVpIntraData>(json); // Newtonsoft.Json.JsonConvert.DeserializeObject<SuriVpIntraData>(json);
+				suriVpIntraData = SuriVpSerialization.GetVpIntra(Instrument, Bars.GetTime(0).Date, Bars.LastBarTime.Date);
 			}
 		}
 		
