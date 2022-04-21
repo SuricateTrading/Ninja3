@@ -40,6 +40,14 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			get { return Serialize.BrushToString(signalBrush); }
 			set { signalBrush = Serialize.StringToBrush(value); }
 		}
+		[XmlIgnore]
+		[Display(Name = "Nicht genügend Daten", Order = 3, GroupName = "Farben")]
+		public Brush notEnoughDataBrush { get; set; }
+		[Browsable(false)]
+		public string notEnoughDataBrushSerialize {
+			get { return Serialize.BrushToString(notEnoughDataBrush); }
+			set { notEnoughDataBrush = Serialize.StringToBrush(value); }
+		}
 		#endregion
 		
 		protected override void OnStateChange() {
@@ -59,6 +67,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				BarsRequiredToPlot							= 0;
 				barBrush									= Brushes.RoyalBlue;
 				signalBrush									= Brushes.Yellow;
+				notEnoughDataBrush							= Brushes.Gray;
 				days										= 125;
 			} else if (State == State.Configure) {
 				volume = SuriVolume(days);
@@ -73,7 +82,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			MinValue = 0;
 			MaxValue = 100;
 		}
-		public override string DisplayName { get { return SuriStrings.DisplayName(Name, Instrument); } }
+		public override string DisplayName { get { return Name; } }
 		
 		protected override void OnRender(ChartControl chartControl, ChartScale chartScale) {
 			base.OnRender(chartControl, chartScale);
@@ -87,7 +96,9 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			Values[2][0] = 100 * volume.Values[0][0] / volume.Values[1][0];
 			Value[0] = Math.Max(Values[1][0], Values[2][0]);
 			
-			if(SuriAddOn.license != License.Basic && Value[0] > 99.99) PlotBrushes[0][0] = signalBrush;
+			if (CurrentBar < days) {
+				PlotBrushes[0][0] = notEnoughDataBrush;
+			} else if(SuriAddOn.license != License.Basic && Value[0] > 99.99) PlotBrushes[0][0] = signalBrush;
 		}
 		
 	}

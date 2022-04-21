@@ -6,25 +6,22 @@ using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Windows.Media;
 using System.Xml.Serialization;
-using NinjaTrader.Core;
 using NinjaTrader.Custom.AddOns.SuriCommon;
 using NinjaTrader.Gui;
 using NinjaTrader.Gui.Chart;
 using NinjaTrader.Gui.NinjaScript;
 using NinjaTrader.NinjaScript;
-using NinjaTrader.NinjaScript.DrawingTools;
-using SharpDX;
 using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
-
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
 	public sealed class SuriCot : Indicator {
-		private CotReport sCot;
+		private SuriCotHelper suriCotHelper;
 		private double min = double.MaxValue;
 		private double max = double.MinValue;
 		private int minIndex;
 		private int maxIndex;
+		private int noNewCotSince;
 		
 		#region Properties
 		[TypeConverter(typeof(FriendlyEnumConverter))]
@@ -119,73 +116,37 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				noNewCotBrush								= Brushes.Orange;
 				lineWidth									= 2;
 				lineWidthSecondary							= 1;
-				days										= 1000;
 				reportField									= SuriCotReportField.CommercialLong;
+				days										= 1000;
 			} else if (State == State.Configure) {
-				sCot = new CotReport { ReportType = CotReportType.Futures, Field = CotReportMaper.SuriToCotReport(reportField) };
+				suriCotHelper = new SuriCotHelper(Instrument, Bars.GetTime(0).Date, Bars.LastBarTime.Date);
 				AddPlot(new Stroke(regularLineBrush, lineWidth), PlotStyle.Line, "CoT-Daten");
-				
 				if (drawLines) {
 					AddPlot(new Stroke(brush20, lineWidthSecondary), PlotStyle.Line, "20%");
 					AddPlot(new Stroke(brush80, lineWidthSecondary), PlotStyle.Line, "80%");
 				}
 			}
 		}
-		public override string DisplayName { get { return SuriStrings.DisplayName(Name, Instrument); } }
+		public override string DisplayName { get { return Name + " " + CotReportMaper.ReportToString(reportField); } }
 		private double ValueOf(double percent) { return min + percent * (max - min); }
-
-		/// Returns a list of CoT values starting with the given *start* timestamp. The Count of the list is equal to the given *bars* + 1.
-		public List<double> GetRange(DateTime start, int bars, NinjaScriptBase ninjaScriptBase) {
-			List<double> value = new List<double>();
-			DateTime current = start;
-			value.Add(sCot.Calculate(ninjaScriptBase.Instrument.MasterInstrument.Name, current));
-			for (int i = 0; i < bars; i++) {
-				// find previous trading date
-				bool isHoliday;
-				do {
-					isHoliday = false;
-					current = current.AddDays(-1);
-					foreach (var pair in TradingHours.Holidays) {
-						Print(pair.Key.Date);
-						if (pair.Key.Date == current.Date) {
-							isHoliday = true;
-							break;
-						}
-					}
-				} while (current.DayOfWeek == DayOfWeek.Saturday || current.DayOfWeek == DayOfWeek.Sunday || isHoliday);
-				value.Add(sCot.Calculate(ninjaScriptBase.Instrument.MasterInstrument.Name, current));
-				//Print(current + " " + value.Last());
-			}
-			return value;
-		}
-
 		protected override void OnRender(ChartControl chartControl, ChartScale chartScale) {
 			base.OnRender(chartControl, chartScale);
 			if (SuriAddOn.license == License.None) SuriCommon.NoValidLicenseError(RenderTarget, ChartControl, ChartPanel);
 		}
 
-		private int noNewCotSince;
 		protected override void OnBarUpdate() {
 			if (SuriAddOn.license == License.None) return;
-			
-			if (CotData.GetCotReportNames(Instrument.MasterInstrument.Name).Count == 0) {
-				Draw.TextFixed(this, "Error", Custom.Resource.CotDataError, TextPosition.BottomRight);
-				return;
-			}
-			if (!Globals.MarketDataOptions.DownloadCotData) {
-				Draw.TextFixed(this, "Warning", Custom.Resource.CotDataWarning, TextPosition.BottomRight);
-			}
-			if (CotData.IsDownloadingData) {
-				Draw.TextFixed(this, "Warning", Custom.Resource.CotDataStillDownloading, TextPosition.BottomRight);
-				return;
-			}
+			int? index = suriCotHelper.Update(Time[0]);
+			if (index == null) return;
 
-			Value[0] = sCot.Calculate(Instrument.MasterInstrument.Name, Time[0]);
+			int? value = GetCotValue(reportField, index.Value);
+			if (value == null) return;
+			Value[0] = value.Value;
 			if (drawLines) {
 				SetMinMax();
 				if (CurrentBar >= days) {
-					Values[2][0] = ValueOf(0.2);
-					Values[3][0] = ValueOf(0.8);
+					Values[1][0] = ValueOf(0.2);
+					Values[2][0] = ValueOf(0.8);
 				}
 			}
 			
@@ -197,6 +158,36 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			if (noNewCotSince > 12) {
 				PlotBrushes[0][0] = noNewCotBrush;
 			}
+		}
+
+		private int? GetCotValue(SuriCotReportField field, int index) {
+			switch (field) {
+				case SuriCotReportField.OpenInterest: return suriCotHelper.dbCotData[index].OpenInterest;
+				case SuriCotReportField.NoncommercialLong: return suriCotHelper.dbCotData[index].NonCommercialsLong;
+				case SuriCotReportField.NoncommercialShort: return suriCotHelper.dbCotData[index].NonCommercialsShort;
+				case SuriCotReportField.NoncommercialNet: return suriCotHelper.dbCotData[index].NonCommercialsLong - suriCotHelper.dbCotData[index].NonCommercialsShort;
+				
+				//case SuriCotReportField.NoncommercialSpreads: return suriCotHelper.dbCotData[index].NoncommercialSpreads;
+				
+				case SuriCotReportField.CommercialLong: return suriCotHelper.dbCotData[index].CommercialsLong;
+				case SuriCotReportField.CommercialShort: return suriCotHelper.dbCotData[index].CommercialsShort;
+				case SuriCotReportField.CommercialNet: return suriCotHelper.dbCotData[index].CommercialsLong - suriCotHelper.dbCotData[index].CommercialsShort;
+				//case SuriCotReportField.TotalLong: return suriCotHelper.dbCotData[index].TotalLong;
+				//case SuriCotReportField.TotalShort: return suriCotHelper.dbCotData[index].TotalShort;
+				//case SuriCotReportField.TotalNet: return suriCotHelper.dbCotData[index].TotalNet;
+				case SuriCotReportField.NonreportablePositionsLong: return suriCotHelper.dbCotData[index].NonReportablesLong;
+				case SuriCotReportField.NonreportablePositionsShort: return suriCotHelper.dbCotData[index].NonReportablesShort;
+				case SuriCotReportField.NonreportablePositionsNet: return suriCotHelper.dbCotData[index].NonReportablesLong - suriCotHelper.dbCotData[index].NonReportablesShort;
+				//case SuriCotReportField.TotalTraders: return suriCotHelper.dbCotData[index].TotalTraders;
+				/*case SuriCotReportField.TradersInNoncommercialLong: return suriCotHelper.dbCotData[index].OpenInterest;
+				case SuriCotReportField.TradersInNoncommercialShort: return suriCotHelper.dbCotData[index].OpenInterest;
+				case SuriCotReportField.TradersInNoncommercialSpreads: return suriCotHelper.dbCotData[index].OpenInterest;
+				case SuriCotReportField.TradersInCommercialLong: return suriCotHelper.dbCotData[index].OpenInterest;
+				case SuriCotReportField.TradersInCommercialShort: return suriCotHelper.dbCotData[index].OpenInterest;
+				case SuriCotReportField.TradersInTotalLong: return suriCotHelper.dbCotData[index].OpenInterest;
+				case SuriCotReportField.TradersInTotalShort: return suriCotHelper.dbCotData[index].OpenInterest;*/
+			}
+			return null;
 		}
 		
 		private void SetMinMax() {
@@ -232,20 +223,20 @@ public abstract class CotReportMaper {
 			case SuriCotReportField.CommercialLong: return "Commercials Long";
 			case SuriCotReportField.CommercialShort: return "Commercials Short";
 			case SuriCotReportField.CommercialNet: return "Commercials Netto";
-			case SuriCotReportField.TotalLong: return "Total Long";
+			/*case SuriCotReportField.TotalLong: return "Total Long";
 			case SuriCotReportField.TotalShort: return "Total Short";
-			case SuriCotReportField.TotalNet: return "Total Net";
+			case SuriCotReportField.TotalNet: return "Total Net";*/
 			case SuriCotReportField.NonreportablePositionsLong: return "Non Reportables Long";
 			case SuriCotReportField.NonreportablePositionsShort: return "Non Reportables Short";
 			case SuriCotReportField.NonreportablePositionsNet: return "Non Reportables Netto";
-			case SuriCotReportField.TotalTraders: return "Total Traders";
+			/*case SuriCotReportField.TotalTraders: return "Total Traders";
 			case SuriCotReportField.TradersInNoncommercialLong: return "Trader in Non Commercials Long";
 			case SuriCotReportField.TradersInNoncommercialShort: return "Trader in Non Commercials Short";
 			case SuriCotReportField.TradersInNoncommercialSpreads: return "Trader in Non Commercials Spreads";
 			case SuriCotReportField.TradersInCommercialLong: return "Trader in Commercials Long";
 			case SuriCotReportField.TradersInCommercialShort: return "Trader in Commercial Short";
 			case SuriCotReportField.TradersInTotalLong: return "Trader in Total Long";
-			case SuriCotReportField.TradersInTotalShort: return "Trader in Total Short";
+			case SuriCotReportField.TradersInTotalShort: return "Trader in Total Short";*/
 			default: return "";
 		}
 	}
@@ -259,20 +250,20 @@ public abstract class CotReportMaper {
 			case "Commercials Long": return SuriCotReportField.CommercialLong;
 			case "Commercials Short": return SuriCotReportField.CommercialShort;
 			case "Commercials Netto": return SuriCotReportField.CommercialNet;
-			case "Total Long": return SuriCotReportField.TotalLong;
+			/*case "Total Long": return SuriCotReportField.TotalLong;
 			case "Total Short": return SuriCotReportField.TotalShort;
-			case "Total Net": return SuriCotReportField.TotalNet;
+			case "Total Net": return SuriCotReportField.TotalNet;*/
 			case "Non Reportables Long": return SuriCotReportField.NonreportablePositionsLong;
 			case "Non Reportables Short": return SuriCotReportField.NonreportablePositionsShort;
 			case "Non Reportables Netto": return SuriCotReportField.NonreportablePositionsNet;
-			case "Total Traders": return SuriCotReportField.TotalTraders;
+			/*case "Total Traders": return SuriCotReportField.TotalTraders;
 			case "Trader in Non Commercials Long": return SuriCotReportField.TradersInNoncommercialLong;
 			case "Trader in Non Commercials Short": return SuriCotReportField.TradersInNoncommercialShort;
 			case "Trader in Non Commercials Spreads": return SuriCotReportField.TradersInNoncommercialSpreads;
 			case "Trader in Commercials Long": return SuriCotReportField.TradersInCommercialLong;
 			case "Trader in Commercial Short": return SuriCotReportField.TradersInCommercialShort;
 			case "Trader in Total Long": return SuriCotReportField.TradersInTotalLong;
-			case "Trader in Total Short": return SuriCotReportField.TradersInTotalShort;
+			case "Trader in Total Short": return SuriCotReportField.TradersInTotalShort;*/
 			default: return SuriCotReportField.OpenInterest;
 		}
 	}
@@ -286,20 +277,20 @@ public abstract class CotReportMaper {
 			case SuriCotReportField.CommercialLong: return CotReportField.CommercialLong;
 			case SuriCotReportField.CommercialShort: return CotReportField.CommercialShort;
 			case SuriCotReportField.CommercialNet: return CotReportField.CommercialNet;
-			case SuriCotReportField.TotalLong: return CotReportField.TotalLong;
+			/*case SuriCotReportField.TotalLong: return CotReportField.TotalLong;
 			case SuriCotReportField.TotalShort: return CotReportField.TotalShort;
-			case SuriCotReportField.TotalNet: return CotReportField.TotalNet;
+			case SuriCotReportField.TotalNet: return CotReportField.TotalNet;*/
 			case SuriCotReportField.NonreportablePositionsLong: return CotReportField.NonreportablePositionsLong;
 			case SuriCotReportField.NonreportablePositionsShort: return CotReportField.NonreportablePositionsShort;
 			case SuriCotReportField.NonreportablePositionsNet: return CotReportField.NonreportablePositionsNet;
-			case SuriCotReportField.TotalTraders: return CotReportField.TotalTraders;
+			/*case SuriCotReportField.TotalTraders: return CotReportField.TotalTraders;
 			case SuriCotReportField.TradersInNoncommercialLong: return CotReportField.TradersInNoncommercialLong;
 			case SuriCotReportField.TradersInNoncommercialShort: return CotReportField.TradersInNoncommercialShort;
 			case SuriCotReportField.TradersInNoncommercialSpreads: return CotReportField.TradersInNoncommercialSpreads;
 			case SuriCotReportField.TradersInCommercialLong: return CotReportField.TradersInCommercialLong;
 			case SuriCotReportField.TradersInCommercialShort: return CotReportField.TradersInCommercialShort;
 			case SuriCotReportField.TradersInTotalLong: return CotReportField.TradersInTotalLong;
-			case SuriCotReportField.TradersInTotalShort: return CotReportField.TradersInTotalShort;
+			case SuriCotReportField.TradersInTotalShort: return CotReportField.TradersInTotalShort;*/
 			default: return CotReportField.OpenInterest;
 		}
 	}
@@ -307,7 +298,8 @@ public abstract class CotReportMaper {
 
 public class FriendlyEnumConverter : TypeConverter {
     public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext context) {
-        List<string> values = new List<string>() { "Open Interest", "Non Commercials Long", "Non Commercials Short", "Non Commercials Spreads", "Non Commercials Netto", "Commercials Long", "Commercials Short", "Commercials Netto", "Total Long", "Total Short", "Total Net", "Non Reportables Long", "Non Reportables Short", "Non Reportables Netto", "Total Traders", "Trader in Non Commercials Long", "Trader in Non Commercials Short", "Trader in Non Commercials Spreads", "Trader in Commercials Long", "Trader in Commercial Short", "Trader in Total Long", "Trader in Total Short" };
+        //List<string> values = new List<string>() { "Open Interest", "Non Commercials Long", "Non Commercials Short", "Non Commercials Spreads", "Non Commercials Netto", "Commercials Long", "Commercials Short", "Commercials Netto", "Total Long", "Total Short", "Total Net", "Non Reportables Long", "Non Reportables Short", "Non Reportables Netto", "Total Traders", "Trader in Non Commercials Long", "Trader in Non Commercials Short", "Trader in Non Commercials Spreads", "Trader in Commercials Long", "Trader in Commercial Short", "Trader in Total Long", "Trader in Total Short" };
+        List<string> values = new List<string>() { "Open Interest", "Non Commercials Long", "Non Commercials Short", "Non Commercials Spreads", "Non Commercials Netto", "Commercials Long", "Commercials Short", "Commercials Netto", "Non Reportables Long", "Non Reportables Short", "Non Reportables Netto" };
         return new StandardValuesCollection(values);
     }
     public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value) {
@@ -336,22 +328,22 @@ public enum SuriCotReportField {
 	CommercialShort,
 	CommercialNet,
 
-	TotalLong,
+	/*TotalLong,
 	TotalShort,
-	TotalNet,
+	TotalNet,*/
 
 	NonreportablePositionsLong,
 	NonreportablePositionsShort,
 	NonreportablePositionsNet,
 
-	TotalTraders,
+	/*TotalTraders,
 	TradersInNoncommercialLong,
 	TradersInNoncommercialShort,
 	TradersInNoncommercialSpreads,
 	TradersInCommercialLong,
 	TradersInCommercialShort,
 	TradersInTotalLong,
-	TradersInTotalShort,
+	TradersInTotalShort,*/
 }
 
 #endregion

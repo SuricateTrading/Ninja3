@@ -86,34 +86,31 @@
     <Reference Include="SharpDX.Direct2D1">
       <HintPath>C:\Program Files (x86)\NinjaTrader 8\bin64\SharpDX.Direct2D1.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>C:\Users\Bo\Documents\NinjaTrader 8\bin\Custom\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="System.Text.Json">
+      <HintPath>C:\Program Files (x86)\NinjaTrader 8\bin64\System.Text.Json.dll</HintPath>
     </Reference>
-    <Reference Include="AcmeIntradayVP8.1.3.0">
-      <HintPath>C:\Users\Bo\Documents\NinjaTrader 8\bin\Custom\AcmeIntradayVP8.1.3.0.dll</HintPath>
-    </Reference>
-    <Reference Include="AcmeCompositeVP8.1.3.0">
-      <HintPath>C:\Users\Bo\Documents\NinjaTrader 8\bin\Custom\AcmeCompositeVP8.1.3.0.dll</HintPath>
-    </Reference>
-    <Reference Include="AcmeLicenseManager8.1.3.0">
-      <HintPath>C:\Users\Bo\Documents\NinjaTrader 8\bin\Custom\AcmeLicenseManager8.1.3.0.dll</HintPath>
+    <Reference Include="System.Memory">
+      <HintPath>C:\Program Files (x86)\NinjaTrader 8\bin64\System.Memory.dll</HintPath>
     </Reference>
     <Reference Include="NinjaTrader.Vendor">
       <HintPath>C:\Users\Bo\Documents\NinjaTrader 8\bin\Custom\NinjaTrader.Vendor.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AddOns\SuriCommon\IStrategyInterface.cs" />
+    <Compile Include="AddOns\Data\SuriCotHelper.cs" />
+    <Compile Include="AddOns\Data\SuriCotRepo.cs" />
+    <Compile Include="AddOns\Data\SuriServer.cs" />
+    <Compile Include="AddOns\Data\SuriStrings.cs" />
+    <Compile Include="AddOns\Data\SuriVpData.cs" />
+    <Compile Include="AddOns\Data\SuriVpSerialization.cs" />
+    <Compile Include="AddOns\SuriCommon\DevStrategyInterface.cs" />
     <Compile Include="AddOns\SuriCommon\StrikingCalculator.cs" />
-    <Compile Include="AddOns\SuriCommon\SuriAdmin.cs" />
     <Compile Include="AddOns\SuriCommon\SuriCommon.cs" />
-    <Compile Include="AddOns\SuriCommon\SuriCotStrategy.cs" />
+    <Compile Include="AddOns\SuriCommon\DevCotStrategy.cs" />
     <Compile Include="AddOns\SuriCommon\SuriHelper.cs" />
-    <Compile Include="AddOns\SuriCommon\SuriOrder.cs" />
-    <Compile Include="AddOns\SuriCommon\SuriServer.cs" />
-    <Compile Include="AddOns\SuriCommon\SuriStrings.cs" />
-    <Compile Include="AddOns\SuriCommon\SuriVpData.cs" />
-    <Compile Include="AddOns\SuriCommon\SuriVpSerialization.cs" />
+    <Compile Include="AddOns\SuriCommon\DevOrder.cs" />
+    <Compile Include="AddOns\SuriScripts\SuriCorrelation.cs" />
+    <Compile Include="AddOns\SuriScripts\SuriAdmin.cs" />
     <Compile Include="BarsTypes\%40DayBarsType.cs" />
     <Compile Include="BarsTypes\%40HeikenAshiBarsType.cs" />
     <Compile Include="BarsTypes\%40KagiBarsType.cs" />
@@ -190,6 +187,10 @@
     <Compile Include="Indicators\%40VolumeUpDown.cs" />
     <Compile Include="Indicators\%40VolumeZones.cs" />
     <Compile Include="Indicators\%40Vortex.cs" />
+    <Compile Include="Indicators\Suri\SuriBidAskDelta.cs" />
+    <Compile Include="Indicators\Suri\dev\DevAverageBarSize.cs" />
+    <Compile Include="Indicators\Suri\dev\DevAverageMovement.cs" />
+    <Compile Include="Indicators\Suri\dev\DevCot2.cs" />
     <Compile Include="Indicators\Suri\dev\DevDelayedCot.cs" />
     <Compile Include="Indicators\Suri\dev\DevDbCot.cs" />
     <Compile Include="Indicators\Suri\dev\DevRolloverButton.cs" />
@@ -199,9 +200,11 @@
     <Compile Include="Indicators\Suri\dev\DevTkDelta.cs" />
     <Compile Include="Indicators\Suri\dev\DevVpMeta.cs" />
     <Compile Include="Indicators\Suri\dev\DevWasde.cs" />
-    <Compile Include="Indicators\Suri\dev\SuriDailyOpenInterest.cs" />
-    <Compile Include="Indicators\Suri\dev\SuriSwing.cs" />
-    <Compile Include="Indicators\Suri\dev\SuriSwing2.cs" />
+    <Compile Include="Indicators\Suri\dev\DevCot.cs" />
+    <Compile Include="Indicators\Suri\dev\DevCot1.cs" />
+    <Compile Include="Indicators\Suri\dev\DevDailyOpenInterest.cs" />
+    <Compile Include="Indicators\Suri\dev\DevSwing.cs" />
+    <Compile Include="Indicators\Suri\dev\DevSwing2.cs" />
     <Compile Include="Indicators\Suri\SuriMega.cs" />
     <Compile Include="Indicators\Suri\SuriDrawingToolTile.cs" />
     <Compile Include="Indicators\Suri\SuriProductionCost.cs" />
@@ -433,9 +436,6 @@
     <Compile Include="Strategies\StrategyCOT2.cs" />
     <Compile Include="DrawingTools\DrawRange.cs" />
     <Compile Include="Indicators\Suri\ComShortOpenInterest.cs" />
-    <Compile Include="AcmeIntradayVP8.1.3.0.cs" />
-    <Compile Include="AcmeCompositeVP8.1.3.0.cs" />
-    <Compile Include="AcmeLicenseManager8.1.3.0.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resource.resx">

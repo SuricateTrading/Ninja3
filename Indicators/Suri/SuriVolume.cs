@@ -50,6 +50,14 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			get { return Serialize.BrushToString(maxBrush); }
 			set { maxBrush = Serialize.StringToBrush(value); }
 		}
+		[XmlIgnore]
+		[Display(Name = "Nicht genügend Daten", Order = 3, GroupName = "Farben")]
+		public Brush notEnoughDataBrush { get; set; }
+		[Browsable(false)]
+		public string notEnoughDataBrushSerialize {
+			get { return Serialize.BrushToString(notEnoughDataBrush); }
+			set { notEnoughDataBrush = Serialize.StringToBrush(value); }
+		}
 		#endregion
 		#endregion
 		
@@ -71,13 +79,14 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				signalBrush									= Brushes.Yellow;
 				maxBrush									= Brushes.DarkCyan;
 				volumeBrush									= Brushes.RoyalBlue;
+				notEnoughDataBrush							= Brushes.Gray;
 				days										= 125;
 			} else if (State == State.Configure) {
 				AddPlot(new Stroke(volumeBrush, 2), PlotStyle.Bar, "Volumen");
 				AddPlot(new Stroke(maxBrush, 1), PlotStyle.Line, "Max Volumen");
 			}
 		}
-		public override string DisplayName { get { return SuriStrings.DisplayName(Name, Instrument); } }
+		public override string DisplayName { get { return Name; } }
         public double Percentage() { return 100 * Values[0][0] / Values[1][0]; }
         public bool IsMegaVolume() { return Math.Abs(Values[0][0] - Values[1][0]) < 0.00001; }
 		
@@ -111,7 +120,9 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				}
 			}
 			Values[1][0] = max;
-			if (SuriAddOn.license != License.Basic && IsMegaVolume()) PlotBrushes[0][0] = signalBrush;
+			if (CurrentBar < days) {
+				PlotBrushes[0][0] = notEnoughDataBrush;
+			} else if (SuriAddOn.license != License.Basic && IsMegaVolume()) PlotBrushes[0][0] = signalBrush;
 		}
 	}
 }

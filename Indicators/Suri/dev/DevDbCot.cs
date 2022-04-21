@@ -10,6 +10,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 	public class DevDbCot : Indicator {
 		private List<DbCotData> dbCotData;
 		private int nextIndex;
+		private bool hasStarted;
 		
 		protected override void OnStateChange() {
 			if (State == State.SetDefaults) {
@@ -25,30 +26,37 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 				ScaleJustification							= ScaleJustification.Right;
 				IsSuspendedWhileInactive					= true;
 				BarsRequiredToPlot							= 0;
-				AddPlot(new Stroke(Brushes.DarkGray, 3), PlotStyle.Line, "DbCot");
+				AddPlot(new Stroke(Brushes.DarkGray, 2), PlotStyle.Line, "DbCot");
+				AddPlot(new Stroke(Brushes.DarkGray, 2), PlotStyle.Line, "Min");
+				AddPlot(new Stroke(Brushes.DarkGray, 2), PlotStyle.Line, "Mid");
+				AddPlot(new Stroke(Brushes.DarkGray, 2), PlotStyle.Line, "Max");
 			} else if (State == State.DataLoaded) {
-				int? id = SuriStrings.GetId(Instrument);
-				if (id != null) {
-					string oldDate = From.Date.ToString("yyyy-MM-dd");
-					string newDate = To.Date.ToString("yyyy-MM-dd");
-					dbCotData = SuriServer.GetCotData(id.Value, oldDate, newDate, 0);
+				Commodity? commodity = SuriStrings.GetComm(Instrument);
+				if (commodity != null) {
+					dbCotData = SuriCotRepo.GetCotData(commodity.Value, Bars.GetTime(0).Date, Bars.LastBarTime.Date).Result;
 				}
 			}
 		}
 		
 		protected override void OnBarUpdate() {
 			if (dbCotData == null) return;
-			if (nextIndex >= dbCotData.Count) {
-				Value[0] = dbCotData[dbCotData.Count-1].OpenInterest;
-				return;
-			}
-			
-			string now = Time[0].Date.ToString("yyyy-MM-dd");
-			if (dbCotData[nextIndex].Date.Equals(now)) {
-				Value[0] = dbCotData[nextIndex].OpenInterest;
-				nextIndex++;
-			} else if (nextIndex >= 1) {
-				Value[0] = dbCotData[nextIndex-1].OpenInterest;
+			for (int i = nextIndex; i < dbCotData.Count; i++) {
+				if (dbCotData[i].Date.Date.Equals(Time[0].Date)) {
+					Values[0][0] = dbCotData[i].CommercialsShort;
+					Values[1][0] = dbCotData[i].Cot2Min;
+					Values[2][0] = dbCotData[i].Cot2Mid;
+					Values[3][0] = dbCotData[i].Cot2Max;
+					nextIndex = i;
+					hasStarted = true;
+					return;
+				}
+				if (hasStarted && dbCotData[i].Date.Date > Time[0].Date) {
+					Values[0][0] = Values[0][1];
+					Values[1][0] = Values[1][1];
+					Values[2][0] = Values[2][1];
+					Values[3][0] = Values[3][1];
+					return;
+				}
 			}
 		}
 		

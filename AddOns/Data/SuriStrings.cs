@@ -8,8 +8,9 @@ using NinjaTrader.Cbi;
 namespace NinjaTrader.Custom.AddOns.SuriCommon {
 	public static class SuriStrings {
 	
-		public static string DisplayName(string prefix, Instrument instrument) {
+		/*public static string DisplayName(string prefix, Instrument instrument) {
 			if (instrument == null) return prefix;
+			return prefix + " (" + instrument.FullName + ")";
 			
 			string name = instrument.MasterInstrument.Name;
 			Commodity? comm = GetComm(name);
@@ -18,7 +19,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 				return prefix + " - " + instrument.FullName;
 			}
 			return prefix + " - " + data[comm.Value].longName + " (" + instrument.FullName + ")";
-		}
+		}*/
 
 		public static int? GetId(Instrument instrument) {
 			try {
@@ -34,6 +35,9 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			} catch (InvalidOperationException) {
 				return null;
 			}
+		}
+		public static Commodity? GetComm(Instrument instrument) {
+			return GetComm(instrument.MasterInstrument.Name);
 		}
 		
 		public static string LongNameToShortName(string longName) {
@@ -52,7 +56,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			{Commodity.Copper,		new CommodityData(4,  "HG", "", "Kupfer")},
 
 			{Commodity.CrudeOil,	new CommodityData(7,  "CL", "", "Rohöl")},
-			{Commodity.Ethanol,		new CommodityData(8,  "EH", "", "Ethanol")},
+			//{Commodity.Ethanol,		new CommodityData(8,  "EH", "", "Ethanol")},
 			{Commodity.NaturalGas,	new CommodityData(9,  "NG", "", "Erdgas")},
 			{Commodity.BrentCrude,	new CommodityData(10, "B", "BB", "Brent Öl")},
 			{Commodity.HeatingOil,	new CommodityData(11, "HO", "", "Heizöl")},
@@ -119,7 +123,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 		//Zinc,
 	
 		CrudeOil,
-		Ethanol,
+		//Ethanol,
 		NaturalGas,
 		BrentCrude,
 		HeatingOil,

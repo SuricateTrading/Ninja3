@@ -287,7 +287,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 					i++;
 				}
 
-				if (drawText) {
+				if (drawText && barWidth > 20) {
 					double delta = suriVpIntraData.barData[lastIndex].delta;
 					string str =	"Σ " + suriVpIntraData.barData[lastIndex].totalVolume + "\n" +
 					                "∆ " + delta + "\n" +

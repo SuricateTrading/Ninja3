@@ -46,29 +46,19 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 				lastLow = Low[0];
 				return;
 			}
-			
-			if (comesFromLow) {
-				for (int i = 1; i < noNewCount && CurrentBar + i < Bars.Count; i++) {
-					double high = Bars.GetHigh(CurrentBar + i);
-					if (high > High[0]) break;
-					if (i == noNewCount - 1) {
-						// we did not find a higher high
-						comesFromHigh = true;
-						comesFromLow = false;
-						Draw.Dot(this, "High_" + SuriCommon.random, true, 0, High[0], brushHigh);
-					}
-				}
-			}
-			if (comesFromHigh) {
-				for (int i = 1; i < noNewCount && CurrentBar + i < Bars.Count; i++) {
-					double low = Bars.GetLow(CurrentBar + i);
-					if (low < Low[0]) break;
-					if (i == noNewCount - 1) {
-						// we did not find a lower low
-						comesFromHigh = false;
-						comesFromLow = true;
-						Draw.Dot(this, "Low_" + SuriCommon.random, true, 0, Low[0], brushLow);
-					}
+			if (comesFromLow)  Check(true);
+			if (comesFromHigh) Check(false);
+		}
+
+		private void Check(bool high) {
+			for (int i = 1; i < noNewCount && CurrentBar + i < Bars.Count; i++) {
+				double value = high ? Bars.GetHigh(CurrentBar + i) : Bars.GetLow(CurrentBar + i);
+				if (high ? value > High[0] : value < Low[0]) break;
+				if (i == noNewCount - 1) {
+					// we did not find a lower low or higher high
+					comesFromHigh = high;
+					comesFromLow = !high;
+					Draw.Dot(this, (high ? "High_" : "Low_") + SuriCommon.random, true, 0, high ? High[0] : Low[0], high ? brushHigh : brushLow);
 				}
 			}
 		}

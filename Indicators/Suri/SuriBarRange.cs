@@ -17,72 +17,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		private double max;
 		private int maxIndex;
 		
-		protected override void OnStateChange() {
-			if (State == State.SetDefaults) {
-				Description									= @"Zeigt die Range einer Bar plus Gap zum Vortag.";
-				Name										= "Bargröße";
-				Calculate									= Calculate.OnEachTick;
-				IsOverlay									= false;
-				DisplayInDataBox							= true;
-				DrawOnPricePanel							= true;
-				DrawHorizontalGridLines						= true;
-				DrawVerticalGridLines						= true;
-				PaintPriceMarkers							= true;
-				ScaleJustification							= ScaleJustification.Right;
-				IsSuspendedWhileInactive					= true;
-				BarsRequiredToPlot							= 0;
-				days										= 125;
-				signalUpBrush								= Brushes.Green;
-				signalDownBrush								= Brushes.Red;
-				maxBrush									= Brushes.DarkCyan;
-				barBrush									= Brushes.RoyalBlue;
-			} else if (State == State.Configure) {
-				AddPlot(new Stroke(barBrush, 2), PlotStyle.Bar, "Bargröße");
-				AddPlot(new Stroke(maxBrush, 1), PlotStyle.Line, "Max");
-			}
-		}
-		public override string DisplayName { get { return SuriStrings.DisplayName(Name, Instrument); } }
-        public double Percentage() { return 100 * Values[0][0] / Values[1][0]; }
-        public bool IsMegaRange() { return CurrentBar > days && Math.Abs(Values[0][0] - Values[1][0]) < 0.00000001; }
-
-        protected override void OnRender(ChartControl chartControl, ChartScale chartScale) {
-	        base.OnRender(chartControl, chartScale);
-	        if (SuriAddOn.license == License.None) SuriCommon.NoValidLicenseError(RenderTarget, ChartControl, ChartPanel);
-        }
-
-        protected override void OnBarUpdate() {
-	        if (SuriAddOn.license == License.None) return;
-	        if (CurrentBar != 0) {
-		        Values[0][0] = Math.Max(Close[1], High[0]) - Math.Min(Close[1], Low[0]);
-	        } else {
-		        Values[0][0] = Close[0] - High[0];
-	        }
-			
-	        if (Values[0][0] > max) {
-		        maxIndex = CurrentBar;
-		        max = Values[0][0];
-	        } else {
-		        // wenn das Hoch weiter weg ist als die Periode dann neues Hoch innerhalb der Periode suchen
-		        if (CurrentBar - maxIndex > days) {
-			        max = 0;
-			        for (int i = days; i > 0 ; i--) {
-				        if (Values[0][i] > max) {
-					        maxIndex = CurrentBar - i;
-					        max = Values[0][i];
-				        }
-			        }
-		        }
-	        }
-	        Values[1][0] = max;
-	        if(SuriAddOn.license != License.Basic && IsMegaRange()) {
-		        if (Open[0] <= Close[0]) {
-			        PlotBrushes[0][0] = signalUpBrush;
-		        } else {
-			        PlotBrushes[0][0] = signalDownBrush;
-		        }
-	        }
-        }
-		
 		#region Properties
 		[NinjaScriptProperty]
 		[Browsable(false)]
@@ -125,8 +59,85 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			get { return Serialize.BrushToString(maxBrush); }
 			set { maxBrush = Serialize.StringToBrush(value); }
 		}
+		[XmlIgnore]
+		[Display(Name = "Nicht genügend Daten", Order = 3, GroupName = "Farben")]
+		public Brush notEnoughDataBrush { get; set; }
+		[Browsable(false)]
+		public string notEnoughDataBrushSerialize {
+			get { return Serialize.BrushToString(notEnoughDataBrush); }
+			set { notEnoughDataBrush = Serialize.StringToBrush(value); }
+		}
 		#endregion
 		#endregion
+
+		protected override void OnStateChange() {
+			if (State == State.SetDefaults) {
+				Description									= @"Zeigt die Range einer Bar plus Gap zum Vortag.";
+				Name										= "Bargröße";
+				Calculate									= Calculate.OnEachTick;
+				IsOverlay									= false;
+				DisplayInDataBox							= true;
+				DrawOnPricePanel							= true;
+				DrawHorizontalGridLines						= true;
+				DrawVerticalGridLines						= true;
+				PaintPriceMarkers							= true;
+				ScaleJustification							= ScaleJustification.Right;
+				IsSuspendedWhileInactive					= true;
+				BarsRequiredToPlot							= 0;
+				days										= 125;
+				signalUpBrush								= Brushes.Green;
+				signalDownBrush								= Brushes.Red;
+				maxBrush									= Brushes.DarkCyan;
+				barBrush									= Brushes.RoyalBlue;
+				notEnoughDataBrush							= Brushes.Gray;
+			} else if (State == State.Configure) {
+				AddPlot(new Stroke(barBrush, 2), PlotStyle.Bar, "Bargröße");
+				AddPlot(new Stroke(maxBrush, 1), PlotStyle.Line, "Max");
+			}
+		}
+		public override string DisplayName { get { return Name; } }
+        public double Percentage() { return 100 * Values[0][0] / Values[1][0]; }
+        public bool IsMegaRange() { return CurrentBar > days && Math.Abs(Values[0][0] - Values[1][0]) < 0.00000001; }
+
+        protected override void OnRender(ChartControl chartControl, ChartScale chartScale) {
+	        base.OnRender(chartControl, chartScale);
+	        if (SuriAddOn.license == License.None) SuriCommon.NoValidLicenseError(RenderTarget, ChartControl, ChartPanel);
+        }
+
+        protected override void OnBarUpdate() {
+	        if (SuriAddOn.license == License.None) return;
+	        if (CurrentBar != 0) {
+		        Values[0][0] = Math.Max(Close[1], High[0]) - Math.Min(Close[1], Low[0]);
+	        } else {
+		        Values[0][0] = Close[0] - High[0];
+	        }
+			
+	        if (Values[0][0] > max) {
+		        maxIndex = CurrentBar;
+		        max = Values[0][0];
+	        } else {
+		        // wenn das Hoch weiter weg ist als die Periode dann neues Hoch innerhalb der Periode suchen
+		        if (CurrentBar - maxIndex > days) {
+			        max = 0;
+			        for (int i = days; i > 0 ; i--) {
+				        if (Values[0][i] > max) {
+					        maxIndex = CurrentBar - i;
+					        max = Values[0][i];
+				        }
+			        }
+		        }
+	        }
+	        Values[1][0] = max;
+	        if (CurrentBar < days) {
+		        PlotBrushes[0][0] = notEnoughDataBrush;
+	        } else if(SuriAddOn.license != License.Basic && IsMegaRange()) {
+		        if (Open[0] <= Close[0]) {
+			        PlotBrushes[0][0] = signalUpBrush;
+		        } else {
+			        PlotBrushes[0][0] = signalDownBrush;
+		        }
+	        }
+        }
 		
 	}
 }

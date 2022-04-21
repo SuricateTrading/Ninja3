@@ -39,7 +39,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				AddPlot(new Stroke(Brushes.Yellow, lineWidth), PlotStyle.Line, "SMA");
 			}
 		}
-		public override string DisplayName { get { return SuriStrings.DisplayName(Name, Instrument); } }
+		public override string DisplayName { get { return Name; } }
 		
 		protected override void OnRender(ChartControl chartControl, ChartScale chartScale) {
 			base.OnRender(chartControl, chartScale);

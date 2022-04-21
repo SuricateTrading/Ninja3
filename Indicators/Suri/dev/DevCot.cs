@@ -1,32 +1,52 @@
 #region Using declarations
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using System.Windows.Media;
+using System.Xml.Serialization;
+using NinjaTrader.Core;
+using NinjaTrader.Custom.AddOns.SuriCommon;
 using NinjaTrader.Gui;
 using NinjaTrader.Gui.Chart;
-using System.ComponentModel.DataAnnotations;
-using System.Xml.Serialization;
-using NinjaTrader.Custom.AddOns.SuriCommon;
 using NinjaTrader.Gui.NinjaScript;
+using NinjaTrader.NinjaScript;
+using NinjaTrader.NinjaScript.DrawingTools;
+using SharpDX;
 using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
+
 #endregion
 
-namespace NinjaTrader.NinjaScript.Indicators.Suri {
-	public sealed class ComShortOpenInterest : Indicator {
-		private SuriCotHelper suriCotHelper;
+namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
+	public sealed class DevCot : Indicator {
+		private CotReport sCot;
 		private double min = double.MaxValue;
 		private double max = double.MinValue;
 		private int minIndex;
 		private int maxIndex;
 		
 		#region Properties
+		[TypeConverter(typeof(FriendlyEnumConverter))]
+		[PropertyEditor("NinjaTrader.Gui.Tools.StringStandardValuesEditorKey")]
 		[NinjaScriptProperty]
+		[Display(Name = "COT Daten", Order=0, GroupName = "Parameter")]
+		[XmlIgnore]
+		public SuriCotReportField reportField { get; set; }
+		
+		[Browsable(false)]
+		public int cotSerialize {
+			get { return (int) reportField; }
+			set { reportField = (SuriCotReportField) value; }
+		}
+		
+		[XmlIgnore]
 		[Display(Name="Zeichne 20 und 80% Linien", Order=0, GroupName="Parameter")]
 		public bool drawLines { get; set; }
 
-		[NinjaScriptProperty]
-		[Browsable(false)]
+		[XmlIgnore]
 		[Range(1, int.MaxValue)]
+		[Browsable(false)]
 		[Display(Name="Tage der 20% und 80% Linien", Order=1, GroupName="Parameter")]
 		public int days { get; set; }
 
@@ -66,6 +86,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			get { return Serialize.BrushToString(brush80); }
 			set { brush80 = Serialize.StringToBrush(value); }
 		}
+		
 		[XmlIgnore]
 		[Display(Name = "Keine neuen COT Daten", Order = 3, GroupName = "Farben", Description = "Wird benutzt, wenn die CFTC keinen aktuellen COT Report veröffentlicht hat.")]
 		public Brush noNewCotBrush { get; set; }
@@ -75,11 +96,11 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			set { noNewCotBrush = Serialize.StringToBrush(value); }
 		}
 		#endregion
-
+		
 		protected override void OnStateChange() {
 			if (State == State.SetDefaults) {
-				Description									= @"Commercials Short geteilt durch Open Interest in Prozent";
-				Name										= "ComShort / OI";
+				Name										= "Dev CoT-Daten";
+				Description									= @"CoT-Daten";
 				Calculate									= Calculate.OnBarClose;
 				IsOverlay									= false;
 				DisplayInDataBox							= true;
@@ -99,16 +120,45 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				lineWidth									= 2;
 				lineWidthSecondary							= 1;
 				days										= 1000;
+				reportField									= SuriCotReportField.CommercialLong;
 			} else if (State == State.Configure) {
-				suriCotHelper = new SuriCotHelper(Instrument, Bars.GetTime(0), Bars.LastBarTime.Date);
-				AddPlot(new Stroke(regularLineBrush, lineWidth), PlotStyle.Line, "Com Short / OI in %");
+				sCot = new CotReport { ReportType = CotReportType.Futures, Field = CotReportMaper.SuriToCotReport(reportField) };
+				AddPlot(new Stroke(regularLineBrush, lineWidth), PlotStyle.Line, "CoT-Daten");
+				
 				if (drawLines) {
 					AddPlot(new Stroke(brush20, lineWidthSecondary), PlotStyle.Line, "20%");
 					AddPlot(new Stroke(brush80, lineWidthSecondary), PlotStyle.Line, "80%");
 				}
 			}
 		}
-		
+		public override string DisplayName { get { return Name; } }
+		private double ValueOf(double percent) { return min + percent * (max - min); }
+
+		/// Returns a list of CoT values starting with the given *start* timestamp. The Count of the list is equal to the given *bars* + 1.
+		public List<double> GetRange(DateTime start, int bars, NinjaScriptBase ninjaScriptBase) {
+			List<double> value = new List<double>();
+			DateTime current = start;
+			value.Add(sCot.Calculate(ninjaScriptBase.Instrument.MasterInstrument.Name, current));
+			for (int i = 0; i < bars; i++) {
+				// find previous trading date
+				bool isHoliday;
+				do {
+					isHoliday = false;
+					current = current.AddDays(-1);
+					foreach (var pair in TradingHours.Holidays) {
+						Print(pair.Key.Date);
+						if (pair.Key.Date == current.Date) {
+							isHoliday = true;
+							break;
+						}
+					}
+				} while (current.DayOfWeek == DayOfWeek.Saturday || current.DayOfWeek == DayOfWeek.Sunday || isHoliday);
+				value.Add(sCot.Calculate(ninjaScriptBase.Instrument.MasterInstrument.Name, current));
+				//Print(current + " " + value.Last());
+			}
+			return value;
+		}
+
 		protected override void OnRender(ChartControl chartControl, ChartScale chartScale) {
 			base.OnRender(chartControl, chartScale);
 			if (SuriAddOn.license == License.None) SuriCommon.NoValidLicenseError(RenderTarget, ChartControl, ChartPanel);
@@ -117,10 +167,20 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		private int noNewCotSince;
 		protected override void OnBarUpdate() {
 			if (SuriAddOn.license == License.None) return;
-			int? index = suriCotHelper.Update(Time[0]);
-			if (index == null) return;
 			
-			Values[0][0] = 100 * suriCotHelper.dbCotData[index.Value].CommercialsShort / (double) suriCotHelper.dbCotData[index.Value].OpenInterest;
+			if (CotData.GetCotReportNames(Instrument.MasterInstrument.Name).Count == 0) {
+				Draw.TextFixed(this, "Error", Custom.Resource.CotDataError, TextPosition.BottomRight);
+				return;
+			}
+			if (!Globals.MarketDataOptions.DownloadCotData) {
+				Draw.TextFixed(this, "Warning", Custom.Resource.CotDataWarning, TextPosition.BottomRight);
+			}
+			if (CotData.IsDownloadingData) {
+				Draw.TextFixed(this, "Warning", Custom.Resource.CotDataStillDownloading, TextPosition.BottomRight);
+				return;
+			}
+
+			Value[0] = sCot.Calculate(Instrument.MasterInstrument.Name, Time[0]);
 			if (drawLines) {
 				SetMinMax();
 				if (CurrentBar >= days) {
@@ -138,8 +198,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				PlotBrushes[0][0] = noNewCotBrush;
 			}
 		}
-		private double ValueOf(double percent) { return min + percent * (max - min); }
-		
 		
 		private void SetMinMax() {
 			if (min > Value[0]) { min = Value[0]; minIndex = CurrentBar; }
@@ -156,44 +214,9 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				}
 			}
 		}
-		
+
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//
 
 #region NinjaScript generated code. Neither change nor remove.
 
@@ -201,19 +224,19 @@ namespace NinjaTrader.NinjaScript.Indicators
 {
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
-		private Suri.ComShortOpenInterest[] cacheComShortOpenInterest;
-		public Suri.ComShortOpenInterest ComShortOpenInterest(bool drawLines, int days)
+		private Suri.dev.DevCot[] cacheDevCot;
+		public Suri.dev.DevCot DevCot(SuriCotReportField reportField)
 		{
-			return ComShortOpenInterest(Input, drawLines, days);
+			return DevCot(Input, reportField);
 		}
 
-		public Suri.ComShortOpenInterest ComShortOpenInterest(ISeries<double> input, bool drawLines, int days)
+		public Suri.dev.DevCot DevCot(ISeries<double> input, SuriCotReportField reportField)
 		{
-			if (cacheComShortOpenInterest != null)
-				for (int idx = 0; idx < cacheComShortOpenInterest.Length; idx++)
-					if (cacheComShortOpenInterest[idx] != null && cacheComShortOpenInterest[idx].drawLines == drawLines && cacheComShortOpenInterest[idx].days == days && cacheComShortOpenInterest[idx].EqualsInput(input))
-						return cacheComShortOpenInterest[idx];
-			return CacheIndicator<Suri.ComShortOpenInterest>(new Suri.ComShortOpenInterest(){ drawLines = drawLines, days = days }, input, ref cacheComShortOpenInterest);
+			if (cacheDevCot != null)
+				for (int idx = 0; idx < cacheDevCot.Length; idx++)
+					if (cacheDevCot[idx] != null && cacheDevCot[idx].reportField == reportField && cacheDevCot[idx].EqualsInput(input))
+						return cacheDevCot[idx];
+			return CacheIndicator<Suri.dev.DevCot>(new Suri.dev.DevCot(){ reportField = reportField }, input, ref cacheDevCot);
 		}
 	}
 }
@@ -222,14 +245,14 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.ComShortOpenInterest ComShortOpenInterest(bool drawLines, int days)
+		public Indicators.Suri.dev.DevCot DevCot(SuriCotReportField reportField)
 		{
-			return indicator.ComShortOpenInterest(Input, drawLines, days);
+			return indicator.DevCot(Input, reportField);
 		}
 
-		public Indicators.Suri.ComShortOpenInterest ComShortOpenInterest(ISeries<double> input , bool drawLines, int days)
+		public Indicators.Suri.dev.DevCot DevCot(ISeries<double> input , SuriCotReportField reportField)
 		{
-			return indicator.ComShortOpenInterest(input, drawLines, days);
+			return indicator.DevCot(input, reportField);
 		}
 	}
 }
@@ -238,14 +261,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.ComShortOpenInterest ComShortOpenInterest(bool drawLines, int days)
+		public Indicators.Suri.dev.DevCot DevCot(SuriCotReportField reportField)
 		{
-			return indicator.ComShortOpenInterest(Input, drawLines, days);
+			return indicator.DevCot(Input, reportField);
 		}
 
-		public Indicators.Suri.ComShortOpenInterest ComShortOpenInterest(ISeries<double> input , bool drawLines, int days)
+		public Indicators.Suri.dev.DevCot DevCot(ISeries<double> input , SuriCotReportField reportField)
 		{
-			return indicator.ComShortOpenInterest(input, drawLines, days);
+			return indicator.DevCot(input, reportField);
 		}
 	}
 }

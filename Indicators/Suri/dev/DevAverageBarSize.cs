@@ -1,24 +1,22 @@
-﻿#region Using declarations
-using System;
+#region Using declarations
 using System.ComponentModel.DataAnnotations;
 using System.Windows.Media;
-using NinjaTrader.Cbi;
-using NinjaTrader.Custom.AddOns.SuriCommon;
-using NinjaTrader.Data;
 using NinjaTrader.Gui;
 using NinjaTrader.Gui.Chart;
-using NinjaTrader.NinjaScript.DrawingTools;
-using NinjaTrader.NinjaScript.Strategies;
-using Brush = System.Windows.Media.Brush;
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
-    public class DevDelayedCot : Indicator {
-        
+	public class AverageBarSize : Indicator {
+		[NinjaScriptProperty]
+		[Range(1, int.MaxValue)]
+		[Display(Name="Tage", Order=1, GroupName="Parameter")]
+		public int days
+		{ get; set; }
+
 		protected override void OnStateChange() {
 			if (State == State.SetDefaults) {
-				Description									= @"Delayed Cot";
-				Name										= "Delayed Cot";
+				Name						= "Average Bar Size";
+				Description					= "Berechnet die durchschnittliche Bargröße der letzten X Bars.";
 				Calculate									= Calculate.OnBarClose;
 				IsOverlay									= false;
 				DisplayInDataBox							= true;
@@ -29,13 +27,21 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 				ScaleJustification							= ScaleJustification.Right;
 				IsSuspendedWhileInactive					= true;
 				BarsRequiredToPlot							= 0;
+
+				days										= 30;
 			} else if (State == State.Configure) {
-				AddPlot(Brushes.Brown, "Delayed Cot");
+				AddPlot(new Stroke(Brushes.Gray, 2), PlotStyle.Line, Name);
 			}
 		}
-		public override string DisplayName { get { return Name; } }
-        
+		
 		protected override void OnBarUpdate() {
+			if (CurrentBar < days) return;
+			Value[0] = 0;
+			for (int barsAgo = 0; barsAgo < days; barsAgo++) {
+				Value[0] += High[barsAgo] - Low[barsAgo];
+			}
+			Value[0] /= days;
 		}
-    }
+
+	}
 }

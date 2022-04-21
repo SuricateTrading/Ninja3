@@ -15,7 +15,7 @@ using TextAlignment = System.Windows.TextAlignment;
 
 namespace NinjaTrader.Custom.AddOns.SuriCommon {
     public abstract class SuriCommon {
-        public static string version = "1.1.0";
+        public static string version = "1.3.0";
         public static string mostRecentVersion = "";
 
         private static Random _random = new Random();

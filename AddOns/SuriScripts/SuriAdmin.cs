@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using NinjaTrader.NinjaScript;
 using System.IO;
 using System.Linq;
-using Newtonsoft.Json;
+using System.Text.Json;
 using NinjaTrader.Cbi;
 using NinjaTrader.Data;
 using Instrument = NinjaTrader.Cbi.Instrument;
@@ -41,7 +41,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 								DateTime time = bars.Bars.GetTime(i);
 								
 								if (prevMonth != time.Month) {
-									File.WriteAllText(dbPath + @"vpintra\" + instrument.MasterInstrument.Name + "_" + (prevMonth == 12 ? time.Year-1 : time.Year) + "_" + prevMonth + ".vpintra", JsonConvert.SerializeObject(suriVpIntraData));
+									File.WriteAllText(dbPath + @"vpintra\" + instrument.MasterInstrument.Name + "_" + (prevMonth == 12 ? time.Year-1 : time.Year) + "_" + prevMonth + ".vpintra", JsonSerializer.Serialize(suriVpIntraData));
 									prevMonth = time.Month;
 									suriVpIntraData = new SuriVpIntraData();
 								}
@@ -53,7 +53,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 							suriVpIntraData.barData.Last().AddTick(bars.Bars.GetTime(i), bars.Bars.GetClose(i), bars.Bars.GetVolume(i), bars.Bars.GetAsk(i), bars.Bars.GetBid(i));
 						}
 						DateTime lastDate = bars.Bars.GetTime(bars.Bars.Count - 1);
-						File.WriteAllText(dbPath + @"vpintra\" + instrument.MasterInstrument.Name + "_" + lastDate.Year + "_" + lastDate.Month + ".vpintra", JsonConvert.SerializeObject(suriVpIntraData));
+						File.WriteAllText(dbPath + @"vpintra\" + instrument.MasterInstrument.Name + "_" + lastDate.Year + "_" + lastDate.Month + ".vpintra", JsonSerializer.Serialize(suriVpIntraData));
 						Code.Output.Process("Done", PrintTo.OutputTab1);
 					});
 				}
@@ -105,7 +105,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 									suriVpBigData.AddMissingValues();
 									SuriVpBigDataSerialized suriVp = FromVpBig(suriVpBigData);
 									suriVp.date = new DateTime(date.Year, 1, 1);
-									stream.Write(JsonConvert.SerializeObject(suriVp));
+									stream.Write(JsonSerializer.Serialize(suriVp));
 								}
 							}
 							
@@ -114,7 +114,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 									suriVpBigData.AddMissingValues();
 									SuriVpBigDataSerialized suriVp = FromVpBig(suriVpBigData);
 									suriVp.date = date.Date;
-									stream.Write(JsonConvert.SerializeObject(suriVp));
+									stream.Write(JsonSerializer.Serialize(suriVp));
 								}
 							}
 						}
@@ -128,7 +128,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 							suriVpBigData.AddMissingValues();
 							SuriVpBigDataSerialized suriVp = FromVpBig(suriVpBigData);
 							suriVp.date = now.Date;
-							stream.Write(JsonConvert.SerializeObject(suriVp));
+							stream.Write(JsonSerializer.Serialize(suriVp));
 						}
 					}
 

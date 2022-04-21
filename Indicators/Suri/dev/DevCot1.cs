@@ -10,12 +10,13 @@ using NinjaTrader.Gui;
 using NinjaTrader.Gui.Chart;
 using NinjaTrader.Gui.NinjaScript;
 using NinjaTrader.NinjaScript.DrawingTools;
+using NinjaTrader.NinjaScript.Indicators.Suri.dev;
 using Brush = System.Windows.Media.Brush;
 using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
 #endregion
 
-namespace NinjaTrader.NinjaScript.Indicators.Suri {
-	public sealed class SuriCot1 : Indicator {
+namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
+	public sealed class DevCot1 : Indicator {
 		private SuriCotHelper suriCotHelper;
 		private SuriSma suriSma;
 		private SessionIterator sessionIterator;
@@ -23,6 +24,13 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		private bool isCurrentlyASignal;
 
 		#region Indicator
+		[NinjaScriptProperty]
+		[Browsable(false)]
+		[Range(1, int.MaxValue)]
+		[Display(Name="Tage", Order=1, GroupName="Parameter")]
+		public int days
+		{ get; set; }
+		
 		//[NinjaScriptProperty]
 		[Browsable(false)]
 		//[Display(Name="Benutze Wochen (oder Tage)", Order=1, GroupName="Parameter")]
@@ -94,7 +102,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		protected override void OnStateChange() {
 			if (State == State.SetDefaults) {
 				Description									= @"CoT 1 Commercials Netto Oszillator 125 Tage";
-				Name										= "CoT 1";
+				Name										= "Dev CoT 1";
 				Calculate									= Calculate.OnBarClose;
 				IsOverlay									= false;
 				DisplayInDataBox							= true;
@@ -114,10 +122,11 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				noNewCotBrush								= Brushes.Orange;
 				lineWidth									= 4;
 				lineWidthSecondary							= 2;
+				days										= 125;
 				//useWeeks									= true;
 			} else if (State == State.Configure) {
-				suriSma = SuriSma(125);
-				suriCotHelper = new SuriCotHelper(Instrument, Bars.GetTime(0), Bars.LastBarTime.Date);
+				suriSma = SuriSma(days);
+				suriCotHelper = new SuriCotHelper(Instrument, Bars.GetTime(0).AddYears(-1), Bars.LastBarTime.Date);
 				AddPlot(new Stroke(regularLineBrush, lineWidth), PlotStyle.Line, "COT1");
 				AddPlot(new Stroke(shortBrush, lineWidthSecondary), PlotStyle.Line, "10%");
 				AddPlot(new Stroke(brush50Percent, lineWidthSecondary), PlotStyle.Line, "50%");
@@ -131,30 +140,75 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 	        MinValue = 0;
 	        MaxValue = 100;
         }
+        
         protected override void OnRender(ChartControl chartControl, ChartScale chartScale) {
+	        /*Print(IsInHitTest + " " + IsSelected);
+	        if (IsInHitTest && IsSelected) return;*/
 	        base.OnRender(chartControl, chartScale);
+	        //if (IsInHitTest && !IsSelected) return;
+	        
+	        /*chartScale.Properties.AutoScaleMarginType = AutoScaleMarginType.Percent;
+	        chartScale.Properties.AutoScaleMarginUpper = 30;
+	        chartScale.Properties.AutoScaleMarginLower = 30;*/
+	        
+	        /*RectangleF rect = new RectangleF {
+		        X = 0,
+		        Y = ChartPanel.Y,
+		        Width = 10000f,
+		        Height = 10000f,
+	        };
+	        Brush b = Brushes.Black.Clone();
+	        b.Opacity = 0.1;
+	        RenderTarget.FillRectangle(rect, b.ToDxBrush(RenderTarget));*/
+	        
 	        if (SuriAddOn.license == License.None) SuriCommon.NoValidLicenseError(RenderTarget, ChartControl, ChartPanel);
         }
+        
         #endregion
 
+        private bool hasStarted;
+        private int noNewCotSince;
+        
+        
 		protected override void OnBarUpdate() {
 			if (SuriAddOn.license == License.None) return;
 			if (!(Bars.BarsPeriod.BarsPeriodType == BarsPeriodType.Day && Bars.BarsPeriod.Value == 1 || Bars.BarsPeriod.BarsPeriodType == BarsPeriodType.Minute && Bars.BarsPeriod.Value == 1440)) {
 				Draw.TextFixed(this, "Warning", "CoT 1 ist nur für ein 1-Tages Chart oder 1440-Minuten Chart verfügbar.", TextPosition.Center);
 				return;
 			}
-			int? index = suriCotHelper.Update(Time[0]);
-			if (index == null) return;
-			Values[0][0] = suriCotHelper.dbCotData[index.Value].Cot1;
+			
 			Values[1][0] = 10;
 			Values[2][0] = 50;
 			Values[3][0] = 90;
-			
-			if (SuriAddOn.license != License.Basic) {
-				if (!isCurrentlyASignal || Value[0] < 90 && Value[0] > 10 ) {
-					isCurrentlyASignal = IsSignal();
+
+			int? index = suriCotHelper.Update(Time[0]);
+			if (index == null) {
+				if (noNewCotSince > 12) {
+					PlotBrushes[0][0] = noNewCotBrush;
 				}
-				if (isCurrentlyASignal) {
+				if (CurrentBar != 0 && !double.IsNaN(Value[1])) {
+					Value[0] = Value[1];
+				}
+				noNewCotSince++;
+				return;
+			}
+			double min = double.MaxValue;
+			double max = double.MinValue;
+			for (int i = 0; i < 26 && (suriCotHelper.dbCotData[index.Value].Date - suriCotHelper.dbCotData[index.Value - i].Date).Days/7.0 <= 26; i++) {
+				double v = suriCotHelper.dbCotData[index.Value - i].CommercialsNetto();
+				if (min > v) min = v;
+				if (max < v) max = v;
+			}
+			Value[0] = 100.0 * (suriCotHelper.dbCotData[index.Value].CommercialsNetto() - min) / (max - min);
+			
+			if (!isCurrentlyASignal || Value[0] < 90 && Value[0] > 10 ) {
+				isCurrentlyASignal = IsSignal();
+			}
+			
+			if (noNewCotSince > 12) {
+				PlotBrushes[0][0] = noNewCotBrush;
+			} else if (isCurrentlyASignal) {
+				if (SuriAddOn.license != License.Basic) {
 					if      (suriSma[0] > suriSma[1] && Value[0] >= 90) PlotBrushes[0][0] = longBrush;
 					else if (suriSma[0] < suriSma[1] && Value[0] <= 10) PlotBrushes[0][0] = shortBrush;
 					else PlotBrushes[0][0] = noSignalBrush;
@@ -164,11 +218,11 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		
 		private bool IsSignal() {
 			if (CurrentBar == 0) return false;
-			if (Value[0] < 90 && Value[0] > 10) return false;
-			if ((Value[1] > 10 && Value[0] <= 10 || Value[1] < 90 && Value[0] >= 90) == false) return false;
+			if ( Value[0] < 90 && Value[0] > 10 ) return false;
+			if ( (Value[1] > 10 && Value[0] <= 10 || Value[1] < 90 && Value[0] >= 90) == false ) return false;
 			
 			// check if we come from the other side
-			for (int i = 2; i <= CurrentBar-1; i++) {
+			for (int i = 2; i <= CurrentBar - 1; i++) {
 				if (Value[i] <= 10 && Value[i - 1] > 10 || Value[i] >= 90 && Value[i - 1] < 90) {
 					return IsValidDataPoint(i) && Math.Abs(Value[i] - Value[0]) >= 80;
 				}
@@ -201,9 +255,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 
 
 
-
-
-
 //
 
 #region NinjaScript generated code. Neither change nor remove.
@@ -212,19 +263,19 @@ namespace NinjaTrader.NinjaScript.Indicators
 {
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
-		private Suri.SuriCot1[] cacheSuriCot1;
-		public Suri.SuriCot1 SuriCot1()
+		private Suri.dev.DevCot1[] cacheDevCot1;
+		public Suri.dev.DevCot1 DevCot1(int days)
 		{
-			return SuriCot1(Input);
+			return DevCot1(Input, days);
 		}
 
-		public Suri.SuriCot1 SuriCot1(ISeries<double> input)
+		public Suri.dev.DevCot1 DevCot1(ISeries<double> input, int days)
 		{
-			if (cacheSuriCot1 != null)
-				for (int idx = 0; idx < cacheSuriCot1.Length; idx++)
-					if (cacheSuriCot1[idx] != null &&  cacheSuriCot1[idx].EqualsInput(input))
-						return cacheSuriCot1[idx];
-			return CacheIndicator<Suri.SuriCot1>(new Suri.SuriCot1(), input, ref cacheSuriCot1);
+			if (cacheDevCot1 != null)
+				for (int idx = 0; idx < cacheDevCot1.Length; idx++)
+					if (cacheDevCot1[idx] != null && cacheDevCot1[idx].days == days && cacheDevCot1[idx].EqualsInput(input))
+						return cacheDevCot1[idx];
+			return CacheIndicator<Suri.dev.DevCot1>(new Suri.dev.DevCot1(){ days = days }, input, ref cacheDevCot1);
 		}
 	}
 }
@@ -233,14 +284,14 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.SuriCot1 SuriCot1()
+		public Indicators.Suri.dev.DevCot1 DevCot1(int days)
 		{
-			return indicator.SuriCot1(Input);
+			return indicator.DevCot1(Input, days);
 		}
 
-		public Indicators.Suri.SuriCot1 SuriCot1(ISeries<double> input )
+		public Indicators.Suri.dev.DevCot1 DevCot1(ISeries<double> input , int days)
 		{
-			return indicator.SuriCot1(input);
+			return indicator.DevCot1(input, days);
 		}
 	}
 }
@@ -249,14 +300,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.SuriCot1 SuriCot1()
+		public Indicators.Suri.dev.DevCot1 DevCot1(int days)
 		{
-			return indicator.SuriCot1(Input);
+			return indicator.DevCot1(Input, days);
 		}
 
-		public Indicators.Suri.SuriCot1 SuriCot1(ISeries<double> input )
+		public Indicators.Suri.dev.DevCot1 DevCot1(ISeries<double> input , int days)
 		{
-			return indicator.SuriCot1(input);
+			return indicator.DevCot1(input, days);
 		}
 	}
 }

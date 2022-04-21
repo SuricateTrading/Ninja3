@@ -3,9 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Net;
+using System.Text.Json;
 using System.Web.Script.Serialization;
-using Newtonsoft.Json;
 using NinjaTrader.Core;
 using Instrument = NinjaTrader.Cbi.Instrument;
 #endregion
@@ -16,6 +17,11 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 
 	    public static Instrument GetInstrument(CommodityData commodity) {
 		    return Instrument.GetInstrument(commodity.shortName + Instrument.GetInstrument(commodity.shortName+" ##-##").MasterInstrument.GetNextExpiry(DateTime.Now).ToString(" MM-yy"));
+	    }
+	    public static Instrument GetInstrument(int index) {
+		    try {
+			    return GetInstrument(SuriStrings.data.ElementAt(index).Value);
+		    } catch (Exception) { return null; }
 	    }
 
 	    public static SuriVpIntraData GetVpIntra(Instrument instrument, DateTime start, DateTime end) {
@@ -30,7 +36,8 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			    // TODO: LOAD FROM SERVER ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
 			    
 			    string json = File.ReadAllText(@"C:\Users\Bo\Documents\NinjaTrader 8\db\suri\vpintra\" + instrument.MasterInstrument.Name + "_" + year + "_" + month + ".vpintra");
-			    SuriVpIntraData vpIntraMonth = JsonConvert.DeserializeObject<SuriVpIntraData>(json);
+			    SuriVpIntraData vpIntraMonth = JsonSerializer.Deserialize<SuriVpIntraData>(json);
+			    
 			    vpIntra.barData.AddRange(vpIntraMonth.barData);
 		    }
 		    vpIntra.barData.RemoveAll(bar => bar.dateTime.Date < start || bar.dateTime.Date > end);

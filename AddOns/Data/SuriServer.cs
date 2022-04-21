@@ -5,6 +5,8 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Web.Script.Serialization;
+using NinjaTrader.NinjaScript;
+
 #endregion
 
 namespace NinjaTrader.Custom.AddOns.SuriCommon {
@@ -47,8 +49,9 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
             return serializer.Deserialize<List<WasdeData>>(response);
         }
 		
-        public static List<DbCotData> GetCotData(int commId, string oldDate, string newDate, int cotId) {
-            string url = "https://cloud2.suricate-trading.de:8443/cot/get?commId=" + commId + "&oldDate=" + oldDate + "&newDate=" + newDate + "&cotId=" + cotId;
+        public static List<DbCotData> GetCotData(int commId, DateTime oldDate, DateTime newDate, int? cotId = null) {
+            string url = "https://cloud2.suricate-trading.de:8443/cot/get?commId=" + commId + "&oldDate=" + oldDate.Date.ToString("yyyy-MM-dd") + "&newDate=" + newDate.Date.ToString("yyyy-MM-dd");
+            if (cotId != null) url += "&cotId=" + cotId;
             string response = Post(url, true);
             var serializer = new JavaScriptSerializer();
             return serializer.Deserialize<List<DbCotData>>(response);
@@ -96,8 +99,25 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
     }
 
     public sealed class DbCotData {
-        public string Date {get; set;}	
+        public DateTime Date {get; set;}	
+        
         public int OpenInterest {get; set;}
+        public int NonCommercialsLong {get; set;}
+        public int NonCommercialsShort {get; set;}
+        public int NonCommercialsSpread {get; set;}
+        public int CommercialsLong {get; set;}
+        public int CommercialsShort {get; set;}
+        public int NonReportablesLong {get; set;}
+        public int NonReportablesShort {get; set;}
+        
+        public float Cot1 {get; set;}
+        public int Cot2Min {get; set;}
+        public int Cot2Mid {get; set;}
+        public int Cot2Max {get; set;}
+
+        public int CommercialsNetto() {
+            return CommercialsLong - CommercialsShort;
+        }
     }
 
     public sealed class Suri {
