@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Windows.Media;
 using NinjaTrader.Custom.AddOns.SuriCommon;
+using NinjaTrader.Custom.AddOns.SuriCommon.Vp;
 using NinjaTrader.Data;
 using NinjaTrader.Gui;
 using NinjaTrader.Gui.Chart;
@@ -34,12 +35,11 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				IsSuspendedWhileInactive					= true;
 				BarsRequiredToPlot							= 0;
 				
+				AddPlot(new Stroke(Brushes.CornflowerBlue, 2), PlotStyle.Bar, "Delta");
 				AddPlot(new Stroke(Brushes.CornflowerBlue, 2), PlotStyle.Bar, "Delta %");
 				AddPlot(new Stroke(Brushes.Gray, 1), PlotStyle.Line, "0");
 			} else if (State == State.DataLoaded && !Bars.IsTickReplay && SuriAddOn.license == License.Dev) {
-				//string json = File.ReadAllText(SuriVpSerialization.dbPath + @"\" + Instrument.MasterInstrument.Name + ".vpintra");
-				//suriVpIntraData = JsonSerializer.Deserialize<SuriVpIntraData>(json); // Newtonsoft.Json.JsonConvert.DeserializeObject<SuriVpIntraData>(json);
-				suriVpIntraData = SuriVpSerialization.GetVpIntra(Instrument, Bars.GetTime(0).Date, Bars.LastBarTime.Date);
+				suriVpIntraData = SuriIntraRepo.GetVpIntra(Instrument, Bars.GetTime(0).Date, Bars.LastBarTime.Date);
 			}
 		}
 		
@@ -60,11 +60,12 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			}
 			if (lastBarLoaded == suriVpIntraData.barData.Count) return;
 			
-			Values[0][0] = 100 * suriVpIntraData.barData[lastBarLoaded].delta / suriVpIntraData.barData[lastBarLoaded].totalVolume;
+			Values[0][0] = suriVpIntraData.barData[lastBarLoaded].delta;
+			Values[1][0] = 100 * suriVpIntraData.barData[lastBarLoaded].delta / suriVpIntraData.barData[lastBarLoaded].totalVolume;
 			if      (Values[0][0] > 0) PlotBrushes[0][0] = Brushes.Green;
 			else if (Values[0][0] < 0) PlotBrushes[0][0] = Brushes.Red;
 			else                       PlotBrushes[0][0] = Brushes.Yellow;
-			Values[1][0] = 0;
+			Values[2][0] = 0;
 		}
 		
 	}

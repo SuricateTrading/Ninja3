@@ -10,6 +10,7 @@ using System.Linq;
 using System.Xml.Serialization;
 using NinjaTrader.Cbi;
 using NinjaTrader.Custom.AddOns.SuriCommon;
+using NinjaTrader.Custom.AddOns.SuriCommon.Vp;
 using NinjaTrader.Gui.NinjaScript;
 using NinjaTrader.Gui.Tools;
 using SharpDX;
@@ -46,8 +47,9 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		[Display(Name = "End Datum", Order = 2, GroupName = "Parameter", Description = "Bis wann Daten geladen werden sollen.")]
 		public DateTime dateTo { get; set; }
 		
-		[Display(Name = "Breite", Order = 3, GroupName = "Parameter", Description = "Wenn leer, dann wird die Breite automatisch berechnet. Ansonsten werden die VP-Bars maximal so breit wie hier angegeben.")]
-		public int? maxWidth { get; set; }
+		[Range(10, 100)]
+		[Display(Name = "Breite in %", Order = 3, GroupName = "Parameter", Description = "Die Breite des Volumenprofils prozentual zur Chartbreite.")]
+		public int width { get; set; }
 		
 		[NinjaScriptProperty]
 		[Display(Name = "Dynamische Breite", Order = 4, GroupName = "Parameter", Description = "Wenn aktiv, dann wird die Breite des VPs ausgehend von dem breitesten aktuell sichtbaren Tick berechnet.\nWenn nicht aktiv, wird die Breite des VPs ausgehend vom Haupt-POC berechnet. \nDie Berechnung mit aktivierter Checkbox ist rechenintensiv! Schalte es aus, wenn es bei Dir hängt.")]
@@ -98,6 +100,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				BarsRequiredToPlot							= 0;
 				ZOrder										= 0;
 
+				width										= 60;
 				dynamicWidth								= false;
 				loadRecent									= true;
 				years										= 20;
@@ -110,7 +113,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			} else if (State == State.DataLoaded) {
 				dataLoaded = false;
 				if ((SuriAddOn.license == License.Premium || SuriAddOn.license == License.Dev) && loadRecent) {
-					suriVpBigData = SuriVpSerialization.GetVpBig(Instrument);
+					suriVpBigData = SuriBigRepo.GetVpBig(Instrument);
 					if (suriVpBigData != null) dataLoaded = true;
 				}
 				if (!dataLoaded) {
@@ -199,7 +202,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				if (suriVpBigData.tickData.ContainsKey(tick)) {
 					SuriVpTickData tickData = suriVpBigData.tickData[tick];
 
-					rect.Width = (float) ((maxWidth ?? ChartPanel.W * 0.6) * tickData.volume / (highestVisibleTick ?? suriVpBigData.pocVolume));
+					rect.Width = (float) ((ChartPanel.W * width / 100.0) * tickData.volume / (highestVisibleTick ?? suriVpBigData.pocVolume));
 					rect.Y += rect.Height;
 					rect.Height = tickData.isMainPoc ? Math.Max(1, rectHeight) : rectHeight;
 					

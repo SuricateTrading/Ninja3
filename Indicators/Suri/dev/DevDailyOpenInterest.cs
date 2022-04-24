@@ -1,18 +1,25 @@
 #region Using declarations
+
+using System.Collections.Generic;
+using System.Windows.Media;
 using NinjaTrader.Custom.AddOns.SuriCommon;
 using NinjaTrader.Data;
+using NinjaTrader.Gui;
 using NinjaTrader.Gui.Chart;
 using NinjaTrader.Gui.NinjaScript;
+using NinjaTrader.Gui.Tools;
 using NinjaTrader.NinjaScript.DrawingTools;
 using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
-	public sealed class SuriDailyOpenInterest : Indicator {
+	public sealed class DevDailyOpenInterest : Indicator {
+		private List<TkData> tkData;
+		private int nextIndex;
 		protected override void OnStateChange() {
 			if (State == State.SetDefaults) {
-				Description									= @"SuriDailyOpenInterest";
-				Name										= "SuriDailyOpenInterest";
+				Description									= @"DevDailyOpenInterest";
+				Name										= "DevDailyOpenInterest";
 				Calculate									= Calculate.OnBarClose;
 				IsOverlay									= false;
 				DisplayInDataBox							= true;
@@ -24,7 +31,19 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 				IsSuspendedWhileInactive					= true;
 				BarsRequiredToPlot							= 0;
 			} else if (State == State.Configure) {
-				//AddPlot(new Stroke(regularLineBrush, lineWidth), PlotStyle.Line, "COT1");
+				AddPlot(new Stroke(Brushes.CornflowerBlue, 2), PlotStyle.Line, "Volumen");
+				AddPlot(new Stroke(Brushes.Green, 2), PlotStyle.Line, "Open Interest");
+				//AddPlot(new Stroke(Brushes.DarkGray, 2), PlotStyle.Line, "Delta");
+				/*AddLine(new Stroke(Brushes.DimGray, 1), 10, "0");
+				AddLine(new Stroke(Brushes.DimGray, 1), 50, "50");
+				AddLine(new Stroke(Brushes.DimGray, 1), 90, "100");*/
+			} else if (State == State.DataLoaded) {
+				int? id = SuriStrings.GetId(Instrument);
+				if (id != null) {
+					string oldDate = Bars.GetTime(0).Date.ToString("yyyy-MM-dd");
+					string newDate = Bars.LastBarTime    .Date.ToString("yyyy-MM-dd");
+					tkData = SuriServer.GetTkData(id.Value, oldDate, newDate);
+				}
 			}
 		}
 		public override string DisplayName { get { return Name; } }
@@ -35,14 +54,21 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
         }
         
 		protected override void OnBarUpdate() {
-			if (SuriAddOn.license == License.None) return;
-			
-			if (!(Bars.BarsPeriod.BarsPeriodType == BarsPeriodType.Day && Bars.BarsPeriod.Value == 1 || Bars.BarsPeriod.BarsPeriodType == BarsPeriodType.Minute && Bars.BarsPeriod.Value == 1440)) {
-				Draw.TextFixed(this, "Warning", "CoT 1 ist nur für ein 1-Tages Chart oder 1440-Minuten Chart verfügbar.", TextPosition.Center);
-				return;
+			if (tkData.IsNullOrEmpty()) return;
+			for (int i = nextIndex; i < tkData.Count; i++) {
+				if (tkData[i].Date.Date.Equals(Time[0].Date)) {
+					Values[0][0] = tkData[i].Volume;
+					Values[1][0] = tkData[i].OpenInterest;
+					nextIndex = i;
+					return;
+				}
+				if (tkData[i].Date.Date > Time[0].Date) {
+					Values[0][0] = Values[0][1];
+					Values[1][0] = Values[1][1];
+					Values[2][0] = Values[2][1];
+					return;
+				}
 			}
-			
-			//..
 		}
 
     }
@@ -90,19 +116,19 @@ namespace NinjaTrader.NinjaScript.Indicators
 {
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
-		private Suri.dev.SuriDailyOpenInterest[] cacheSuriDailyOpenInterest;
-		public Suri.dev.SuriDailyOpenInterest SuriDailyOpenInterest()
+		private Suri.dev.DevDailyOpenInterest[] cacheDevDailyOpenInterest;
+		public Suri.dev.DevDailyOpenInterest DevDailyOpenInterest()
 		{
-			return SuriDailyOpenInterest(Input);
+			return DevDailyOpenInterest(Input);
 		}
 
-		public Suri.dev.SuriDailyOpenInterest SuriDailyOpenInterest(ISeries<double> input)
+		public Suri.dev.DevDailyOpenInterest DevDailyOpenInterest(ISeries<double> input)
 		{
-			if (cacheSuriDailyOpenInterest != null)
-				for (int idx = 0; idx < cacheSuriDailyOpenInterest.Length; idx++)
-					if (cacheSuriDailyOpenInterest[idx] != null &&  cacheSuriDailyOpenInterest[idx].EqualsInput(input))
-						return cacheSuriDailyOpenInterest[idx];
-			return CacheIndicator<Suri.dev.SuriDailyOpenInterest>(new Suri.dev.SuriDailyOpenInterest(), input, ref cacheSuriDailyOpenInterest);
+			if (cacheDevDailyOpenInterest != null)
+				for (int idx = 0; idx < cacheDevDailyOpenInterest.Length; idx++)
+					if (cacheDevDailyOpenInterest[idx] != null &&  cacheDevDailyOpenInterest[idx].EqualsInput(input))
+						return cacheDevDailyOpenInterest[idx];
+			return CacheIndicator<Suri.dev.DevDailyOpenInterest>(new Suri.dev.DevDailyOpenInterest(), input, ref cacheDevDailyOpenInterest);
 		}
 	}
 }
@@ -111,14 +137,14 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.dev.SuriDailyOpenInterest SuriDailyOpenInterest()
+		public Indicators.Suri.dev.DevDailyOpenInterest DevDailyOpenInterest()
 		{
-			return indicator.SuriDailyOpenInterest(Input);
+			return indicator.DevDailyOpenInterest(Input);
 		}
 
-		public Indicators.Suri.dev.SuriDailyOpenInterest SuriDailyOpenInterest(ISeries<double> input )
+		public Indicators.Suri.dev.DevDailyOpenInterest DevDailyOpenInterest(ISeries<double> input )
 		{
-			return indicator.SuriDailyOpenInterest(input);
+			return indicator.DevDailyOpenInterest(input);
 		}
 	}
 }
@@ -127,14 +153,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.dev.SuriDailyOpenInterest SuriDailyOpenInterest()
+		public Indicators.Suri.dev.DevDailyOpenInterest DevDailyOpenInterest()
 		{
-			return indicator.SuriDailyOpenInterest(Input);
+			return indicator.DevDailyOpenInterest(Input);
 		}
 
-		public Indicators.Suri.dev.SuriDailyOpenInterest SuriDailyOpenInterest(ISeries<double> input )
+		public Indicators.Suri.dev.DevDailyOpenInterest DevDailyOpenInterest(ISeries<double> input )
 		{
-			return indicator.SuriDailyOpenInterest(input);
+			return indicator.DevDailyOpenInterest(input);
 		}
 	}
 }

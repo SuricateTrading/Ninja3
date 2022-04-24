@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading;
-using System.Threading.Tasks;
 using NinjaTrader.Core;
 
 namespace NinjaTrader.Custom.AddOns.SuriCommon {
@@ -14,20 +13,22 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 
         static SuriCotRepo() {
             Directory.CreateDirectory(dbPath);
-            foreach (Commodity c in Enum.GetValues(typeof(Commodity)).Cast<Commodity>()) {
-                commState.Add(c, new Mutex());
+            foreach (var commodity in Enum.GetValues(typeof(Commodity)).Cast<Commodity>()) {
+                commState.Add(commodity, new Mutex());
             }
         }
         private static string GetPath(int commId, int year) { return dbPath + commId + "_" + year + ".cot"; }
 
-        public static async Task<List<DbCotData>> GetCotData(Commodity commodity, DateTime start, DateTime end) {
+        public static List<DbCotData> GetCotData(Commodity commodity, DateTime start, DateTime end) {
             commState[commodity].WaitOne();
-            List<DbCotData> data = new List<DbCotData>();
+            var data = new List<DbCotData>();
             try {
                 for (int year = start.Year; year <= end.Year; year++) {
                     int commId = SuriStrings.data[commodity].id;
                     string path = GetPath(commId, year);
-                    if (!File.Exists(path) || year == DateTime.Now.Year && (DateTime.Now - File.GetCreationTime(path)).Hours > 10 ) {
+                    TimeSpan fileAge = DateTime.Now - File.GetCreationTime(path);
+                    if (!File.Exists(path) || fileAge.TotalDays >= 10 || year == DateTime.Now.Year && fileAge.TotalHours >= 8 ) {
+                        // load cot file
                         List<DbCotData> part = SuriServer.GetCotData(commId, DateTime.Parse(year + "-01-01"), DateTime.Parse(year + "-12-31"));
                         File.WriteAllText(path, JsonSerializer.Serialize(part));
                     }

@@ -33,7 +33,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 			} else if (State == State.DataLoaded) {
 				Commodity? commodity = SuriStrings.GetComm(Instrument);
 				if (commodity != null) {
-					dbCotData = SuriCotRepo.GetCotData(commodity.Value, Bars.GetTime(0).Date, Bars.LastBarTime.Date).Result;
+					dbCotData = SuriCotRepo.GetCotData(commodity.Value, Bars.GetTime(0).Date, Bars.LastBarTime.Date);
 				}
 			}
 		}
@@ -43,9 +43,10 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 			for (int i = nextIndex; i < dbCotData.Count; i++) {
 				if (dbCotData[i].Date.Date.Equals(Time[0].Date)) {
 					Values[0][0] = dbCotData[i].CommercialsShort;
-					Values[1][0] = dbCotData[i].Cot2Min;
-					Values[2][0] = dbCotData[i].Cot2Mid;
-					Values[3][0] = dbCotData[i].Cot2Max;
+					// todo: ?? 0 entfernen
+					Values[1][0] = dbCotData[i].Cot2Min ?? 0;
+					Values[2][0] = dbCotData[i].Cot2Mid ?? 0;
+					Values[3][0] = dbCotData[i].Cot2Max ?? 0;
 					nextIndex = i;
 					hasStarted = true;
 					return;

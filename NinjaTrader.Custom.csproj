@@ -105,10 +105,12 @@
   <ItemGroup>
     <Compile Include="AddOns\Data\SuriCotHelper.cs" />
     <Compile Include="AddOns\Data\SuriCotRepo.cs" />
+    <Compile Include="AddOns\Data\SuriRepo.cs" />
     <Compile Include="AddOns\Data\SuriServer.cs" />
     <Compile Include="AddOns\Data\SuriStrings.cs" />
-    <Compile Include="AddOns\Data\SuriVpData.cs" />
-    <Compile Include="AddOns\Data\SuriVpSerialization.cs" />
+    <Compile Include="AddOns\Data\Vp\SuriBigRepo.cs" />
+    <Compile Include="AddOns\Data\Vp\SuriVpData.cs" />
+    <Compile Include="AddOns\Data\Vp\SuriIntraRepo.cs" />
     <Compile Include="AddOns\SuriCommon\DevStrategyInterface.cs" />
     <Compile Include="AddOns\SuriCommon\StrikingCalculator.cs" />
     <Compile Include="AddOns\SuriCommon\SuriCommon.cs" />
@@ -193,6 +195,7 @@
     <Compile Include="Indicators\%40VolumeUpDown.cs" />
     <Compile Include="Indicators\%40VolumeZones.cs" />
     <Compile Include="Indicators\%40Vortex.cs" />
+    <Compile Include="Indicators\Suri\dev\DevDailyOpenInterestQuandl.cs" />
     <Compile Include="Indicators\Suri\SuriBidAskDelta.cs" />
     <Compile Include="Indicators\Suri\dev\DevAverageBarSize.cs" />
     <Compile Include="Indicators\Suri\dev\DevAverageMovement.cs" />

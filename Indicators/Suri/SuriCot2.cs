@@ -98,7 +98,9 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				AddPlot(new Stroke(brush50Percent, lineWidthSecondary), PlotStyle.Line, "50%");
 				AddPlot(new Stroke(longBrush, lineWidthSecondary), PlotStyle.Line, "25%");
 				AddPlot(new Stroke(regularLineBrush, lineWidth), PlotStyle.Line, "Com Short");
-				suriCotHelper = new SuriCotHelper(Instrument, Bars.GetTime(0), Bars.LastBarTime.Date);
+				if (Bars.Count > 0) {
+					suriCotHelper = new SuriCotHelper(Instrument, Bars.GetTime(0), Bars.LastBarTime.Date);
+				}
 			}
 		}
 		public override string DisplayName { get { return Name; } }
@@ -109,13 +111,22 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		}
 		
 		protected override void OnBarUpdate() {
-			if (SuriAddOn.license == License.None) return;
+			if (SuriAddOn.license == License.None || suriCotHelper == null) return;
 			int? index = suriCotHelper.Update(Time[0]);
-			if (index == null) return;
-			Values[0][0] = suriCotHelper.dbCotData[index.Value].Cot2Max;
-			Values[1][0] = suriCotHelper.dbCotData[index.Value].Cot2Mid;
-			Values[2][0] = suriCotHelper.dbCotData[index.Value].Cot2Min;
-			Values[3][0] = suriCotHelper.dbCotData[index.Value].CommercialsShort;
+			if (index == null) {
+				if (CurrentBar > 10) {
+					Values[0][0] = Values[0][1];
+					Values[1][0] = Values[1][1];
+					Values[2][0] = Values[2][1];
+					Values[3][0] = Values[3][1];
+				}
+			} else {
+				if (suriCotHelper.dbCotData[index.Value].Cot2Max == null) return;
+				Values[0][0] = suriCotHelper.dbCotData[index.Value].Cot2Max.Value;
+				Values[1][0] = suriCotHelper.dbCotData[index.Value].Cot2Mid.Value;
+				Values[2][0] = suriCotHelper.dbCotData[index.Value].Cot2Min.Value;
+				Values[3][0] = suriCotHelper.dbCotData[index.Value].CommercialsShort;
+			}
 			Analyze();
 		}
 		

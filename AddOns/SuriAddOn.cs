@@ -131,6 +131,10 @@ namespace NinjaTrader.Gui.NinjaScript {
 					});
 				}*/
 			};
+
+			if (!SuriCommon.isUpToDate) {
+				NTMessageBoxSimple.Show(Window.GetWindow(window), "Hallo Trader,\nEs ist eine neue Version verfügbar!", "Neue Version", MessageBoxButton.OK, MessageBoxImage.None);
+			}
 			
 			cc.MainMenu.Add(startSuri);
 		}
@@ -310,7 +314,7 @@ namespace NinjaTrader.Gui.NinjaScript {
 			Button correlation			= new Button { Content = "Korrelation"			, Padding = new Thickness(15), Margin = new Thickness(5) };
 			Button downloadTicks		= new Button { Content = "Download Ticks"		, Padding = new Thickness(15), Margin = new Thickness(5) };
 			downloadVpBig.Click		+= (sender, args) => SuriAdmin.StoreVpBigToFile();
-			downloadVpIntra.Click	+= (sender, args) => SuriAdmin.LoadVpIntra();
+			downloadVpIntra.Click	+= (sender, args) => SuriAdmin.StoreVpIntra();
 			correlation.Click		+= (sender, args) => DevCorrelation.LoadData();
 			downloadTicks.Click		+= (sender, args) => SuriAdmin.StoreTickData();
 			

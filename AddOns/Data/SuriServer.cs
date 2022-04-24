@@ -85,9 +85,11 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
     }
     
     public sealed class TkData {
-        public DateTime Date {get; set;}	
+        public DateTime Date {get; set;}
         public int TkState {get; set;}
         public double Delta {get; set;}
+        public int Volume {get; set;}
+        public int OpenInterest {get; set;}
     }
     
     public sealed class WasdeData {
@@ -110,10 +112,10 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
         public int NonReportablesLong {get; set;}
         public int NonReportablesShort {get; set;}
         
-        public float Cot1 {get; set;}
-        public int Cot2Min {get; set;}
-        public int Cot2Mid {get; set;}
-        public int Cot2Max {get; set;}
+        public float? Cot1 {get; set;}
+        public int? Cot2Min {get; set;}
+        public int? Cot2Mid {get; set;}
+        public int? Cot2Max {get; set;}
 
         public int CommercialsNetto() {
             return CommercialsLong - CommercialsShort;

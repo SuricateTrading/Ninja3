@@ -12,7 +12,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
         public SuriCotHelper(Instrument instrument, DateTime start, DateTime end) {
             Commodity? commodity = SuriStrings.GetComm(instrument);
             if (commodity != null && start.Year > 1900 && end.Year > 1900) {
-                dbCotData = SuriCotRepo.GetCotData(commodity.Value, start, end).Result;
+                dbCotData = SuriCotRepo.GetCotData(commodity.Value, start, end);
             } else {
                 dbCotData = new List<DbCotData>();
             }

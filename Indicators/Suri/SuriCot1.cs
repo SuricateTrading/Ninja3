@@ -117,7 +117,9 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				//useWeeks									= true;
 			} else if (State == State.Configure) {
 				suriSma = SuriSma(125);
-				suriCotHelper = new SuriCotHelper(Instrument, Bars.GetTime(0), Bars.LastBarTime.Date);
+				if (Bars.Count > 0) {
+					suriCotHelper = new SuriCotHelper(Instrument, Bars.GetTime(0), Bars.LastBarTime.Date);
+				}
 				AddPlot(new Stroke(regularLineBrush, lineWidth), PlotStyle.Line, "COT1");
 				AddPlot(new Stroke(shortBrush, lineWidthSecondary), PlotStyle.Line, "10%");
 				AddPlot(new Stroke(brush50Percent, lineWidthSecondary), PlotStyle.Line, "50%");
@@ -138,14 +140,19 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
         #endregion
 
 		protected override void OnBarUpdate() {
-			if (SuriAddOn.license == License.None) return;
+			if (SuriAddOn.license == License.None || suriCotHelper == null) return;
 			if (!(Bars.BarsPeriod.BarsPeriodType == BarsPeriodType.Day && Bars.BarsPeriod.Value == 1 || Bars.BarsPeriod.BarsPeriodType == BarsPeriodType.Minute && Bars.BarsPeriod.Value == 1440)) {
 				Draw.TextFixed(this, "Warning", "CoT 1 ist nur für ein 1-Tages Chart oder 1440-Minuten Chart verfügbar.", TextPosition.Center);
 				return;
 			}
 			int? index = suriCotHelper.Update(Time[0]);
-			if (index == null) return;
-			Values[0][0] = suriCotHelper.dbCotData[index.Value].Cot1;
+			if (index == null) {
+				if (CurrentBar > 10) Value[0] = Value[1];
+			} else {
+				if (suriCotHelper.dbCotData[index.Value].Cot1 == null) return;
+				Values[0][0] = suriCotHelper.dbCotData[index.Value].Cot1.Value;
+			}
+
 			Values[1][0] = 10;
 			Values[2][0] = 50;
 			Values[3][0] = 90;

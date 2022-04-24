@@ -7,18 +7,19 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using NinjaTrader.Cbi;
+using NinjaTrader.Custom.AddOns.SuriCommon.Vp;
 using NinjaTrader.Data;
 using Instrument = NinjaTrader.Cbi.Instrument;
 #endregion
 
 namespace NinjaTrader.Custom.AddOns.SuriCommon {
-    public class SuriAdmin : SuriVpSerialization {
+    public class SuriAdmin {
         
-	    public static void LoadVpIntra() {
+	    public static void StoreVpIntra() {
 			try {
 				foreach (KeyValuePair<Commodity,CommodityData> entry in SuriStrings.data) {
 					if (entry.Key != Commodity.Soybeans) continue;
-					Instrument instrument = GetInstrument(entry.Value);
+					Instrument instrument = SuriRepo.GetInstrument(entry.Value);
 					DateTime from = DateTime.Parse("2018-01-01").Date;
 					DateTime to = DateTime.Now.AddDays(-1).Date;
 					Code.Output.Process("Loading " + instrument.MasterInstrument.Name + " from " + from + " to " + to, PrintTo.OutputTab1);
@@ -43,7 +44,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 								
 								if (prevMonth != time.Month) {
 									File.WriteAllText(
-										dbPath + @"vpintra\" + instrument.MasterInstrument.Name + "_" + (prevMonth == 12 ? time.Year-1 : time.Year) + "_" + prevMonth + ".vpintra",
+										SuriRepo.dbPath + @"vpintra\" + instrument.MasterInstrument.Name + "_" + (prevMonth == 12 ? time.Year-1 : time.Year) + "_" + prevMonth + ".vpintra",
 										//JsonSerializer.Serialize(suriVpIntraData)
 										Newtonsoft.Json.JsonConvert.SerializeObject(suriVpIntraData)
 									);
@@ -58,7 +59,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 							suriVpIntraData.barData.Last().AddTick(bars.Bars.GetTime(i), bars.Bars.GetClose(i), bars.Bars.GetVolume(i), bars.Bars.GetAsk(i), bars.Bars.GetBid(i));
 						}
 						DateTime lastDate = bars.Bars.GetTime(bars.Bars.Count - 1);
-						File.WriteAllText(dbPath + @"vpintra\" + instrument.MasterInstrument.Name + "_" + lastDate.Year + "_" + lastDate.Month + ".vpintra", Newtonsoft.Json.JsonConvert.SerializeObject(suriVpIntraData));
+						File.WriteAllText(SuriRepo.dbPath + @"vpintra\" + instrument.MasterInstrument.Name + "_" + lastDate.Year + "_" + lastDate.Month + ".vpintra", Newtonsoft.Json.JsonConvert.SerializeObject(suriVpIntraData));
 						Code.Output.Process("Done", PrintTo.OutputTab1);
 					});
 				}
@@ -79,7 +80,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			}
 
 			try {
-				Instrument instrument = GetInstrument(entry.Value);
+				Instrument instrument = SuriRepo.GetInstrument(entry.Value);
 				DateTime from = entry.Key != Commodity.Rice ? DateTime.Parse("2000-01-01") : DateTime.Parse("2015-01-01");
 				DateTime to = DateTime.Now.AddDays(-1).Date;
 				Code.Output.Process("Loading " + entry.Key + " from " + from + " to " + to, PrintTo.OutputTab1);
@@ -95,31 +96,31 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 					}
 					
 					SuriVpBigData suriVpBigData = new SuriVpBigData(instrument.MasterInstrument.TickSize);
-					string path = dbPath + @"vpbig\" + instrument.MasterInstrument.Name + @"\";
+					string path = SuriRepo.dbPath + @"vpbig\" + instrument.MasterInstrument.Name + @"\";
 					Directory.CreateDirectory(path);
 					for (int i = 0; i < bars.Bars.Count; i++) {
 						DateTime date = bars.Bars.GetTime(i).Date;
 						if (!onlyRecent && (date - bars.Bars.GetTime(0).Date).Days > 365 * 6) {
 							DateTime oldDate = bars.Bars.GetTime(i-1).Date;
-							int newWeek = Week(date);
-							int oldWeek = Week(oldDate);
+							int newWeek = SuriRepo.Week(date);
+							int oldWeek = SuriRepo.Week(oldDate);
 							if (oldWeek - newWeek > 1 && newWeek == 2) {
 								// this happens if a new year started and the first week of the year did not have a single trading day.
 								Code.Output.Process("Fehlende erste Woche bei " + instrument.MasterInstrument.Name + " " + date, PrintTo.OutputTab1);
-								using (StreamWriter stream = File.CreateText(GetVpBigFilePath(instrument, date.Year, 1))) {
+								using (StreamWriter stream = File.CreateText(SuriBigRepo.GetVpBigFilePath(instrument, date.Year, 1))) {
 									suriVpBigData.AddMissingValues();
-									SuriVpBigDataSerialized suriVp = FromVpBig(suriVpBigData);
+									SuriVpBigDataSerialized suriVp = SuriBigRepo.FromVpBig(suriVpBigData);
 									suriVp.date = new DateTime(date.Year, 1, 1);
-									stream.Write(JsonSerializer.Serialize(suriVp));
+									stream.Write(Newtonsoft.Json.JsonConvert.SerializeObject(suriVp));
 								}
 							}
 							
 							if (oldWeek < newWeek || oldWeek - newWeek > 1) {
-								using (StreamWriter stream = File.CreateText(GetVpBigFilePath(instrument, date.Year, newWeek))) {
+								using (StreamWriter stream = File.CreateText(SuriBigRepo.GetVpBigFilePath(instrument, date.Year, newWeek))) {
 									suriVpBigData.AddMissingValues();
-									SuriVpBigDataSerialized suriVp = FromVpBig(suriVpBigData);
+									SuriVpBigDataSerialized suriVp = SuriBigRepo.FromVpBig(suriVpBigData);
 									suriVp.date = date.Date;
-									stream.Write(JsonSerializer.Serialize(suriVp));
+									stream.Write(Newtonsoft.Json.JsonConvert.SerializeObject(suriVp));
 								}
 							}
 						}
@@ -129,11 +130,11 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 
 					DateTime now = DateTime.Now;
 					if (onlyRecent) {
-						using (StreamWriter stream = File.CreateText(GetVpBigFilePath(instrument))) {
+						using (StreamWriter stream = File.CreateText(SuriBigRepo.GetVpBigFilePath(instrument))) {
 							suriVpBigData.AddMissingValues();
-							SuriVpBigDataSerialized suriVp = FromVpBig(suriVpBigData);
+							SuriVpBigDataSerialized suriVp = SuriBigRepo.FromVpBig(suriVpBigData);
 							suriVp.date = now.Date;
-							stream.Write(JsonSerializer.Serialize(suriVp));
+							stream.Write(Newtonsoft.Json.JsonConvert.SerializeObject(suriVp));
 						}
 					}
 
@@ -147,18 +148,22 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			}
 		}
 
-	    public static void StoreTickData(int commodityIndex = 0) {
+	    public static void StoreTickData(int commodityIndex = 5) {
+		    //if (commodityIndex >= 5) return;
 		    KeyValuePair<Commodity, CommodityData> entry;
 		    try {
 			    entry = SuriStrings.data.ElementAt(commodityIndex);
-		    } catch (Exception) { return; }
+		    } catch (Exception) {
+			    Code.Output.Process("Could not find commodityIndex " + commodityIndex, PrintTo.OutputTab1);
+			    return;
+		    }
 		    /*if (entry.Key != Commodity.Soybeans) {
 			    StoreTickData(commodityIndex + 1);
 			    return;
 		    }*/
 			try {
-				Instrument instrument = GetInstrument(entry.Value);
-				DateTime from = DateTime.Parse("2022-01-01").Date;
+				Instrument instrument = SuriRepo.GetInstrument(entry.Value);
+				DateTime from = DateTime.Parse("2015-01-01").Date;
 				DateTime to = DateTime.Now.AddDays(-1).Date;
 				Code.Output.Process("Loading " + instrument.MasterInstrument.Name + " from " + from + " to " + to, PrintTo.OutputTab1);
 				
@@ -168,11 +173,11 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 					TradingHours = instrument.MasterInstrument.TradingHours,
 				}.Request((bars, errorCode, errorMessage) => {
 					if (errorCode != ErrorCode.NoError) return;
-					StreamWriter stream = File.CreateText(dbPath + @"ticks\" + instrument.MasterInstrument.Name + "_" + bars.Bars.GetTime(0).Year + "_" + bars.Bars.GetTime(0).Month + ".tickdata");
+					StreamWriter stream = File.CreateText(SuriRepo.dbPath + @"ticks\" + instrument.MasterInstrument.Name + "_" + bars.Bars.GetTime(0).Year + "_" + bars.Bars.GetTime(0).Month + ".tickdata");
 					for (int i = 0; i < bars.Bars.Count; i++) {
 						if (i > 0 && bars.Bars.GetTime(i).Month != bars.Bars.GetTime(i - 1).Month) {
 							stream.Close();
-							stream = File.CreateText(dbPath + @"ticks\" + instrument.MasterInstrument.Name + "_" + bars.Bars.GetTime(i).Year + "_" + bars.Bars.GetTime(i).Month + ".tickdata");
+							stream = File.CreateText(SuriRepo.dbPath + @"ticks\" + instrument.MasterInstrument.Name + "_" + bars.Bars.GetTime(i).Year + "_" + bars.Bars.GetTime(i).Month + ".tickdata");
 						}
 						if (Math.Abs(3.0 * bars.Bars.GetClose(i) - bars.Bars.GetLow(i) - bars.Bars.GetHigh(i) - bars.Bars.GetOpen(i)) > 0.0000000001) {
 							Code.Output.Process("ERROR", PrintTo.OutputTab1);

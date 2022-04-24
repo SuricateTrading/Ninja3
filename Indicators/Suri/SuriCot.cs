@@ -119,7 +119,9 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				reportField									= SuriCotReportField.CommercialLong;
 				days										= 1000;
 			} else if (State == State.Configure) {
-				suriCotHelper = new SuriCotHelper(Instrument, Bars.GetTime(0).Date, Bars.LastBarTime.Date);
+				if (Bars.Count > 0) {
+					suriCotHelper = new SuriCotHelper(Instrument, Bars.GetTime(0).Date, Bars.LastBarTime.Date);
+				}
 				AddPlot(new Stroke(regularLineBrush, lineWidth), PlotStyle.Line, "CoT-Daten");
 				if (drawLines) {
 					AddPlot(new Stroke(brush20, lineWidthSecondary), PlotStyle.Line, "20%");
@@ -135,13 +137,17 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		}
 
 		protected override void OnBarUpdate() {
-			if (SuriAddOn.license == License.None) return;
+			if (SuriAddOn.license == License.None || suriCotHelper == null) return;
 			int? index = suriCotHelper.Update(Time[0]);
-			if (index == null) return;
+			if (!suriCotHelper.hasStarted) return;
+			if (index == null) {
+				if (CurrentBar > 10) Value[0] = Value[1];
+			} else {
+				int? value = GetCotValue(reportField, index.Value);
+				if (value == null) return;
+				Value[0] = value.Value;
+			}
 
-			int? value = GetCotValue(reportField, index.Value);
-			if (value == null) return;
-			Value[0] = value.Value;
 			if (drawLines) {
 				SetMinMax();
 				if (CurrentBar >= days) {

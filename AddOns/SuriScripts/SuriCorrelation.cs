@@ -6,12 +6,13 @@ using System.IO;
 using System.Linq;
 using NinjaTrader.Cbi;
 using NinjaTrader.Core;
+using NinjaTrader.Custom.AddOns.SuriCommon.Vp;
 using NinjaTrader.Data;
 using Instrument = NinjaTrader.Cbi.Instrument;
 #endregion
 
 namespace NinjaTrader.Custom.AddOns.SuriCommon {
-    public class DevCorrelation : SuriVpSerialization {
+    public class DevCorrelation {
 	    private static readonly string filePath = Globals.UserDataDir + @"mining\";
 	    private static readonly string fileName = filePath + @"correlation.txt";
 	    private static readonly List<Commodity> commodities = Enum.GetValues(typeof(Commodity)).Cast<Commodity>().ToList();
@@ -25,7 +26,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 		    }
 		    Commodity commodity = commodities[index];
 		    try {
-			    Instrument instrument = GetInstrument(SuriStrings.data[commodity]);
+			    Instrument instrument = SuriRepo.GetInstrument(SuriStrings.data[commodity]);
 			    DateTime from = DateTime.Now.AddYears(-3).Date;
 			    DateTime to = DateTime.Now.AddDays(-1).Date;
 			    //Code.Output.Process("Loading " + commodity + " from " + from + " to " + to, PrintTo.OutputTab1);

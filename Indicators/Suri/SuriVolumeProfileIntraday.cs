@@ -10,9 +10,9 @@ using NinjaTrader.Gui;
 using NinjaTrader.Gui.Tools;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using System.IO;
 using System.Xml.Serialization;
 using NinjaTrader.Custom.AddOns.SuriCommon;
+using NinjaTrader.Custom.AddOns.SuriCommon.Vp;
 using NinjaTrader.Gui.NinjaScript;
 using Brush = System.Windows.Media.Brush;
 using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
@@ -137,11 +137,16 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				//string json = File.ReadAllText(SuriVpSerialization.dbPath + @"\" + Instrument.MasterInstrument.Name + ".vpintra");
 				//suriVpIntraData = Newtonsoft.Json.JsonConvert.DeserializeObject<SuriVpIntraData>(json);
 				
-				suriVpIntraData = SuriVpSerialization.GetVpIntra(Instrument, Bars.GetTime(0).Date, Bars.LastBarTime.Date);
+				suriVpIntraData = SuriIntraRepo.GetVpIntra(Instrument, Bars.GetTime(0).Date, Bars.LastBarTime.Date);
 				ForceRefresh();
 				//if (suriVpIntraData != null) dataLoaded = true;
 			}
 		}
+
+		/*protected override void OnMarketDepth(MarketDepthEventArgs e) {
+			base.OnMarketDepth(e);
+			//e.
+		}*/
 
 		protected override void OnMarketData(MarketDataEventArgs e) {
 			if (SuriAddOn.license == License.None || Bars.Count <= 0 || !Bars.IsTickReplay) return;

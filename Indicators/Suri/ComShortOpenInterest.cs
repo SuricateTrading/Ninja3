@@ -100,7 +100,9 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				lineWidthSecondary							= 1;
 				days										= 1000;
 			} else if (State == State.Configure) {
-				suriCotHelper = new SuriCotHelper(Instrument, Bars.GetTime(0), Bars.LastBarTime.Date);
+				if (Bars.Count > 0) {
+					suriCotHelper = new SuriCotHelper(Instrument, Bars.GetTime(0), Bars.LastBarTime.Date);
+				}
 				AddPlot(new Stroke(regularLineBrush, lineWidth), PlotStyle.Line, "Com Short / OI in %");
 				if (drawLines) {
 					AddPlot(new Stroke(brush20, lineWidthSecondary), PlotStyle.Line, "20%");
@@ -116,11 +118,14 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 
 		private int noNewCotSince;
 		protected override void OnBarUpdate() {
-			if (SuriAddOn.license == License.None) return;
+			if (SuriAddOn.license == License.None || suriCotHelper == null) return;
 			int? index = suriCotHelper.Update(Time[0]);
-			if (index == null) return;
-			
-			Values[0][0] = 100 * suriCotHelper.dbCotData[index.Value].CommercialsShort / (double) suriCotHelper.dbCotData[index.Value].OpenInterest;
+			if (index == null) {
+				if (CurrentBar > 10) Value[0] = Value[1];
+			} else {
+				Values[0][0] = 100 * suriCotHelper.dbCotData[index.Value].CommercialsShort / (double) suriCotHelper.dbCotData[index.Value].OpenInterest;
+			}
+
 			if (drawLines) {
 				SetMinMax();
 				if (CurrentBar >= days) {
