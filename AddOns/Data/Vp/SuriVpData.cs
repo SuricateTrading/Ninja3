@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 using NinjaTrader.Data;
-using NinjaTrader.NinjaScript;
 
 namespace NinjaTrader.Custom.AddOns.SuriCommon {
 	public sealed class SuriVpBox {

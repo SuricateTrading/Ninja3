@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using NinjaTrader.NinjaScript;
 using System.IO;
 using System.Linq;
-using System.Text.Json;
-using System.Threading;
 using NinjaTrader.Cbi;
 using NinjaTrader.Custom.AddOns.SuriCommon.Vp;
 using NinjaTrader.Data;
@@ -15,54 +13,57 @@ using Instrument = NinjaTrader.Cbi.Instrument;
 namespace NinjaTrader.Custom.AddOns.SuriCommon {
     public class SuriAdmin {
         
-	    public static void StoreVpIntra() {
+	    public static void StoreVpIntra(int commodityIndex = 23) {
+		    KeyValuePair<Commodity, CommodityData> entry;
+		    try {
+			    entry = SuriStrings.data.ElementAt(commodityIndex);
+		    } catch (Exception) {
+			    Code.Output.Process("Could not find commodityIndex " + commodityIndex, PrintTo.OutputTab1);
+			    return;
+		    }
 			try {
-				foreach (KeyValuePair<Commodity,CommodityData> entry in SuriStrings.data) {
-					if (entry.Key != Commodity.Soybeans) continue;
-					Instrument instrument = SuriRepo.GetInstrument(entry.Value);
-					DateTime from = DateTime.Parse("2018-01-01").Date;
-					DateTime to = DateTime.Now.AddDays(-1).Date;
-					Code.Output.Process("Loading " + instrument.MasterInstrument.Name + " from " + from + " to " + to, PrintTo.OutputTab1);
+				Instrument instrument = SuriRepo.GetInstrument(entry.Value);
+				DateTime from = DateTime.Parse("2018-01-01").Date;
+				DateTime to = DateTime.Now.AddDays(-1).Date;
+				Code.Output.Process("Loading " + instrument.MasterInstrument.Name + " from " + from + " to " + to, PrintTo.OutputTab1);
+				
+				new BarsRequest(instrument, from, to) {
+					MergePolicy = MergePolicy.MergeBackAdjusted,
+					BarsPeriod = new BarsPeriod {BarsPeriodType = BarsPeriodType.Tick, Value = 1},
+					TradingHours = instrument.MasterInstrument.TradingHours,
+				}.Request((bars, errorCode, errorMessage) => {
+					if (errorCode != ErrorCode.NoError) return;
+					SessionIterator session = new SessionIterator(bars.Bars);
 					
-					new BarsRequest(instrument, from, to) {
-						MergePolicy = MergePolicy.MergeBackAdjusted,
-						BarsPeriod = new BarsPeriod {BarsPeriodType = BarsPeriodType.Tick, Value = 1},
-						TradingHours = instrument.MasterInstrument.TradingHours,
-						/*IsResetOnNewTradingDay = true,
-						LookupPolicy = LookupPolicies.Repository,
-						IsDividendAdjusted = true,
-						IsSplitAdjusted = true,*/
-					}.Request((bars, errorCode, errorMessage) => {
-						if (errorCode != ErrorCode.NoError) return;
-						SessionIterator session = new SessionIterator(bars.Bars);
-						
-						SuriVpIntraData suriVpIntraData = new SuriVpIntraData();
-						int prevMonth = bars.Bars.GetTime(0).Month;
-						for (int i = 0; i < bars.Bars.Count; i++) {
-							if (bars.Bars.IsFirstBarOfSessionByIndex(i)) {
-								DateTime time = bars.Bars.GetTime(i);
-								
-								if (prevMonth != time.Month) {
-									File.WriteAllText(
-										SuriRepo.dbPath + @"vpintra\" + instrument.MasterInstrument.Name + "_" + (prevMonth == 12 ? time.Year-1 : time.Year) + "_" + prevMonth + ".vpintra",
-										//JsonSerializer.Serialize(suriVpIntraData)
-										Newtonsoft.Json.JsonConvert.SerializeObject(suriVpIntraData)
-									);
-									prevMonth = time.Month;
-									suriVpIntraData = new SuriVpIntraData();
-								}
-								
-								session.GetNextSession(time, true);
-								DateTime closeTime = session.ActualSessionEnd;
-								suriVpIntraData.barData.Add(new SuriVpBarData(instrument.MasterInstrument.TickSize, closeTime.Date));
+					SuriVpIntraData suriVpIntraData = new SuriVpIntraData();
+					int prevMonth = bars.Bars.GetTime(0).Month;
+					for (int i = 0; i < bars.Bars.Count; i++) {
+						if (bars.Bars.IsFirstBarOfSessionByIndex(i)) {
+							DateTime time = bars.Bars.GetTime(i);
+							
+							if (prevMonth != time.Month) {
+								File.WriteAllText(
+									SuriRepo.dbPath + @"vpintra\" + entry.Value.id + "_" + (prevMonth == 12 ? time.Year-1 : time.Year) + "_" + prevMonth + ".vpintra",
+									Newtonsoft.Json.JsonConvert.SerializeObject(suriVpIntraData)
+								);
+								prevMonth = time.Month;
+								suriVpIntraData = new SuriVpIntraData();
 							}
-							suriVpIntraData.barData.Last().AddTick(bars.Bars.GetTime(i), bars.Bars.GetClose(i), bars.Bars.GetVolume(i), bars.Bars.GetAsk(i), bars.Bars.GetBid(i));
+							
+							session.GetNextSession(time, true);
+							DateTime closeTime = session.ActualSessionEnd;
+							suriVpIntraData.barData.Add(new SuriVpBarData(instrument.MasterInstrument.TickSize, closeTime.Date));
 						}
-						DateTime lastDate = bars.Bars.GetTime(bars.Bars.Count - 1);
-						File.WriteAllText(SuriRepo.dbPath + @"vpintra\" + instrument.MasterInstrument.Name + "_" + lastDate.Year + "_" + lastDate.Month + ".vpintra", Newtonsoft.Json.JsonConvert.SerializeObject(suriVpIntraData));
-						Code.Output.Process("Done", PrintTo.OutputTab1);
-					});
-				}
+						suriVpIntraData.barData.Last().AddTick(bars.Bars.GetTime(i), bars.Bars.GetClose(i), bars.Bars.GetVolume(i), bars.Bars.GetAsk(i), bars.Bars.GetBid(i));
+					}
+					DateTime lastDate = bars.Bars.GetTime(bars.Bars.Count - 1);
+					File.WriteAllText(
+						SuriRepo.dbPath + @"vpintra\" + entry.Value.id + "_" + lastDate.Year + "_" + lastDate.Month + ".vpintra",
+						Newtonsoft.Json.JsonConvert.SerializeObject(suriVpIntraData)
+					);
+					Code.Output.Process("Done", PrintTo.OutputTab1);
+					StoreVpIntra(commodityIndex + 1);
+				});
 			} catch (Exception e) {
 				Code.Output.Process(e.ToString(), PrintTo.OutputTab1);
 			}
@@ -81,7 +82,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 
 			try {
 				Instrument instrument = SuriRepo.GetInstrument(entry.Value);
-				DateTime from = entry.Key != Commodity.Rice ? DateTime.Parse("2000-01-01") : DateTime.Parse("2015-01-01");
+				DateTime from = entry.Key != Commodity.Rice ? DateTime.Parse("2000-01-01") : DateTime.Parse("2012-01-01");
 				DateTime to = DateTime.Now.AddDays(-1).Date;
 				Code.Output.Process("Loading " + entry.Key + " from " + from + " to " + to, PrintTo.OutputTab1);
 				
@@ -148,7 +149,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			}
 		}
 
-	    public static void StoreTickData(int commodityIndex = 5) {
+	    public static void StoreTickData(int commodityIndex = 0) {
 		    //if (commodityIndex >= 5) return;
 		    KeyValuePair<Commodity, CommodityData> entry;
 		    try {

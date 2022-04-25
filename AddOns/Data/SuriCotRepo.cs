@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.Json;
 using System.Threading;
 using NinjaTrader.Core;
 
@@ -30,9 +29,9 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
                     if (!File.Exists(path) || fileAge.TotalDays >= 10 || year == DateTime.Now.Year && fileAge.TotalHours >= 8 ) {
                         // load cot file
                         List<DbCotData> part = SuriServer.GetCotData(commId, DateTime.Parse(year + "-01-01"), DateTime.Parse(year + "-12-31"));
-                        File.WriteAllText(path, JsonSerializer.Serialize(part));
+                        File.WriteAllText(path, Newtonsoft.Json.JsonConvert.SerializeObject(part));
                     }
-                    data.AddRange(JsonSerializer.Deserialize<List<DbCotData>>(File.ReadAllText(path)));
+                    data.AddRange(Newtonsoft.Json.JsonConvert.DeserializeObject<List<DbCotData>>(File.ReadAllText(path)));
                 }
             } finally {
                 commState[commodity].ReleaseMutex();

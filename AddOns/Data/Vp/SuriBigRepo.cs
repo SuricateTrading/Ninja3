@@ -10,6 +10,10 @@ using Instrument = NinjaTrader.Cbi.Instrument;
 namespace NinjaTrader.Custom.AddOns.SuriCommon.Vp {
     public class SuriBigRepo : SuriRepo {
         
+	    static SuriBigRepo() {
+		    Directory.CreateDirectory(dbPath + @"vpbig/");
+	    }
+	    
 		public static SuriVpBigData GetVpBig(Instrument instrument, DateTime? date = null) {
 			int? year = null, week = null;
 			if (date != null) {
@@ -18,14 +22,8 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon.Vp {
 			}
 			
 			string fileName = GetVpBigFilePath(instrument, year, week);
-			bool updateVpFile = true;
-			if (File.Exists(fileName)) {
-				TimeSpan timeSpan = DateTime.Now - File.GetCreationTime(fileName);
-				if (timeSpan.TotalDays <= 2 || timeSpan.TotalDays <= 1 && DateTime.Now.DayOfWeek == DayOfWeek.Saturday) {
-					updateVpFile = false;
-				}
-			}
-			if (updateVpFile) {
+			if (!File.Exists(fileName) || (DateTime.Now - File.GetCreationTime(fileName)).TotalDays >= 2) {
+				// update vp
 				string serverFile = @"https://app.suricate-trading.de/ninja/vpbig/" + instrument.MasterInstrument.Name + ".vpbig";
 				try {
 					using (WebClient webClient = new WebClient()) {

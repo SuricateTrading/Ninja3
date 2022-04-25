@@ -1,8 +1,5 @@
 #region Using declarations
-
-using System.IO;
 using System.Linq;
-using System.Text.Json;
 using System.Windows.Media;
 using NinjaTrader.Custom.AddOns.SuriCommon;
 using NinjaTrader.Custom.AddOns.SuriCommon.Vp;

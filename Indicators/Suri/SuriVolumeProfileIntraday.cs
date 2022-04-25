@@ -133,13 +133,9 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				textFormat					= font.ToDirectWriteTextFormat();
 				textFormat.TextAlignment	= SharpDX.DirectWrite.TextAlignment.Leading;
 				textFormat.WordWrapping		= SharpDX.DirectWrite.WordWrapping.NoWrap;
-			} else if (State == State.DataLoaded && !Bars.IsTickReplay && SuriAddOn.license == License.Dev) {
-				//string json = File.ReadAllText(SuriVpSerialization.dbPath + @"\" + Instrument.MasterInstrument.Name + ".vpintra");
-				//suriVpIntraData = Newtonsoft.Json.JsonConvert.DeserializeObject<SuriVpIntraData>(json);
-				
+			} else if (State == State.DataLoaded && !Bars.IsTickReplay && SuriAddOn.license == License.Dev && Bars.BarsPeriod.BarsPeriodType == BarsPeriodType.Minute && Bars.BarsPeriod.Value == 1440) {
 				suriVpIntraData = SuriIntraRepo.GetVpIntra(Instrument, Bars.GetTime(0).Date, Bars.LastBarTime.Date);
 				ForceRefresh();
-				//if (suriVpIntraData != null) dataLoaded = true;
 			}
 		}
 
@@ -149,17 +145,12 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		}*/
 
 		protected override void OnMarketData(MarketDataEventArgs e) {
-			if (SuriAddOn.license == License.None || Bars.Count <= 0 || !Bars.IsTickReplay) return;
+			if (SuriAddOn.license == License.None || Bars.Count <= 0 || !Bars.IsTickReplay || e.MarketDataType != MarketDataType.Last) return;
 			if (lastBar != CurrentBar) {
 				lastBar = CurrentBar;
 				suriVpIntraData.barData.Add(new SuriVpBarData(TickSize, e.Time));
-				/*Print("");
-				Print("");
-				Print("");*/
 			}
-			//Print(e.Time);
 			suriVpIntraData.barData.Last().AddTick(e);
-			//Print(e.Time + "\t\t" + e.Price + "\t\t" + e.Ask + "\t\t" + e.Bid + "\t\t" + e.Volume + "\t\t" + e.Last);
 		}
 		
 		public override void OnRenderTargetChanged() {
