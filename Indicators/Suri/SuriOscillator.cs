@@ -14,7 +14,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			if (State == State.SetDefaults) {
 				Description									= @"";
 				Name										= "Oszillator";
-				Calculate									= Calculate.OnBarClose;
+				Calculate									= Calculate.OnPriceChange;
 				IsOverlay									= false;
 				DisplayInDataBox							= true;
 				DrawOnPricePanel							= true;

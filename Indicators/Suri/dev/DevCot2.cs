@@ -112,7 +112,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 				noNewCotBrush								= Brushes.Orange;
 				lineWidth									= 4;
 				lineWidthSecondary							= 2;
-				days										= 1000;
+				days										= 500;
 				suriCotData = DevCot(SuriCotReportField.CommercialShort);
 			} else if (State == State.Configure) {
 				AddPlot(new Stroke(shortBrush, lineWidthSecondary), PlotStyle.Line, "75%");

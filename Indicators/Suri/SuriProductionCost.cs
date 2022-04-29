@@ -76,7 +76,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			if (State == State.SetDefaults) {
 				Description									= @"";
 				Name										= "Produktionskosten";
-				Calculate									= Calculate.OnBarClose;
+				Calculate									= Calculate.OnPriceChange;
 				IsOverlay									= true;
 				DisplayInDataBox							= true;
 				DrawOnPricePanel							= true;

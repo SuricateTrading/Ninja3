@@ -48,13 +48,21 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			get { return Serialize.BrushToString(notEnoughDataBrush); }
 			set { notEnoughDataBrush = Serialize.StringToBrush(value); }
 		}
+		[XmlIgnore]
+		[Display(Name = "90% Linie", Order = 2, GroupName = "Parameter")]
+		public Brush line90Brush { get; set; }
+		[Browsable(false)]
+		public string line90BrushSerialize {
+			get { return Serialize.BrushToString(line90Brush); }
+			set { line90Brush = Serialize.StringToBrush(value); }
+		}
 		#endregion
 		
 		protected override void OnStateChange() {
 			if (State == State.SetDefaults) {
 				Description									= @"";
 				Name										= "Mega";
-				Calculate									= Calculate.OnBarClose;
+				Calculate									= Calculate.OnPriceChange;
 				IsOverlay									= false;
 				DisplayInDataBox							= true;
 				DrawOnPricePanel							= true;
@@ -63,11 +71,11 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				PaintPriceMarkers							= true;
 				ScaleJustification							= Gui.Chart.ScaleJustification.Right;
 				IsSuspendedWhileInactive					= true;
-				Calculate									= Calculate.OnEachTick;
 				BarsRequiredToPlot							= 0;
 				barBrush									= Brushes.RoyalBlue;
 				signalBrush									= Brushes.Yellow;
 				notEnoughDataBrush							= Brushes.Gray;
+				line90Brush									= Brushes.Gray;
 				days										= 125;
 			} else if (State == State.Configure) {
 				volume = SuriVolume(days);
@@ -75,6 +83,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				AddPlot(new Stroke(barBrush, 2), PlotStyle.Bar, "Mega");
 				AddPlot(new Stroke(barBrush, 0), PlotStyle.Bar, "Range");
 				AddPlot(new Stroke(barBrush, 0), PlotStyle.Bar, "Volumen");
+				AddPlot(new Stroke(line90Brush, 1), PlotStyle.Line, "90%");
 			}
 		}
 
@@ -95,6 +104,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			Values[1][0] = 100 * range.Values[0][0] / range.Values[1][0];
 			Values[2][0] = 100 * volume.Values[0][0] / volume.Values[1][0];
 			Value[0] = Math.Max(Values[1][0], Values[2][0]);
+			Values[3][0] = 90;
 			
 			if (CurrentBar < days) {
 				PlotBrushes[0][0] = notEnoughDataBrush;

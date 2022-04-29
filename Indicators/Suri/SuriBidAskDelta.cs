@@ -1,5 +1,6 @@
 #region Using declarations
 using System.Linq;
+using System.Linq.Expressions;
 using System.Windows.Media;
 using NinjaTrader.Custom.AddOns.SuriCommon;
 using NinjaTrader.Custom.AddOns.SuriCommon.Vp;
@@ -14,7 +15,7 @@ using NinjaTrader.Gui.Tools;
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
 	public class SuriBidAskDelta : Indicator {
 		private SuriVpIntraData suriVpIntraData = new SuriVpIntraData();
-		private int lastBarStored;
+		private int lastBarStored = int.MinValue;
 		private int lastBarLoaded;
 		
 		protected override void OnStateChange() {
@@ -35,13 +36,22 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				AddPlot(new Stroke(Brushes.CornflowerBlue, 2), PlotStyle.Bar, "Delta");
 				AddPlot(new Stroke(Brushes.CornflowerBlue, 2), PlotStyle.Bar, "Delta %");
 				AddPlot(new Stroke(Brushes.Gray, 1), PlotStyle.Line, "0");
-			} else if (State == State.DataLoaded && !Bars.IsTickReplay && SuriAddOn.license == License.Dev) {
-				suriVpIntraData = SuriIntraRepo.GetVpIntra(Instrument, Bars.GetTime(0).Date, Bars.LastBarTime.Date);
+			} else if (State == State.DataLoaded && !Bars.IsTickReplay &&
+			           (SuriAddOn.license == License.Premium || SuriAddOn.license == License.Dev) &&
+			           Bars.BarsPeriod.BarsPeriodType == BarsPeriodType.Minute && Bars.BarsPeriod.Value == 1440
+			) {
+				SuriIntraRepo.GetVpIntra(Instrument, Bars.GetTime(0).Date, Bars.LastBarTime.Date, data => {
+					suriVpIntraData = data;
+					for (int i = CurrentBar - 1; i >= 0; i--) {
+						UpdateData(i);
+					}
+					ForceRefresh();
+				});
 			}
 		}
 		
 		protected override void OnMarketData(MarketDataEventArgs e) {
-			if (SuriAddOn.license == License.None || Bars.Count <= 0 || !Bars.IsTickReplay) return;
+			if (SuriAddOn.license == License.None || Bars.Count <= 0 || !Bars.IsTickReplay || e.MarketDataType != MarketDataType.Last) return;
 			if (lastBarStored != CurrentBar) {
 				lastBarStored = CurrentBar;
 				suriVpIntraData.barData.Add(new SuriVpBarData(TickSize, e.Time));
@@ -49,20 +59,20 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			suriVpIntraData.barData.Last().AddTick(e);
 		}
 		
-		protected override void OnBarUpdate() {
+		
+		private void UpdateData(int barsAgo) {
 			if (suriVpIntraData == null || suriVpIntraData.barData.IsNullOrEmpty()) return;
-			
-			for (; lastBarLoaded < suriVpIntraData.barData.Count; lastBarLoaded++) {
-				if (suriVpIntraData.barData[lastBarLoaded].dateTime.Date == Time[0].Date) break;
-			}
-			if (lastBarLoaded == suriVpIntraData.barData.Count) return;
-			
-			Values[0][0] = suriVpIntraData.barData[lastBarLoaded].delta;
-			Values[1][0] = 100 * suriVpIntraData.barData[lastBarLoaded].delta / suriVpIntraData.barData[lastBarLoaded].totalVolume;
-			if      (Values[0][0] > 0) PlotBrushes[0][0] = Brushes.Green;
-			else if (Values[0][0] < 0) PlotBrushes[0][0] = Brushes.Red;
-			else                       PlotBrushes[0][0] = Brushes.Yellow;
-			Values[2][0] = 0;
+			Values[0][barsAgo] = suriVpIntraData.barData[lastBarLoaded].delta;
+			Values[1][barsAgo] = 100 * suriVpIntraData.barData[lastBarLoaded].delta / suriVpIntraData.barData[lastBarLoaded].totalVolume;
+			Values[2][barsAgo] = 0;
+			if      (Values[0][barsAgo] > 0) PlotBrushes[0][barsAgo] = Brushes.Green;
+			else if (Values[0][barsAgo] < 0) PlotBrushes[0][barsAgo] = Brushes.Red;
+			else                             PlotBrushes[0][barsAgo] = Brushes.Yellow;
+			if (lastBarLoaded < Bars.Count-1) lastBarLoaded++;
+		}
+		
+		protected override void OnBarUpdate() {
+			UpdateData(0);
 		}
 		
 	}

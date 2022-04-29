@@ -74,7 +74,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			if (State == State.SetDefaults) {
 				Description									= @"Zeigt die Range einer Bar plus Gap zum Vortag.";
 				Name										= "Bargröße";
-				Calculate									= Calculate.OnEachTick;
+				Calculate									= Calculate.OnPriceChange;
 				IsOverlay									= false;
 				DisplayInDataBox							= true;
 				DrawOnPricePanel							= true;

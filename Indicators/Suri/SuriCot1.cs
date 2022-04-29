@@ -95,7 +95,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			if (State == State.SetDefaults) {
 				Description									= @"CoT 1 Commercials Netto Oszillator 125 Tage";
 				Name										= "CoT 1";
-				Calculate									= Calculate.OnBarClose;
+				Calculate									= Calculate.OnPriceChange;
 				IsOverlay									= false;
 				DisplayInDataBox							= true;
 				DrawOnPricePanel							= true;
@@ -139,6 +139,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
         }
         #endregion
 
+        private int noNewCotSince;
 		protected override void OnBarUpdate() {
 			if (SuriAddOn.license == License.None || suriCotHelper == null) return;
 			if (!(Bars.BarsPeriod.BarsPeriodType == BarsPeriodType.Day && Bars.BarsPeriod.Value == 1 || Bars.BarsPeriod.BarsPeriodType == BarsPeriodType.Minute && Bars.BarsPeriod.Value == 1440)) {
@@ -147,8 +148,12 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			}
 			int? index = suriCotHelper.Update(Time[0]);
 			if (index == null) {
-				if (CurrentBar > 10) Value[0] = Value[1];
+				if (CurrentBar > 10) {
+					Value[0] = Value[1];
+					noNewCotSince++;
+				}
 			} else {
+				noNewCotSince = 0;
 				if (suriCotHelper.dbCotData[index.Value].Cot1 == null) return;
 				Values[0][0] = suriCotHelper.dbCotData[index.Value].Cot1.Value;
 			}
@@ -156,8 +161,10 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			Values[1][0] = 10;
 			Values[2][0] = 50;
 			Values[3][0] = 90;
-			
-			if (SuriAddOn.license != License.Basic) {
+
+			if (noNewCotSince > 12) {
+				PlotBrushes[0][0] = noNewCotBrush;
+			} else if (SuriAddOn.license != License.Basic) {
 				if (!isCurrentlyASignal || Value[0] < 90 && Value[0] > 10 ) {
 					isCurrentlyASignal = IsSignal();
 				}

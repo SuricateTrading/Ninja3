@@ -5,6 +5,7 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Web.Script.Serialization;
+using NinjaTrader.Gui.NinjaScript;
 using NinjaTrader.NinjaScript;
 
 #endregion
@@ -16,10 +17,10 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
             //Code.Output.Process(url, PrintTo.OutputTab1);
             ServicePointManager.ServerCertificateValidationCallback = delegate { return true; }; // todo: delete?
             
-            var data = Encoding.ASCII.GetBytes("5YjNQrsvuJgoPCQs33cgcelvPCJ2");
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
             request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
             if (post) {
+                var data = Encoding.ASCII.GetBytes(SuriAddOn.suri.NtLicense);
                 request.Method = "POST";
                 request.ContentType = "application/json";
                 request.ContentLength = data.Length;

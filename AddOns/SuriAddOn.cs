@@ -313,17 +313,19 @@ namespace NinjaTrader.Gui.NinjaScript {
 			Button downloadVpIntra		= new Button { Content = "Download VP Intra"	, Padding = new Thickness(15), Margin = new Thickness(5) };
 			Button correlation			= new Button { Content = "Korrelation"			, Padding = new Thickness(15), Margin = new Thickness(5) };
 			Button downloadTicks		= new Button { Content = "Download Ticks"		, Padding = new Thickness(15), Margin = new Thickness(5) };
+			Button suriStatistics		= new Button { Content = "Suri Statistics"		, Padding = new Thickness(15), Margin = new Thickness(5) };
 			downloadVpBig.Click		+= (sender, args) => SuriAdmin.StoreVpBigToFile();
 			downloadVpIntra.Click	+= (sender, args) => SuriAdmin.StoreVpIntra();
-			correlation.Click		+= (sender, args) => DevCorrelation.LoadData();
+			correlation.Click		+= (sender, args) => new DevCorrelation().LoadData();
 			downloadTicks.Click		+= (sender, args) => SuriAdmin.StoreTickData();
+			suriStatistics.Click	+= (sender, args) => new DevStatistics().Start();
 			
 			tabs.Items.Insert(0, new TabItem {
 				Header = "Admin",
 				Padding = new Thickness(10.5),
 				Content = new ScrollViewer {
 					Content = new StackPanel {
-						Children = { downloadVpBig, downloadVpIntra, correlation, downloadTicks }
+						Children = { downloadVpBig, downloadVpIntra, correlation, downloadTicks, suriStatistics }
 					}
 				}
 			});

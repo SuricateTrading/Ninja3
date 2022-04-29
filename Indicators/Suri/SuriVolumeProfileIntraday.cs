@@ -133,9 +133,14 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				textFormat					= font.ToDirectWriteTextFormat();
 				textFormat.TextAlignment	= SharpDX.DirectWrite.TextAlignment.Leading;
 				textFormat.WordWrapping		= SharpDX.DirectWrite.WordWrapping.NoWrap;
-			} else if (State == State.DataLoaded && !Bars.IsTickReplay && SuriAddOn.license == License.Dev && Bars.BarsPeriod.BarsPeriodType == BarsPeriodType.Minute && Bars.BarsPeriod.Value == 1440) {
-				suriVpIntraData = SuriIntraRepo.GetVpIntra(Instrument, Bars.GetTime(0).Date, Bars.LastBarTime.Date);
-				ForceRefresh();
+			} else if (State == State.DataLoaded && !Bars.IsTickReplay &&
+			           (/*SuriAddOn.license == License.Premium || */SuriAddOn.license == License.Dev) &&
+			           Bars.BarsPeriod.BarsPeriodType == BarsPeriodType.Minute && Bars.BarsPeriod.Value == 1440
+			) {
+				SuriIntraRepo.GetVpIntra(Instrument, Bars.GetTime(0).Date, Bars.LastBarTime.Date, data => {
+					suriVpIntraData = data;
+					ForceRefresh();
+				});
 			}
 		}
 
@@ -146,6 +151,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 
 		protected override void OnMarketData(MarketDataEventArgs e) {
 			if (SuriAddOn.license == License.None || Bars.Count <= 0 || !Bars.IsTickReplay || e.MarketDataType != MarketDataType.Last) return;
+			//Print("asdsd " + e.MarketDataType);
 			if (lastBar != CurrentBar) {
 				lastBar = CurrentBar;
 				suriVpIntraData.barData.Add(new SuriVpBarData(TickSize, e.Time));
@@ -186,7 +192,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				SuriCommon.NoValidLicenseError(RenderTarget, ChartControl, ChartPanel);
 				return;
 			}
-			if (Bars == null || Bars.Instrument == null || IsInHitTest || suriVpIntraData.barData.IsNullOrEmpty()) {
+			if (Bars == null || Bars.Instrument == null || IsInHitTest || suriVpIntraData == null || suriVpIntraData.barData.IsNullOrEmpty()) {
 				return;
 			}
 			if (!suriVpIntraData.isPrepared) suriVpIntraData.Prepare();
@@ -195,28 +201,38 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			RectangleF rect = new RectangleF();
 			float barWidth = (float) (chartControl.GetXByBarIndex(ChartBars, 1) - chartControl.GetXByBarIndex(ChartBars, 0) - chartControl.BarWidth*1.2);
 
-			int lastIndex = 0;
-			for (int idx = ChartBars.FromIndex; idx <= ChartBars.ToIndex; idx++) {
-				if (!Bars.IsTickReplay && SuriAddOn.license == License.Dev) {
-					for (; lastIndex <= suriVpIntraData.barData.Count; lastIndex++) {
-						if (lastIndex == suriVpIntraData.barData.Count) return;
-						if (suriVpIntraData.barData[lastIndex].dateTime.Date == ChartBars.Bars.GetTime(idx).Date) break;
-					}
+			int vpIndex = 0;
+			for (int visibleBarIndex = ChartBars.FromIndex; visibleBarIndex <= ChartBars.ToIndex; visibleBarIndex++) {
+
+				if (Bars.IsTickReplay) {
+					vpIndex = visibleBarIndex;
 				} else {
-					lastIndex = idx;
+					// this can only happen in a 1440-minute chart when tickreplay is disabled.
+					// caution: the user may have MORE bars loaded than vp-data is laoded, because cached vp data is only available since *SuriIntraRepo.startOfCachedData*
+					if (ChartBars.Bars.GetTime(visibleBarIndex).Date < SuriIntraRepo.startOfCachedData.Date) {
+						continue;
+					}
+					for (; vpIndex <= suriVpIntraData.barData.Count; vpIndex++) {
+						if (vpIndex == suriVpIntraData.barData.Count) return;
+						DateTime d1 = suriVpIntraData.barData[vpIndex].dateTime.Date;
+						DateTime d2 = ChartBars.Bars.GetTime(visibleBarIndex).Date;
+						if (d1.DayOfYear == d2.DayOfYear && d1.Year == d2.Year) {
+							break;
+						}
+					}
 				}
 				
-				rect.X = chartControl.GetXByBarIndex(ChartBars, idx) + offset;
-				double y = chartScale.GetYByValue(ChartBars.Bars.GetLow(idx));
-				double height = (y - chartScale.GetYByValue(ChartBars.Bars.GetHigh(idx))) / Math.Max(1, suriVpIntraData.barData[lastIndex].tickData.Count-1);
+				rect.X = chartControl.GetXByBarIndex(ChartBars, visibleBarIndex) + offset;
+				double y = chartScale.GetYByValue(ChartBars.Bars.GetLow(visibleBarIndex));
+				double height = (y - chartScale.GetYByValue(ChartBars.Bars.GetHigh(visibleBarIndex))) / Math.Max(1, suriVpIntraData.barData[vpIndex].tickData.Count-1);
 
 				int i = 1;
 				float? previousDistVolWidth = null;
 				float? previousDelta = null;
 
-				foreach(KeyValuePair<int, SuriVpTickData> entry in suriVpIntraData.barData[lastIndex].tickData) {
+				foreach(KeyValuePair<int, SuriVpTickData> entry in suriVpIntraData.barData[vpIndex].tickData) {
 					rect.Y = (float) (y - i * height + height * 0.5f);
-					rect.Width = (float) ((maxWidth ?? barWidth) * entry.Value.volume / suriVpIntraData.barData[lastIndex].pocVolume);
+					rect.Width = (float) ((maxWidth ?? barWidth) * entry.Value.volume / suriVpIntraData.barData[vpIndex].pocVolume);
 					rect.Height = (float) height;
 
 					SharpDX.Direct2D1.Brush b;
@@ -266,11 +282,10 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 					}
 
 					// bid ask delta
-					if (false && SuriAddOn.license == License.Dev) {
+					if (SuriAddOn.license == License.Dev) {
 						float delta = entry.Value.asks - entry.Value.bids;
-						delta = (float) (((maxWidth ?? barWidth)/2f) * delta / suriVpIntraData.barData[lastIndex].highestDelta);
+						delta = (float) (((maxWidth ?? barWidth)/2f) * delta / suriVpIntraData.barData[vpIndex].highestDelta);
 						if (previousDelta != null) {
-							Print(suriVpIntraData.barData[lastIndex].highestDelta);
 							RenderTarget.DrawLine(
 								new Vector2(rect.X + previousDelta.Value, rect.Y + rect.Height + rect.Height / 2f),
 								new Vector2(rect.X + delta              , rect.Y + rect.Height / 2f),
@@ -284,27 +299,27 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				}
 
 				if (drawText && barWidth > 20) {
-					double delta = suriVpIntraData.barData[lastIndex].delta;
-					string str =	"Σ " + suriVpIntraData.barData[lastIndex].totalVolume + "\n" +
+					double delta = suriVpIntraData.barData[vpIndex].delta;
+					string str =	"Σ " + suriVpIntraData.barData[vpIndex].totalVolume + "\n" +
 					                "∆ " + delta + "\n" +
-					                "∆% " + (100 * delta / suriVpIntraData.barData[lastIndex].totalVolume).ToString("F1") + "%\n" +
-					                "Ticks " + (suriVpIntraData.barData[lastIndex].tickData.Count - 1) + "\n" +
-					                "VA " + suriVpIntraData.barData[lastIndex].vaPercentage + "%"
+					                "∆% " + (100 * delta / suriVpIntraData.barData[vpIndex].totalVolume).ToString("F1") + "%\n" +
+					                "Ticks " + (suriVpIntraData.barData[vpIndex].tickData.Count - 1) + "\n" +
+					                "VA " + suriVpIntraData.barData[vpIndex].vaPercentage + "%"
 					;
 					textLayout  = new SharpDX.DirectWrite.TextLayout(Core.Globals.DirectWriteFactory, str, textFormat, 250, textFormat.FontSize);
-					y = chartScale.GetYByValue(ChartBars.Bars.GetLow(idx)) + 10f;
+					y = chartScale.GetYByValue(ChartBars.Bars.GetLow(visibleBarIndex)) + 10f;
 					RenderTarget.DrawTextLayout(new Vector2(rect.X, (float) y + rect.Height/2.0f), textLayout, textFill, SharpDX.Direct2D1.DrawTextOptions.NoSnap);
 				}
 
 				// box
 				if (false && SuriAddOn.license == License.Dev) {
-					if (suriVpIntraData.boxes.ContainsKey(lastIndex)) {
-						SuriVpBox box = suriVpIntraData.boxes[lastIndex];
+					if (suriVpIntraData.boxes.ContainsKey(vpIndex)) {
+						SuriVpBox box = suriVpIntraData.boxes[vpIndex];
 						RectangleF boxRect = new RectangleF {
-							X = chartControl.GetXByBarIndex(ChartBars, idx),
+							X = chartControl.GetXByBarIndex(ChartBars, visibleBarIndex),
 							Y = chartScale.GetYByValue(box.boxHigh * TickSize)
 						};
-						boxRect.Width = chartControl.GetXByBarIndex(ChartBars, idx - box.length + 1) - boxRect.X;
+						boxRect.Width = chartControl.GetXByBarIndex(ChartBars, visibleBarIndex - box.length + 1) - boxRect.X;
 						boxRect.Height = chartScale.GetYByValue(box.boxLow * TickSize) - boxRect.Y;
 						RenderTarget.FillRectangle(boxRect, boxFill);
 					}

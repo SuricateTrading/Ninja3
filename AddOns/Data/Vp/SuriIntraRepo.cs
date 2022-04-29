@@ -5,12 +5,16 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading;
+using NinjaTrader.Cbi;
+using NinjaTrader.Data;
+using NinjaTrader.NinjaScript;
 using Instrument = NinjaTrader.Cbi.Instrument;
 #endregion
 
 namespace NinjaTrader.Custom.AddOns.SuriCommon.Vp {
     public class SuriIntraRepo : SuriRepo {
         private static readonly Dictionary<Commodity, Mutex> state = new Dictionary<Commodity, Mutex>();
+        public static readonly DateTime startOfCachedData = DateTime.Parse("2021-05-01");
 
         static SuriIntraRepo() {
             Directory.CreateDirectory(dbPath + @"vpintra\");
@@ -19,38 +23,23 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon.Vp {
             }
         }
         private static string GetPath(int commId, int year, int month) { return dbPath + @"vpintra\" + commId + "_" + year + "_" + month + ".vpintra"; }
-
-        public static List<DbCotData> GetCotData(Commodity commodity, DateTime start, DateTime end) {
+        
+        
+        public static void GetVpIntra(Instrument instrument, DateTime start, DateTime end, Action<SuriVpIntraData> result) {
+            /*
             state[commodity].WaitOne();
-            var data = new List<DbCotData>();
-            try {
-                for (int year = start.Year; year <= end.Year; year++) {
-                    int commId = SuriStrings.data[commodity].id;
-                    string path = GetPath(commId, year, 9999999); // todo
-                    if (!File.Exists(path) || (DateTime.Now - File.GetCreationTime(path)).Days > 14 || year == DateTime.Now.Year && (DateTime.Now - File.GetCreationTime(path)).Hours > 10 ) {
-                        // load cot file
-                        List<DbCotData> part = SuriServer.GetCotData(commId, DateTime.Parse(year + "-01-01"), DateTime.Parse(year + "-12-31"));
-                        File.WriteAllText(path, Newtonsoft.Json.JsonConvert.SerializeObject(part));
-                    }
-                    data.AddRange(Newtonsoft.Json.JsonConvert.DeserializeObject<List<DbCotData>>(File.ReadAllText(path)));
-                }
-            } finally {
-                state[commodity].ReleaseMutex();
-            }
-            return data;
-        }
-        
-        
-        public static SuriVpIntraData GetVpIntra(Instrument instrument, DateTime start, DateTime end) {
+            state[commodity].ReleaseMutex();
+             */
+            Mutex mutex = new Mutex();
+            mutex.WaitOne();
             int monthsCount = 1 + (end.Month - start.Month) + (end.Year - start.Year) * 12;
             int month, year;
             int? id = SuriStrings.GetId(instrument);
-            if (id == null) return null;
+            if (id == null) return;
             SuriVpIntraData vpIntra = new SuriVpIntraData();
             for (int i = 0; i < monthsCount; i++) {
                 month = ((start.Month + i - 1) % 12) + 1;
                 year = start.Year + (int) Math.Floor((start.Month + i - 1) / 12.0);
-
                 if (year < 2021 || year == 2021 && month < 5) continue;
                 
                 string path = GetPath(id.Value, year, month);
@@ -65,37 +54,41 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon.Vp {
                             webClient.DownloadFile(serverFile, path);
                         }
                     } catch (Exception) {
-                        return null;
+                        return;
                     }
                 }
-                
                 SuriVpIntraData vpIntraMonth = Newtonsoft.Json.JsonConvert.DeserializeObject<SuriVpIntraData>(File.ReadAllText(path));
                 vpIntra.barData.AddRange(vpIntraMonth.barData);
             }
             vpIntra.barData.RemoveAll(bar => bar.dateTime.Date < start || bar.dateTime.Date > end);
             
-            // todo: load tick data after the last loaded day.
-            
-            vpIntra.Prepare();
-            return vpIntra;
+            if (vpIntra.barData.Last().dateTime.Date < end.Date) {
+                // the cached vp data does not contain everything. We have to attach current data.
+                Code.Output.Process("From " + vpIntra.barData.Last().dateTime.AddDays(1).Date + " to " + end.AddDays(1).Date, PrintTo.OutputTab1);
+                new BarsRequest(instrument, vpIntra.barData.Last().dateTime.AddDays(1).Date, end.AddDays(1).Date) {
+                    MergePolicy = MergePolicy.MergeBackAdjusted,
+                    BarsPeriod = new BarsPeriod {BarsPeriodType = BarsPeriodType.Tick, Value = 1},
+                    TradingHours = instrument.MasterInstrument.TradingHours,
+                }.Request((bars, errorCode, errorMessage) => {
+                    if (errorCode != ErrorCode.NoError) return;
+                    SessionIterator session = new SessionIterator(bars.Bars);
+                    for (int i = 0; i < bars.Bars.Count; i++) {
+                        if (bars.Bars.IsFirstBarOfSessionByIndex(i)) {
+                            DateTime time = bars.Bars.GetTime(i);
+                            session.GetNextSession(time, true);
+                            DateTime closeTime = session.ActualSessionEnd;
+                            vpIntra.barData.Add(new SuriVpBarData(instrument.MasterInstrument.TickSize, closeTime.Date));
+                        }
+                        vpIntra.barData.Last().AddTick(bars.Bars.GetTime(i), bars.Bars.GetClose(i), bars.Bars.GetVolume(i), bars.Bars.GetAsk(i), bars.Bars.GetBid(i));
+                    }
+                    vpIntra.Prepare();
+                    result(vpIntra);
+                });
+            } else {
+                vpIntra.Prepare();
+                result(vpIntra);
+            }
         }
 
-    }
-    
-    public sealed class SuriVpIntraSingleSerialized {
-        public List<SuriVpIntraTickSerialized> tickData;
-        public DateTime date;
-        public int high;
-        public int low;
-        public double totalVolume;
-        public double tickSize;
-        public int totalAsks;
-        public int totalBids;
-    }
-    
-    public sealed class SuriVpIntraTickSerialized {
-        public long tick;
-        public long bid;
-        public long ask;
     }
 }

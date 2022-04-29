@@ -111,6 +111,7 @@
     <Compile Include="AddOns\SuriCommon\DevOrder.cs" />
     <Compile Include="AddOns\SuriScripts\SuriCorrelation.cs" />
     <Compile Include="AddOns\SuriScripts\SuriAdmin.cs" />
+    <Compile Include="AddOns\SuriScripts\SuriStatistics.cs" />
     <Compile Include="BarsTypes\%40DayBarsType.cs" />
     <Compile Include="BarsTypes\%40HeikenAshiBarsType.cs" />
     <Compile Include="BarsTypes\%40KagiBarsType.cs" />
@@ -419,6 +420,7 @@
     <Compile Include="Strategies\%40SampleMultiTimeFrame.cs" />
     <Compile Include="Strategies\%40Strategy.cs" />
     <Compile Include="Strategies\MyStrategy.cs" />
+    <Compile Include="Strategies\StupidStrategy.cs" />
     <Compile Include="SuperDomColumns\%40APQ.cs" />
     <Compile Include="SuperDomColumns\%40Notes.cs" />
     <Compile Include="SuperDomColumns\%40ProfitLoss.cs" />

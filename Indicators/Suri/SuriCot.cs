@@ -98,7 +98,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			if (State == State.SetDefaults) {
 				Name										= "CoT-Daten";
 				Description									= @"CoT-Daten";
-				Calculate									= Calculate.OnBarClose;
+				Calculate									= Calculate.OnPriceChange;
 				IsOverlay									= false;
 				DisplayInDataBox							= true;
 				DrawOnPricePanel							= true;

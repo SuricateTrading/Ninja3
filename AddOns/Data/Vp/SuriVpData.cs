@@ -162,7 +162,8 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			if (tick >= _ask) {
 				tickData[tick].asks += volume;
 				totalAsks += volume;
-			} /*else*/ if (tick <= _bid) {
+			}
+			if (tick <= _bid) {
 				tickData[tick].bids += volume;
 				totalBids += volume;
 			}
@@ -176,8 +177,8 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			
 			int tickHigh = PriceToTick(high);
 			int tickLow  = PriceToTick(low);
-			if (tickHigh > this.high) this.high = tickHigh;
-			if (tickLow  < this.low ) this.low  = tickLow;
+			if (this.high < tickHigh) this.high = tickHigh;
+			if (this.low  > tickLow ) this.low  = tickLow;
 			
 			double volumePerTick = volume / (tickHigh - tickLow + 1.0);
 			for (int price = tickLow; price <= tickHigh; price++) {
@@ -315,12 +316,15 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 					pocVolume = tickData[low + i].volume;
 					pocIndex = i;
 				}
+
+				if (!isVpBig) {
+					highestDelta = Math.Max(Math.Abs(highestDelta), Math.Abs(tickData[low + i].asks - tickData[low + i].bids));
+				}
 			}
 			PocTickData().isMainPoc = true;
 
 			if (!isVpBig) {
 				CalculateVaueArea();
-				
 				
 				
 				// distributed volume
@@ -338,7 +342,6 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 						At(i + 1)			.distributedVolume += entry.volume / 3.0;
 					}
 					
-					highestDelta = Math.Max(Math.Abs(highestDelta), Math.Abs(entry.asks - entry.bids));
 				}*/
 			
 				/*foreach (KeyValuePair<int, VpTickData> tick in tickData) {
