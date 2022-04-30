@@ -81,11 +81,11 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 				    }
 				    standardDeviation = Math.Sqrt(standardDeviation);
 				    
-				    data[commodity].mean = mean;
-				    data[commodity].volatility = standardDeviation;
-				    data[commodity].volume /= bars.Bars.Count;
-				    data[commodity].barSize /= bars.Bars.Count;
-				    data[commodity].gap /= (bars.Bars.Count - 1);
+				    data[commodity].mean = instrument.MasterInstrument.RoundToTickSize(mean);
+				    data[commodity].volatility = instrument.MasterInstrument.RoundToTickSize(standardDeviation);
+				    data[commodity].volume = (long) Math.Round(data[commodity].volume / (double) bars.Bars.Count);
+				    data[commodity].barSize = instrument.MasterInstrument.RoundToTickSize(data[commodity].barSize / bars.Bars.Count);
+				    data[commodity].gap = instrument.MasterInstrument.RoundToTickSize(data[commodity].gap / (bars.Bars.Count - 1));
 				    
 				    LoadData(++index);
 			    });
@@ -144,7 +144,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 		    // average values:
 		    public double barSize;
 		    public double slippage;
-		    public double volume;
+		    public long volume;
 		    public double volatility;
 		    public double mean;
 		    public double gap;
