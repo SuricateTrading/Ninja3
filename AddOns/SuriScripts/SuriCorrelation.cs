@@ -1,4 +1,4 @@
-#region Using declarations
+/*#region Using declarations
 using System;
 using System.Collections.Generic;
 using NinjaTrader.NinjaScript;
@@ -110,8 +110,8 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 		    meanWriter.Write(text);
 	    }
 
-	    /** Synchronizes the index of 2 Bars so that the index for each bar points to the exact same date. */
 	    private Tuple<int, int> SynchronizeIndex(Tuple<int, int> index, Bars bars1, Bars bars2) {
+			// Synchronizes the index of 2 Bars so that the index for each bar points to the exact same date.
 		    if (index.Item1 >= bars1.Count || index.Item2 >= bars2.Count) return null;
 		    if (bars1.GetTime(index.Item1).Date == bars2.GetTime(index.Item2).Date) return index;
 
@@ -132,3 +132,4 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 	    
     }
 }
+*/

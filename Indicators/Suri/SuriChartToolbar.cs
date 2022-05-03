@@ -161,15 +161,10 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				if (change == null) return;
 				string shortName = Regex.Replace(change, "\t.*", "");
 				Instrument ins = Instrument.GetInstrument(shortName + Instrument.GetInstrument(shortName+" ##-##").MasterInstrument.GetNextExpiry(DateTime.Now).ToString(" MM-yy"));
-			
-				Keyboard.FocusedElement.RaiseEvent(new TextCompositionEventArgs(InputManager.Current.PrimaryKeyboardDevice,
-						new TextComposition(InputManager.Current, ChartControl.OwnerChart, "open sesame"))
-					{ RoutedEvent = TextCompositionManager.PreviewTextInputEvent });
-				Keyboard.FocusedElement.RaiseEvent(new TextCompositionEventArgs(InputManager.Current.PrimaryKeyboardDevice,
-						new TextComposition(InputManager.Current, ChartControl.OwnerChart, ins.FullName))
-					{ RoutedEvent = TextCompositionManager.TextInputEvent });
-				Keyboard.FocusedElement.RaiseEvent(new KeyEventArgs(Keyboard.PrimaryDevice,
-					PresentationSource.FromVisual(ChartControl.OwnerChart), 0,  Key.Enter) { RoutedEvent = Keyboard.PreviewKeyDownEvent } );
+				
+				Keyboard.FocusedElement.RaiseEvent(new TextCompositionEventArgs(InputManager.Current.PrimaryKeyboardDevice, new TextComposition(InputManager.Current, ChartControl.OwnerChart, "open sesame"))	{ RoutedEvent = TextCompositionManager.PreviewTextInputEvent });
+				Keyboard.FocusedElement.RaiseEvent(new TextCompositionEventArgs(InputManager.Current.PrimaryKeyboardDevice, new TextComposition(InputManager.Current, ChartControl.OwnerChart, ins.FullName))			{ RoutedEvent = TextCompositionManager.TextInputEvent });
+				Keyboard.FocusedElement.RaiseEvent(new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(ChartControl.OwnerChart), 0                                , Key.Enter)				{ RoutedEvent = Keyboard.PreviewKeyDownEvent } );
 			};
 			Grid.SetRow(comList, 0);
 			Grid.SetColumn(comList, ++index);
