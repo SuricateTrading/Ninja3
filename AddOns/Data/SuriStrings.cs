@@ -82,12 +82,13 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			{Commodity.LiveCattle,	new CommodityData(28, "LE", "", "Lebendrind")},
 			{Commodity.FeederCattle,new CommodityData(29, "GF", "", "Mastrind")},
 			{Commodity.LiveHogs,	new CommodityData(30, "HE", "", "Schwein")},
-/*
-			{Commodity.Sp500,		new CommodityData(31, "", "", "")},
-			{Commodity.Nikkei,		new CommodityData(32, "", "", "")},
-			{Commodity.Nasdaq,		new CommodityData(33, "", "", "")},
-			{Commodity.Dow,			new CommodityData(34, "", "", "")},
 
+			{Commodity.Sp500,		new CommodityData(31, "ES", "", "S&P 500 Mini")},
+			{Commodity.Nikkei,		new CommodityData(32, "NKD", "", "Nikkei / USD")},
+			{Commodity.Nasdaq,		new CommodityData(33, "NQ", "", "Nasdaq Mini")},
+			{Commodity.Dow,			new CommodityData(34, "YM", "", "Dow Jones Mini")},
+			{Commodity.Vix,			new CommodityData(56, "VX", "", "CBOE Volatility Index")},
+/*
 			{Commodity.U10Yn,		new CommodityData(35, "", "", "")},
 			{Commodity.UltraBond,	new CommodityData(36, "", "", "")},
 			{Commodity.UtrBond,		new CommodityData(37, "", "", "")},
@@ -106,6 +107,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			{Commodity.NewZealandDollar,	new CommodityData(49, "6N", "", "Neuseeland Dollar")},
 			{Commodity.RussianRuble,		new CommodityData(50, "6R", "", "Russischer Rubel")},
 			{Commodity.SwissFranc,			new CommodityData(51, "6S", "", "Schweizer Franken")},
+			{Commodity.SouthAfricanRand,	new CommodityData(57, "6Z", "", "Südafrikanischer Rand")},
 			{Commodity.UsDollar,			new CommodityData(52, "DX", "", "US Dollar")},
 			{Commodity.Eurodollar,			new CommodityData(53, "GE", "", "Euro-Dollar")},
 			{Commodity.BitcoinMicro,		new CommodityData(54, "BTC", "", "Bitcoin")},
@@ -150,12 +152,13 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 		LiveCattle,
 		FeederCattle,
 		LiveHogs,
-		/*
+		
 		Sp500,
 		Nikkei,
 		Nasdaq,
 		Dow,
-		
+		Vix,
+		/*
 		U10Yn,
 		UltraBond,
 		UtrBond,
@@ -174,6 +177,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 		NewZealandDollar,
 		RussianRuble,
 		SwissFranc,
+		SouthAfricanRand,
 		UsDollar,
 		Eurodollar,
 		BitcoinMicro,

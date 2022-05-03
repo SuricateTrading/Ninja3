@@ -30,6 +30,21 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		private		bool		subscribedToSize;
 		private		Point		startPoint;
 
+		#region Properties
+		[Browsable(false)] public double Top { get; set; }
+		[Browsable(false)] public double Left { get; set; }
+
+		[Display(ResourceType = typeof(Custom.Resource), Name = "NinjaScriptIsVisibleOnlyFocused", GroupName = "NinjaScriptIndicatorVisualGroup", Order = 499)]
+		public bool isVisibleOnlyFocused { get; set; }
+
+		public XElement SelectedTypes { get; set; }
+		
+		[Range(1, int.MaxValue)]
+		[Display(Name = "Reihen", GroupName = "Parameter", Order = 0)]
+		public int numberOfRows { get; set; }
+		#endregion
+		
+
 		protected override void OnBarUpdate() {
 			if (!subscribedToSize && ChartPanel != null) {
 				subscribedToSize = true;
@@ -70,7 +85,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				}
 				Left			= 5;
 				Top				= -1;
-				numberOfRows	= 5;
+				numberOfRows	= 1;
 			} else if (State == State.Historical && IsVisible && ChartControl != null) {
 				if (Top < 0) Top = 25;
 				ChartControl.Dispatcher.InvokeAsync(() => { UserControlCollection.Add(CreateControl()); });
@@ -284,19 +299,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 
 			return ret;
 		}
-
-		#region Properties
-		[Browsable(false)] public double Top { get; set; }
-		[Browsable(false)] public double Left { get; set; }
-
-		[Display(ResourceType = typeof(Custom.Resource), Name = "NinjaScriptIsVisibleOnlyFocused", GroupName = "NinjaScriptIndicatorVisualGroup", Order = 499)]
-		public bool isVisibleOnlyFocused { get; set; }
-
-		public XElement SelectedTypes { get; set; }
-		[Range(1, int.MaxValue)]
-		[Display(Name = "Reihen", GroupName = "Parameter", Order = 0)]
-		public int numberOfRows { get; set; }
-		#endregion
 	}
 
 	public sealed class DrawingToolPropertyDescriptor : PropertyDescriptor {

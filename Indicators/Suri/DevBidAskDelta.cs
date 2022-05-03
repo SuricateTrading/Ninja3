@@ -13,7 +13,7 @@ using NinjaTrader.Gui.Tools;
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
-	public class SuriBidAskDelta : Indicator {
+	public class DevBidAskDelta : Indicator {
 		private SuriVpIntraData suriVpIntraData = new SuriVpIntraData();
 		private int lastBarStored = int.MinValue;
 		private int lastBarLoaded;
@@ -138,19 +138,19 @@ namespace NinjaTrader.NinjaScript.Indicators
 {
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
-		private Suri.SuriBidAskDelta[] cacheSuriBidAskDelta;
-		public Suri.SuriBidAskDelta SuriBidAskDelta()
+		private Suri.DevBidAskDelta[] cacheDevBidAskDelta;
+		public Suri.DevBidAskDelta DevBidAskDelta()
 		{
-			return SuriBidAskDelta(Input);
+			return DevBidAskDelta(Input);
 		}
 
-		public Suri.SuriBidAskDelta SuriBidAskDelta(ISeries<double> input)
+		public Suri.DevBidAskDelta DevBidAskDelta(ISeries<double> input)
 		{
-			if (cacheSuriBidAskDelta != null)
-				for (int idx = 0; idx < cacheSuriBidAskDelta.Length; idx++)
-					if (cacheSuriBidAskDelta[idx] != null &&  cacheSuriBidAskDelta[idx].EqualsInput(input))
-						return cacheSuriBidAskDelta[idx];
-			return CacheIndicator<Suri.SuriBidAskDelta>(new Suri.SuriBidAskDelta(), input, ref cacheSuriBidAskDelta);
+			if (cacheDevBidAskDelta != null)
+				for (int idx = 0; idx < cacheDevBidAskDelta.Length; idx++)
+					if (cacheDevBidAskDelta[idx] != null &&  cacheDevBidAskDelta[idx].EqualsInput(input))
+						return cacheDevBidAskDelta[idx];
+			return CacheIndicator<Suri.DevBidAskDelta>(new Suri.DevBidAskDelta(), input, ref cacheDevBidAskDelta);
 		}
 	}
 }
@@ -159,14 +159,14 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.SuriBidAskDelta SuriBidAskDelta()
+		public Indicators.Suri.DevBidAskDelta DevBidAskDelta()
 		{
-			return indicator.SuriBidAskDelta(Input);
+			return indicator.DevBidAskDelta(Input);
 		}
 
-		public Indicators.Suri.SuriBidAskDelta SuriBidAskDelta(ISeries<double> input )
+		public Indicators.Suri.DevBidAskDelta DevBidAskDelta(ISeries<double> input )
 		{
-			return indicator.SuriBidAskDelta(input);
+			return indicator.DevBidAskDelta(input);
 		}
 	}
 }
@@ -175,14 +175,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.SuriBidAskDelta SuriBidAskDelta()
+		public Indicators.Suri.DevBidAskDelta DevBidAskDelta()
 		{
-			return indicator.SuriBidAskDelta(Input);
+			return indicator.DevBidAskDelta(Input);
 		}
 
-		public Indicators.Suri.SuriBidAskDelta SuriBidAskDelta(ISeries<double> input )
+		public Indicators.Suri.DevBidAskDelta DevBidAskDelta(ISeries<double> input )
 		{
-			return indicator.SuriBidAskDelta(input);
+			return indicator.DevBidAskDelta(input);
 		}
 	}
 }

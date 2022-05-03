@@ -15,7 +15,7 @@ using Instrument = NinjaTrader.Cbi.Instrument;
 namespace NinjaTrader.Custom.AddOns.SuriCommon {
     public class DevStatistics {
 	    private static readonly string filePath = Globals.UserDataDir + @"mining\";
-	    private static readonly string fileName = filePath + @"statistics.txt";
+	    private static readonly string fileName = filePath + @"statistics.json";
 	    private readonly List<Commodity> commodities = Enum.GetValues(typeof(Commodity)).Cast<Commodity>().ToList();
 	    private readonly Dictionary<Commodity, Data> data = new Dictionary<Commodity, Data>();
 
@@ -51,6 +51,9 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 				    data[commodity].commodityId = SuriStrings.GetId(instrument).Value;
 				    SessionIterator sessionIterator = new SessionIterator(bars.Bars);
 				    sessionIterator.GetNextSession(bars.Bars.GetTime(0), true);
+				    if (commodity == Commodity.OrangeJuice) {
+					    Code.Output.Process("1232323: " + errorCode, PrintTo.OutputTab1);
+				    }
 				    data[commodity].tradingHours = sessionIterator.ActualSessionBegin.ToString("t") + " - " + sessionIterator.ActualSessionEnd.ToString("t");
 				    data[commodity].ninjaName = instrument.MasterInstrument.Name;
 				    data[commodity].exchange = String.Join(", ", instrument.MasterInstrument.Exchanges.ToArray());

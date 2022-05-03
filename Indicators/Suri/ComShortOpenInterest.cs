@@ -18,6 +18,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		private double max = double.MinValue;
 		private int minIndex;
 		private int maxIndex;
+		private DateTime lastReportDate;
 		
 		#region Properties
 		[NinjaScriptProperty]
@@ -116,30 +117,27 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			if (SuriAddOn.license == License.None) SuriCommon.NoValidLicenseError(RenderTarget, ChartControl, ChartPanel);
 		}
 
-		private int noNewCotSince;
 		protected override void OnBarUpdate() {
 			if (SuriAddOn.license == License.None || suriCotHelper == null) return;
 			int? index = suriCotHelper.Update(Time[0]);
 			if (index == null) {
-				if (CurrentBar > 10) Value[0] = Value[1];
+				if (CurrentBar > 10) {
+					Value[0] = Value[1];
+				}
 			} else {
+				lastReportDate = Time[0];
 				Values[0][0] = 100 * suriCotHelper.dbCotData[index.Value].CommercialsShort / (double) suriCotHelper.dbCotData[index.Value].OpenInterest;
 			}
 
 			if (drawLines) {
 				SetMinMax();
-				if (CurrentBar >= days) {
+				if (CurrentBar > days) {
 					Values[1][0] = ValueOf(0.2);
 					Values[2][0] = ValueOf(0.8);
 				}
 			}
 			
-			if (CurrentBar > 0 && Math.Abs(Value[0] - Value[1]) < 0.00000000001) {
-				noNewCotSince++;
-			} else {
-				noNewCotSince = 0;
-			}
-			if (noNewCotSince > 12) {
+			if (lastReportDate != null && (Time[0].Date - lastReportDate.Date).TotalDays > 10) {
 				PlotBrushes[0][0] = noNewCotBrush;
 			}
 		}

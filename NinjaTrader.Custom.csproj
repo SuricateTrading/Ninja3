@@ -90,6 +90,9 @@
     <Reference Include="Newtonsoft.Json">
       <HintPath>C:\Program Files (x86)\NinjaTrader 8\bin64\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="MathNet.Numerics">
+      <HintPath>C:\Users\Bo\Documents\NinjaTrader 8\bin\Custom\MathNet.Numerics.dll</HintPath>
+    </Reference>
     <Reference Include="NinjaTrader.Vendor">
       <HintPath>C:\Users\Bo\Documents\NinjaTrader 8\bin\Custom\NinjaTrader.Vendor.dll</HintPath>
     </Reference>
@@ -189,7 +192,7 @@
     <Compile Include="Indicators\%40VolumeZones.cs" />
     <Compile Include="Indicators\%40Vortex.cs" />
     <Compile Include="Indicators\Suri\dev\DevDailyOpenInterestQuandl.cs" />
-    <Compile Include="Indicators\Suri\SuriBidAskDelta.cs" />
+    <Compile Include="Indicators\Suri\DevBidAskDelta.cs" />
     <Compile Include="Indicators\Suri\dev\DevAverageBarSize.cs" />
     <Compile Include="Indicators\Suri\dev\DevAverageMovement.cs" />
     <Compile Include="Indicators\Suri\dev\DevCot2.cs" />
@@ -207,6 +210,7 @@
     <Compile Include="Indicators\Suri\dev\DevDailyOpenInterest.cs" />
     <Compile Include="Indicators\Suri\dev\DevSwing.cs" />
     <Compile Include="Indicators\Suri\dev\DevSwing2.cs" />
+    <Compile Include="Indicators\Suri\SuriDrawingToolTile2.cs" />
     <Compile Include="Indicators\Suri\SuriMega.cs" />
     <Compile Include="Indicators\Suri\SuriDrawingToolTile.cs" />
     <Compile Include="Indicators\Suri\SuriProductionCost.cs" />

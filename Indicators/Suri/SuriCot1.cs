@@ -19,6 +19,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		private SuriCotHelper suriCotHelper;
 		private SuriSma suriSma;
 		private SessionIterator sessionIterator;
+		private DateTime lastReportDate;
 		
 		private bool isCurrentlyASignal;
 
@@ -139,7 +140,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
         }
         #endregion
 
-        private int noNewCotSince;
 		protected override void OnBarUpdate() {
 			if (SuriAddOn.license == License.None || suriCotHelper == null) return;
 			if (!(Bars.BarsPeriod.BarsPeriodType == BarsPeriodType.Day && Bars.BarsPeriod.Value == 1 || Bars.BarsPeriod.BarsPeriodType == BarsPeriodType.Minute && Bars.BarsPeriod.Value == 1440)) {
@@ -150,10 +150,9 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			if (index == null) {
 				if (CurrentBar > 10) {
 					Value[0] = Value[1];
-					noNewCotSince++;
 				}
 			} else {
-				noNewCotSince = 0;
+				lastReportDate = Time[0];
 				if (suriCotHelper.dbCotData[index.Value].Cot1 == null) return;
 				Values[0][0] = suriCotHelper.dbCotData[index.Value].Cot1.Value;
 			}
@@ -162,7 +161,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			Values[2][0] = 50;
 			Values[3][0] = 90;
 
-			if (noNewCotSince > 12) {
+			if (lastReportDate != null && (Time[0].Date - lastReportDate.Date).TotalDays > 10) {
 				PlotBrushes[0][0] = noNewCotBrush;
 			} else if (SuriAddOn.license != License.Basic) {
 				if (!isCurrentlyASignal || Value[0] < 90 && Value[0] > 10 ) {

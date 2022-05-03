@@ -7,7 +7,7 @@ using NinjaTrader.Cbi;
 using NinjaTrader.Gui.Chart;
 #endregion
 
-namespace NinjaTrader.NinjaScript.Indicators {
+namespace NinjaTrader.NinjaScript.Indicators.Suri {
 	public class DevRolloverButton : Indicator {
 		private ChartTab						chartTab;
 		private Chart							chartWindow;
@@ -191,19 +191,19 @@ namespace NinjaTrader.NinjaScript.Indicators
 {
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
-		private DevRolloverButton[] cacheDevRolloverButton;
-		public DevRolloverButton DevRolloverButton()
+		private Suri.DevRolloverButton[] cacheDevRolloverButton;
+		public Suri.DevRolloverButton DevRolloverButton()
 		{
 			return DevRolloverButton(Input);
 		}
 
-		public DevRolloverButton DevRolloverButton(ISeries<double> input)
+		public Suri.DevRolloverButton DevRolloverButton(ISeries<double> input)
 		{
 			if (cacheDevRolloverButton != null)
 				for (int idx = 0; idx < cacheDevRolloverButton.Length; idx++)
 					if (cacheDevRolloverButton[idx] != null &&  cacheDevRolloverButton[idx].EqualsInput(input))
 						return cacheDevRolloverButton[idx];
-			return CacheIndicator<DevRolloverButton>(new DevRolloverButton(), input, ref cacheDevRolloverButton);
+			return CacheIndicator<Suri.DevRolloverButton>(new Suri.DevRolloverButton(), input, ref cacheDevRolloverButton);
 		}
 	}
 }
@@ -212,12 +212,12 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.DevRolloverButton DevRolloverButton()
+		public Indicators.Suri.DevRolloverButton DevRolloverButton()
 		{
 			return indicator.DevRolloverButton(Input);
 		}
 
-		public Indicators.DevRolloverButton DevRolloverButton(ISeries<double> input )
+		public Indicators.Suri.DevRolloverButton DevRolloverButton(ISeries<double> input )
 		{
 			return indicator.DevRolloverButton(input);
 		}
@@ -228,12 +228,12 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.DevRolloverButton DevRolloverButton()
+		public Indicators.Suri.DevRolloverButton DevRolloverButton()
 		{
 			return indicator.DevRolloverButton(Input);
 		}
 
-		public Indicators.DevRolloverButton DevRolloverButton(ISeries<double> input )
+		public Indicators.Suri.DevRolloverButton DevRolloverButton(ISeries<double> input )
 		{
 			return indicator.DevRolloverButton(input);
 		}

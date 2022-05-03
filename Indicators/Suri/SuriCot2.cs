@@ -15,6 +15,7 @@ using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
 	public sealed class SuriCot2 : Indicator {
 		private SuriCotHelper suriCotHelper;
+		private DateTime lastReportDate;
 
 		#region Properties
 		[XmlIgnore]
@@ -110,7 +111,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			if (SuriAddOn.license == License.None) SuriCommon.NoValidLicenseError(RenderTarget, ChartControl, ChartPanel);
 		}
 		
-		private int noNewCotSince;
 		protected override void OnBarUpdate() {
 			if (SuriAddOn.license == License.None || suriCotHelper == null) return;
 			int? index = suriCotHelper.Update(Time[0]);
@@ -120,17 +120,16 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 					Values[1][0] = Values[1][1];
 					Values[2][0] = Values[2][1];
 					Values[3][0] = Values[3][1];
-					noNewCotSince++;
 				}
 			} else {
-				noNewCotSince = 0;
+				lastReportDate = Time[0];
 				if (suriCotHelper.dbCotData[index.Value].Cot2Max == null) return;
 				Values[0][0] = suriCotHelper.dbCotData[index.Value].Cot2Max.Value;
 				Values[1][0] = suriCotHelper.dbCotData[index.Value].Cot2Mid.Value;
 				Values[2][0] = suriCotHelper.dbCotData[index.Value].Cot2Min.Value;
 				Values[3][0] = suriCotHelper.dbCotData[index.Value].CommercialsShort;
 			}
-			if (noNewCotSince > 12) {
+			if (lastReportDate != null && (Time[0].Date - lastReportDate.Date).TotalDays > 10) {
 				PlotBrushes[0][0] = noNewCotBrush;
 				PlotBrushes[1][0] = noNewCotBrush;
 				PlotBrushes[2][0] = noNewCotBrush;

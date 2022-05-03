@@ -8,6 +8,7 @@ using NinjaTrader.Gui;
 using NinjaTrader.Gui.Chart;
 using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
+using NinjaTrader.Gui.Tools;
 using NinjaTrader.NinjaScript.DrawingTools;
 #endregion
 
@@ -120,14 +121,15 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 		}
 		
 		protected override void OnBarUpdate() {
-			if (wasdeData == null) return;
+			if (wasdeData.IsNullOrEmpty()) return;
 			
 			for (int i = nextIndex; i < wasdeData.Count; i++) {
 				if (wasdeData[i].Date.Date.Equals(Time[0].Date)) {
 					hasStarted = true;
-					Values[0][0] = wasdeData[i].Attributes[fieldText];	i++;
-					Values[1][0] = wasdeData[i].Attributes[fieldText];	i++;
-					Values[2][0] = wasdeData[i].Attributes[fieldText];
+					double entry;
+					if (wasdeData[i].Attributes.TryGetValue(fieldText, out entry)) Values[0][0] = entry; i++;
+					if (wasdeData[i].Attributes.TryGetValue(fieldText, out entry)) Values[1][0] = entry; i++;
+					if (wasdeData[i].Attributes.TryGetValue(fieldText, out entry)) Values[2][0] = entry;
 					nextIndex = i;
 					break;
 				}

@@ -9,14 +9,14 @@
                 <ScrollViewer>
                     <StackPanel Grid.ColumnSpan="2" Margin="0,0,0.334,0.333">
                         <Image x:Name="NinjatImage" Height="270" Width="270" VerticalAlignment="Top" Margin="10" />
-                        <!--TextBlock TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Foreground="LightGray" FontSize="16" Margin="10,0" >
+                        <!--TextBlock TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" FontSize="16" Margin="10,0" >
                             Hallo Trader<LineBreak/>
                             Es gibt Neuigkeiten:<LineBreak/>
                             <BulletDecorator  Margin="0,15,0,0" VerticalAlignment="Center">
                                 <BulletDecorator.Bullet>
                                     <Ellipse Height="5" Width="5" Fill="#FF0096FF"/>
                                 </BulletDecorator.Bullet>
-                                <TextBlock TextWrapping="Wrap" HorizontalAlignment="Left" Foreground ="LightGray" FontSize="16" Margin="10,0">
+                                <TextBlock TextWrapping="Wrap" HorizontalAlignment="Left" FontSize="16" Margin="10,0">
                                     Sensationale Weltneuheit: die erste Version des Suri Tools ist erschienen!
                                 </TextBlock>
                             </BulletDecorator>
@@ -24,20 +24,20 @@
                                 <BulletDecorator.Bullet>
                                     <Ellipse Height="5" Width="5" Fill="#FF0096FF"/>
                                 </BulletDecorator.Bullet>
-                                <TextBlock TextWrapping="Wrap" HorizontalAlignment="Left" Foreground ="LightGray" FontSize="16" Margin="10,0">
+                                <TextBlock TextWrapping="Wrap" HorizontalAlignment="Left" FontSize="16" Margin="10,0">
                                     Wir haben ein neues Video hochgeladen ...
                                 </TextBlock>
                             </BulletDecorator>
                         </TextBlock-->
-                        <TextBlock TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Foreground="LightGray" FontSize="16" Margin="10,10,10,5" >
+                        <TextBlock TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" FontSize="16" Margin="10,10,10,5" >
                             Termine
                             <LineBreak/>
                             <BulletDecorator  Margin="0,5,0,0" VerticalAlignment="Center">
                                 <BulletDecorator.Bullet>
                                     <Ellipse Height="5" Width="5" Fill="#FF0096FF"/>
                                 </BulletDecorator.Bullet>
-                                <TextBlock TextWrapping="Wrap" HorizontalAlignment="Left" Foreground ="LightGray" FontSize="16" Margin="10,0">
-                                    10.04.22 um 20:00 Uhr Marktanalyse
+                                <TextBlock TextWrapping="Wrap" HorizontalAlignment="Left" FontSize="16" Margin="10,0">
+                                    08.05.22 um 19:00 Uhr Marktanalyse
                                 </TextBlock>
                             </BulletDecorator>
                             <LineBreak/>
@@ -45,8 +45,8 @@
                                 <BulletDecorator.Bullet>
                                     <Ellipse Height="5" Width="5" Fill="#FF0096FF"/>
                                 </BulletDecorator.Bullet>
-                                <TextBlock TextWrapping="Wrap" HorizontalAlignment="Left" Foreground ="LightGray" FontSize="16" Margin="10,0">
-                                    17.04.22 um 20:00 Uhr Marktanalyse
+                                <TextBlock TextWrapping="Wrap" HorizontalAlignment="Left" FontSize="16" Margin="10,0">
+                                    15.05.22 um 19:00 Uhr Marktanalyse
                                 </TextBlock>
                             </BulletDecorator>
                             <LineBreak/>
@@ -54,8 +54,8 @@
                                 <BulletDecorator.Bullet>
                                     <Ellipse Height="5" Width="5" Fill="#FF0096FF"/>
                                 </BulletDecorator.Bullet>
-                                <TextBlock TextWrapping="Wrap" HorizontalAlignment="Left" Foreground ="LightGray" FontSize="16" Margin="10,0">
-                                    25.04.22 um 20:00 Uhr COT Webinar
+                                <TextBlock TextWrapping="Wrap" HorizontalAlignment="Left" FontSize="16" Margin="10,0">
+                                    30.05.22 um 20:00 Uhr COT Webinar
                                 </TextBlock>
                             </BulletDecorator>
                             <LineBreak/>
@@ -63,15 +63,15 @@
                                 <BulletDecorator.Bullet>
                                     <Ellipse Height="5" Width="5" Fill="#FF0096FF"/>
                                 </BulletDecorator.Bullet>
-                                <TextBlock TextWrapping="Wrap" HorizontalAlignment="Left" Foreground ="LightGray" FontSize="16" Margin="10,0">
-                                    26.04.22 um 20:00 Uhr VP Webinar
+                                <TextBlock TextWrapping="Wrap" HorizontalAlignment="Left" FontSize="16" Margin="10,0">
+                                    31.05.22 um 20:00 Uhr VP Webinar
                                 </TextBlock>
                             </BulletDecorator>
                         </TextBlock>
 
 
                         <StackPanel Margin="0,60,0,10" VerticalAlignment="Bottom" Grid.ColumnSpan="2" >
-                            <TextBlock TextWrapping="WrapWithOverflow" TextAlignment="Center" HorizontalAlignment="Center" Foreground="LightGray" FontSize="16" Margin="0,0,0,10" >
+                            <TextBlock TextWrapping="WrapWithOverflow" TextAlignment="Center" HorizontalAlignment="Center" FontSize="16" Margin="0,0,0,10" >
                             Wir wünschen Dir viel Spaß mit dem Suri Tool<LineBreak/>
                             Dein Suricate Trading Team
                             </TextBlock>
@@ -105,7 +105,7 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         <Border Grid.Column="0" Grid.Row="0" BorderBrush="#FF0096FF" BorderThickness="1">
-                            <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Center">
+                            <TextBlock FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Center">
                                 Indikatoren
                             </TextBlock>
                         </Border>
@@ -130,138 +130,138 @@
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
                             <Border Grid.Column="0" Grid.Row="0" BorderBrush="#FF0096FF" BorderThickness="1">
-                                <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Center">
                                 CoT 1
                                 </TextBlock>
                             </Border>
                             <Border Grid.Column="1" Grid.Row="0" BorderBrush="#FF0096FF" BorderThickness="1">
-                                <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Margin="10">
+                                <TextBlock FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Margin="10">
                                     Der CoT 1 Indikator nach Regelwerk.
                                 </TextBlock>
                             </Border>
                             <Border Grid.Column="0" Grid.Row="1" BorderBrush="#FF0096FF" BorderThickness="1">
-                                <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Center">
                                 CoT 2
                                 </TextBlock>
                             </Border>
                             <Border Grid.Column="1" Grid.Row="1" BorderBrush="#FF0096FF" BorderThickness="1">
-                                <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Margin="10">
+                                <TextBlock FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Margin="10">
                                     Der CoT 2 Indikator nach Regelwerk.
                                 </TextBlock>
                             </Border>
                             <Border Grid.Column="0" Grid.Row="2" BorderBrush="#FF0096FF" BorderThickness="1">
-                                <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Center">
                                 CoT-Daten
                                 </TextBlock>
                             </Border>
                             <Border Grid.Column="1" Grid.Row="2" BorderBrush="#FF0096FF" BorderThickness="1">
-                                <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Margin="10">
+                                <TextBlock FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Margin="10">
                                 Hiermit kannst Du Dir andere CoT Daten anzeigen, z.B. das Open Interest.
                                 </TextBlock>
                             </Border>
                             <Border Grid.Column="0" Grid.Row="3" BorderBrush="#FF0096FF" BorderThickness="1">
-                                <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Center">
                                 SMA
                                 </TextBlock>
                             </Border>
                             <Border Grid.Column="1" Grid.Row="3" BorderBrush="#FF0096FF" BorderThickness="1">
-                                <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Margin="10">
+                                <TextBlock FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Margin="10">
                                 Der SMA ist grün, wenn er im Vergleich zum Vortag steigend ist, oder rot, wenn er fallend ist.
                                 </TextBlock>
                             </Border>
                             <Border Grid.Column="0" Grid.Row="4" BorderBrush="#FF0096FF" BorderThickness="1">
-                                <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Center">
                                 Oszillator
                                 </TextBlock>
                             </Border>
                             <Border Grid.Column="1" Grid.Row="4" BorderBrush="#FF0096FF" BorderThickness="1">
-                                <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Margin="10">
+                                <TextBlock FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Margin="10">
                                     Ein Oszillator, der einen Wert in Bezug zu den letzten 125 Bars berechnet.
                                 </TextBlock>
                             </Border>
                             <Border Grid.Column="0" Grid.Row="5" BorderBrush="#FF0096FF" BorderThickness="1">
-                                <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Center">
                                 Com Short / OI in %
                                 </TextBlock>
                             </Border>
                             <Border Grid.Column="1" Grid.Row="5" BorderBrush="#FF0096FF" BorderThickness="1">
-                                <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Margin="10">
+                                <TextBlock FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Margin="10">
                                     Der Anteil der Commercials Short am Open Interest.
                                 </TextBlock>
                             </Border>
                             <Border Grid.Column="0" Grid.Row="6" BorderBrush="#FF0096FF" BorderThickness="1">
-                                <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Center">
                                 Bargröße
                                 </TextBlock>
                             </Border>
                             <Border Grid.Column="1" Grid.Row="6" BorderBrush="#FF0096FF" BorderThickness="1">
-                                <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Margin="10">
+                                <TextBlock FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Margin="10">
                                 Die Bargröße im Vergleich zu den letzten 125 Tagen.<LineBreak/>
                                 Falls diese Bar die größte in diesem Zeitraum ist, gilt sie als Megabar und wird gelb markiert.<LineBreak/>
                                 Gaps werden mit einberechnet.
                                 </TextBlock>
                             </Border>
                             <Border Grid.Column="0" Grid.Row="7" BorderBrush="#FF0096FF" BorderThickness="1">
-                                <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Center">
                                     Volumen
                                 </TextBlock>
                             </Border>
                             <Border Grid.Column="1" Grid.Row="7" BorderBrush="#FF0096FF" BorderThickness="1">
-                                <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Margin="10">
+                                <TextBlock FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Margin="10">
                                     Das Volumen im Vergleich zu den letzten 125 Tagen.<LineBreak/>
                                     Falls es das höchste Volumen in diesem Zeitraum ist, gilt sie als Megavolumen und wird gelb markiert.
                                 </TextBlock>
                             </Border>
                             <Border Grid.Column="0" Grid.Row="8" BorderBrush="#FF0096FF" BorderThickness="1">
-                                <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Center">
                                     Mega
                                 </TextBlock>
                             </Border>
                             <Border Grid.Column="1" Grid.Row="8" BorderBrush="#FF0096FF" BorderThickness="1">
-                                <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Margin="10">
+                                <TextBlock FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Margin="10">
                                     Kombiniert die beiden Indikatoren Volumen und Bargröße und zeigt an, um wie viel Prozent ein Megabar oder Megavolumen erreicht wurde.<LineBreak/>
                                     Wenn beispielsweise Volumen auf 40% und Bargröße auf 60% ist, dann wird 60% angezeigt. 100% ist eine Megabar oder Megavolumen.
                                 </TextBlock>
                             </Border>
 
                             <Border Grid.Column="0" Grid.Row="9" BorderBrush="#FF0096FF" BorderThickness="1">
-                                <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Center">
                                     Volume Profile Gross
                                 </TextBlock>
                             </Border>
                             <Border Grid.Column="1" Grid.Row="9" BorderBrush="#FF0096FF" BorderThickness="1">
-                                <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Margin="10">
+                                <TextBlock FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Margin="10">
 
                                 </TextBlock>
                             </Border>
                             <Border Grid.Column="0" Grid.Row="10" BorderBrush="#FF0096FF" BorderThickness="1">
-                                <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Center">
                                     Volume Profile Intraday
                                 </TextBlock>
                             </Border>
                             <Border Grid.Column="1" Grid.Row="10" BorderBrush="#FF0096FF" BorderThickness="1">
-                                <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Margin="10">
+                                <TextBlock FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Margin="10">
                                     Dieser Indikator benötigt Tickdaten!
                                 </TextBlock>
                             </Border>
                             <Border Grid.Column="0" Grid.Row="11" BorderBrush="#FF0096FF" BorderThickness="1">
-                                <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Center">
                                 Toolbar
                                 </TextBlock>
                             </Border>
                             <Border Grid.Column="1" Grid.Row="11" BorderBrush="#FF0096FF" BorderThickness="1">
-                                <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Margin="10">
+                                <TextBlock FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Margin="10">
                                 Die Toolbar lädt ueber dem Chart ein Menü, mit dem man Indikatoren ein- und ausschalten kann.<LineBreak/>
                                 Der Indikator muss allerdings zuvor im Indikatormenü geladen sein.
                                 </TextBlock>
                             </Border>
                             <Border Grid.Column="0" Grid.Row="12" BorderBrush="#FF0096FF" BorderThickness="1">
-                                <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Center">
                                 Zeichenwerkzeuge
                                 </TextBlock>
                             </Border>
                             <Border Grid.Column="1" Grid.Row="12" BorderBrush="#FF0096FF" BorderThickness="1">
-                                <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Margin="10">
+                                <TextBlock FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Margin="10">
                                 Lädt innerhalb des Charts ein bewegliches, kleines Menue, mit dem man schneller auf Zeichenwerkzeuge zugreifen kann.
                                 </TextBlock>
                             </Border>
@@ -269,7 +269,7 @@
 
 
                         <Border Grid.Column="0" Grid.Row="1" BorderBrush="#FF0096FF" BorderThickness="1">
-                            <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Center">
+                            <TextBlock FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Center">
                                 Zeichenwerkzeuge
                             </TextBlock>
                         </Border>
@@ -284,22 +284,22 @@
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
                             <Border Grid.Column="0" Grid.Row="0" BorderBrush="#FF0096FF" BorderThickness="1">
-                                <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Center">
                                     Suri Rechteck
                                 </TextBlock>
                             </Border>
                             <Border Grid.Column="1" Grid.Row="0" BorderBrush="#FF0096FF" BorderThickness="1">
-                                <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Margin="10">
+                                <TextBlock FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Margin="10">
                                     Zeichnet ein Rechteck um Bars herum mit einigen zusätzlichen Informationen wie die Anzahl an Ticks oder die Dauer in Tagen oder Bars.
                                 </TextBlock>
                             </Border>
                             <Border Grid.Column="0" Grid.Row="1" BorderBrush="#FF0096FF" BorderThickness="1">
-                                <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Center">
                                     Barinfo
                                 </TextBlock>
                             </Border>
                             <Border Grid.Column="1" Grid.Row="1" BorderBrush="#FF0096FF" BorderThickness="1">
-                                <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Margin="10">
+                                <TextBlock FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Margin="10">
                                     Zeichnet Informationen zu einer einzelnen Bar an, wie die Anzahl an Ticks der Bar, des Körpers oder der Dochte.
                                 </TextBlock>
                             </Border>
@@ -307,7 +307,7 @@
 
 
                         <Border Grid.Column="0" Grid.Row="2" BorderBrush="#FF0096FF" BorderThickness="1">
-                            <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Center">
+                            <TextBlock FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Center">
                                 Chart Style
                             </TextBlock>
                         </Border>
@@ -320,12 +320,12 @@
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
                             <Border Grid.Column="0" Grid.Row="0" BorderBrush="#FF0096FF" BorderThickness="1">
-                                <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Center">
                                 Candlestick mit Gaps
                                 </TextBlock>
                             </Border>
                             <Border Grid.Column="1" Grid.Row="0" BorderBrush="#FF0096FF" BorderThickness="1">
-                                <TextBlock Foreground ="LightGray" FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Margin="10">
+                                <TextBlock FontSize="16" TextWrapping="WrapWithOverflow" TextAlignment="Center" VerticalAlignment="Top" Margin="10">
                                     Für unser Regelwerk spielen Gaps eine wichtige Rolle. Für uns gehört das Gap zu einer Bar dazu.<LineBreak/>
                                     Mit diesem Chart Style kannst Du Dir das Gap zu einer Bar anzeigen lassen.
                                 </TextBlock>
@@ -338,39 +338,65 @@
             <TabItem Header="Hilfe" Padding="10,5">
                 <ScrollViewer>
                     <StackPanel Margin="0,0,0,10" >
-                        <TextBlock x:Name="Version" TextAlignment="Center" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="LightGray" FontSize="16" Margin="20,10,20,0">
+                        <TextBlock x:Name="Version" TextAlignment="Center" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" Margin="20,10,20,0">
                             Du benutzt Version
                         </TextBlock>
                         <Button x:Name="DownloadTool" Content="Aktuelle Version herunterladen" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,5" Padding="10" BorderBrush="#FF0B76C4" />
-                        <TextBlock TextAlignment="Center" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="LightGray" FontSize="16" Margin="20,0">
+                        <TextBlock TextAlignment="Center" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" Margin="20,0">
                             So kannst Du das Suri Tool aktualisieren:<LineBreak/>
                             1. Optional: Mache einen Screenshot dieser Anleitung, weil Du kurzzeitig keinen Zugriff mehr darauf haben wirst<LineBreak/>
-                            2. Lade Dir die neuste Version herunter<LineBreak/>
-                            3. Klicke im Hauptmenü auf "Werkzeuge" und dann auf "Entferne NinjaScript Assembly"<LineBreak/>
-                            4. Klicke auf das Suri Tool und dann auf "Entfernen"<LineBreak/>
-                            5. Starte NinjaTrader neu<LineBreak/>
-                            6. Klicke erneut auf "Werkzeuge", dann auf "Import" und "NinjaScript AddOn..."<LineBreak/>
-                            7. Selektiere die Datei, die Du in Schritt 1 heruntergeladen hast<LineBreak/>
-                            8. Starte NinjaTrader neu
+                            2. Speichere falls nötig Dein Workspace ab<LineBreak/>
+                            3. Lade Dir die neuste Version herunter<LineBreak/>
+                            4. Klicke im Hauptmenü auf "Werkzeuge" und dann auf "Entferne NinjaScript Assembly"<LineBreak/>
+                            5. Klicke zuerst oben auf das Suri Tool und danach auf "Entfernen"<LineBreak/>
+                            6. Schließe NinjaTrader, das Workspace aber nicht abspeichern! Starte Ninja Trader neu<LineBreak/>
+                            7. Klicke erneut auf "Werkzeuge", dann auf "Import" und "NinjaScript AddOn..."<LineBreak/>
+                            8. Selektiere die Datei, die Du eben heruntergeladen hast<LineBreak/>
+                            9. Schließe NinjaTrader. Dabei nicht das Workspace abspeichern. Starte es danach neu.
                         </TextBlock>
 
                         <Button x:Name="DownloadWorkspace" Content="Aktuelles Workspace herunterladen" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,70,0,5" Padding="10" BorderBrush="#FF0B76C4" />
-                        <TextBlock TextAlignment="Center" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="LightGray" FontSize="16" Margin="20,0">
+                        <TextBlock TextAlignment="Center" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" Margin="20,0">
                             Du musst NinjaTrader neu starten um das Workspace benutzen zu können.
                         </TextBlock>
 
-                        <TextBlock x:Name="LicenseUntil" TextAlignment="Center" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" VerticalAlignment="Top" Foreground="LightGray" FontSize="16" Margin="20,70,20,0">
+                        <TextBlock x:Name="LicenseUntil" TextAlignment="Center" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="16" Margin="20,70,20,0">
                             Deine Lizenz läuft bis zum
                         </TextBlock>
                         <Button x:Name="ExtendLicense" Content="Lizenz verlängern" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,5" Padding="10" BorderBrush="#FF0B76C4" />
 
-                        <TextBlock TextAlignment="Center" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" VerticalAlignment="Top" Foreground="LightGray" FontSize="16" Margin="20,70,20,20">
+                        <TextBlock TextAlignment="Center" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="16" Margin="20,70,20,20">
                         Falls Du eine Frage oder Verbesserungswünsche hast, schreibe uns bitte eine Mail an<LineBreak/>
                         <Hyperlink x:Name="contact" FontSize="16" NavigateUri="mailto:info@suricate-trading.de">
                             <Run Text="info@suricate-trading.de"/>
                         </Hyperlink>
                         </TextBlock>
 
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <TabItem Header="Patch Notes" Padding="10,5">
+                <ScrollViewer>
+                    <StackPanel Margin="0,0,0,10" >
+                        <TextBlock TextAlignment="Center" TextWrapping="WrapWithOverflow" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="16" Margin="20,0">
+                            <LineBreak/>
+                            Hier informieren wir Dich über die Verbesserungen, die in den jeweiligen Versionen gekommen sind.
+                            Dieses Suri Fenster aktualisiert sich immer automatisch. Du erfährst hier also immer den neusten Stand.
+                            <LineBreak/>
+                            <LineBreak/>
+                            Version 1.3.2:
+                            <LineBreak/>
+                            - Es erscheint nun beim Start von Ninja Trader eine Nachricht, wenn eine neue Version des Suri Tools verfügbar ist. Du kannst dann hier reinschauen um zu prüfen, was sich im Details verändert hat.<LineBreak/>
+                            - COT-Daten werden besser geladen. Es kam manchmal dazu, dass manche Märkte zu spät geladen wurden.<LineBreak/>
+                            - COT-Indikatoren werden wieder bis zum aktuellen Tag gezeichnet und stoppen nicht nach dem letzten Report-Datum.<LineBreak/>
+                            - Neue Märkte: Südafrikanischer Rand, VIX (CBOE Volatility Index) und die 4 üblichen Anleihen Nasddq, Nikkei, Dow und S&amp;P 500<LineBreak/>
+                            - Der Zeichenwerkzeuge-Toolbar sollte nun nach einem Update des Suri Tools nicht neu konfiguriert werden müssen.<LineBreak/>
+                            - Die Schriftfarbe des Suri-Fensters ist nun dynamisch, sodass man insbesondere beim weißen-Design die Schrift besser lesen kann.<LineBreak/>
+                            - Wenn ein Markt mit der Toolbar gewechselt wird, steht nun rechts neben der Toolbar ein Hinweis, dass die Daten aktuell noch geladen werden. Der Hinweis verschwindet, wenn alles geladen worden ist.<LineBreak/>
+                            - Es erscheint nun beim Start von Ninja Trader eine Nachricht, wenn eine neue Version des Suri Tools verfügbar ist.<LineBreak/>
+                            - Wenn ein Markt seit 10 Tagen nicht mehr im COT-Report auftaucht, ausgehend vom Report-Datum, wird die Farbe des Indikators orange. Der Reporttag ist meistens Dienstag. Bis zum nächsten Releaste-Tag am Freitag sind es also 10 Tage. Wenn man dann am Samstag (also der 11. Tag) die Analyse macht und die Linie orange ist, weiß man, dass kein neuer Report da ist.<LineBreak/>
+                        </TextBlock>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>

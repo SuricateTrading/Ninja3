@@ -21,7 +21,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		private double max = double.MinValue;
 		private int minIndex;
 		private int maxIndex;
-		private int noNewCotSince;
+		private DateTime lastReportDate;
 		
 		#region Properties
 		[TypeConverter(typeof(FriendlyEnumConverter))]
@@ -156,14 +156,8 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				}
 			}
 			
-			if (CurrentBar > 0 && Math.Abs(Value[0] - Value[1]) < 0.00000000001) {
-				noNewCotSince++;
-			} else {
-				noNewCotSince = 0;
-			}
-			if (noNewCotSince > 12) {
-				PlotBrushes[0][0] = noNewCotBrush;
-			}
+			if (CurrentBar > 0 && Math.Abs(Value[0] - Value[1]) > 0.00000000001)				lastReportDate = Time[0];
+			if (lastReportDate != null && (Time[0].Date - lastReportDate.Date).TotalDays > 10)	PlotBrushes[0][0] = noNewCotBrush;
 		}
 
 		private int? GetCotValue(SuriCotReportField field, int index) {

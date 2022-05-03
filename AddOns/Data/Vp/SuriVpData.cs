@@ -37,7 +37,6 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			for (int i = barData.Count - 1; i >= 0; i--) {
 				SuriVpBarData suriVpBarData = barData[i];
 				suriVpBarData.Prepare();
-				//CalculateNakedPoc(i);
 
 				// naked poc:
 				if (i != barData.Count -1 && (suriVpBarData.PocTickData().tick < low || suriVpBarData.PocTickData().tick > high)) {
@@ -81,17 +80,6 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 				
 				boxes[index] = new SuriVpBox(bars.Count, index, boxHigh, boxLow);
 			}
-		}
-		
-		private void CalculateNakedPoc(int index) {
-			if (index >= barData.Count - 1) return;
-			int pocTick = barData[index].PocTickData().tick;
-			for (int i = index + 1; i < barData.Count; i++) {
-				if (barData[i].tickData.ContainsKey(pocTick) && barData[i].tickData[pocTick].volume != 0 ) {
-					return;
-				}
-			}
-			barData[index].PocTickData().isNakedPoc = true;
 		}
 	}
 
@@ -353,7 +341,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			}
 		}
 
-		
+		#region Intra Only Functions
 		private void SetLvns(int start = 0) {
 			for (int i = start; i < tickData.Count; i++) {
 				int? high1, high2, low1;
@@ -453,7 +441,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			}
 			return value / count;
 		}
-		
+		#endregion
 	}
 
 	public sealed class SuriVpBigData : SuriSingleVp { public SuriVpBigData(double tickSize) : base(true, tickSize) {} }

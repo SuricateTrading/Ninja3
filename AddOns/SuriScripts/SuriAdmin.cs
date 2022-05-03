@@ -69,25 +69,30 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			}
 		}
 	    
-	    public static void StoreVpBigToFile(int commodityIndex = 0, bool onlyRecent = true) {
+	    public static void StoreVpBigToFile(bool dev = false, int commodityIndex = 0, bool onlyRecent = true) {
 			KeyValuePair<Commodity, CommodityData> entry;
 			try {
 				entry = SuriStrings.data.ElementAt(commodityIndex);
 			} catch (Exception) { return; }
 
 			if (entry.Key == Commodity.BitcoinMicro) {
-				StoreVpBigToFile(commodityIndex + 1, onlyRecent);
+				StoreVpBigToFile(dev, commodityIndex + 1, onlyRecent);
 				return;
 			}
 
 			try {
 				Instrument instrument = SuriRepo.GetInstrument(entry.Value);
-				DateTime from = entry.Key != Commodity.Rice ? DateTime.Parse("2000-01-01") : DateTime.Parse("2012-01-01");
+				DateTime from;
+				if (dev) {
+					from = entry.Key != Commodity.Rice ? DateTime.Parse("2010-01-01") : DateTime.Parse("2012-01-01");
+				} else {
+					from = entry.Key != Commodity.Rice ? DateTime.Parse("2000-01-01") : DateTime.Parse("2013-01-01");
+				}
 				DateTime to = DateTime.Now.AddDays(-1).Date;
 				Code.Output.Process("Loading " + entry.Key + " from " + from + " to " + to, PrintTo.OutputTab1);
 				
 				new BarsRequest(instrument, from, to) {
-					MergePolicy = MergePolicy.MergeBackAdjusted,
+					MergePolicy = dev ? MergePolicy.MergeNonBackAdjusted : MergePolicy.MergeBackAdjusted,
 					BarsPeriod = new BarsPeriod {BarsPeriodType = BarsPeriodType.Minute, Value = 1},
 					TradingHours = instrument.MasterInstrument.TradingHours,
 				}.Request((bars, errorCode, errorMessage) => {
@@ -97,7 +102,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 					}
 					
 					SuriVpBigData suriVpBigData = new SuriVpBigData(instrument.MasterInstrument.TickSize);
-					string path = SuriRepo.dbPath + @"vpbig\" + instrument.MasterInstrument.Name + @"\";
+					string path = SuriRepo.dbPath + @"vpbig" + (dev ? @"dev\" : @"\") + instrument.MasterInstrument.Name + @"\";
 					Directory.CreateDirectory(path);
 					for (int i = 0; i < bars.Bars.Count; i++) {
 						DateTime date = bars.Bars.GetTime(i).Date;
@@ -108,7 +113,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 							if (oldWeek - newWeek > 1 && newWeek == 2) {
 								// this happens if a new year started and the first week of the year did not have a single trading day.
 								Code.Output.Process("Fehlende erste Woche bei " + instrument.MasterInstrument.Name + " " + date, PrintTo.OutputTab1);
-								using (StreamWriter stream = File.CreateText(SuriBigRepo.GetVpBigFilePath(instrument, date.Year, 1))) {
+								using (StreamWriter stream = File.CreateText(SuriBigRepo.GetVpBigFilePath(instrument, dev, date.Year, 1))) {
 									suriVpBigData.AddMissingValues();
 									SuriVpBigDataSerialized suriVp = SuriBigRepo.FromVpBig(suriVpBigData);
 									suriVp.date = new DateTime(date.Year, 1, 1);
@@ -117,7 +122,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 							}
 							
 							if (oldWeek < newWeek || oldWeek - newWeek > 1) {
-								using (StreamWriter stream = File.CreateText(SuriBigRepo.GetVpBigFilePath(instrument, date.Year, newWeek))) {
+								using (StreamWriter stream = File.CreateText(SuriBigRepo.GetVpBigFilePath(instrument, dev, date.Year, newWeek))) {
 									suriVpBigData.AddMissingValues();
 									SuriVpBigDataSerialized suriVp = SuriBigRepo.FromVpBig(suriVpBigData);
 									suriVp.date = date.Date;
@@ -140,12 +145,12 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 					}
 
 					Code.Output.Process("Done " + instrument.MasterInstrument.Name, PrintTo.OutputTab1);
-					StoreVpBigToFile(commodityIndex + 1, onlyRecent);
+					StoreVpBigToFile(dev, commodityIndex + 1, onlyRecent);
 				});
 				System.Threading.Thread.Sleep(1000*60);
 			} catch (Exception e) {
 				Code.Output.Process("Error in " + entry.Key + " " + e, PrintTo.OutputTab1);
-				StoreVpBigToFile(commodityIndex + 1, onlyRecent);
+				StoreVpBigToFile(dev, commodityIndex + 1, onlyRecent);
 			}
 		}
 

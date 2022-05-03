@@ -12,19 +12,20 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon.Vp {
         
 	    static SuriBigRepo() {
 		    Directory.CreateDirectory(dbPath + @"vpbig/");
+		    Directory.CreateDirectory(dbPath + @"vpbigdev/");
 	    }
 	    
-		public static SuriVpBigData GetVpBig(Instrument instrument, DateTime? date = null) {
+		public static SuriVpBigData GetVpBig(Instrument instrument, bool dev = false, DateTime? date = null) {
 			int? year = null, week = null;
 			if (date != null) {
 				year = date.Value.Year;
 				week = Week(date.Value);
 			}
 			
-			string fileName = GetVpBigFilePath(instrument, year, week);
+			string fileName = GetVpBigFilePath(instrument, dev, year, week);
 			if (!File.Exists(fileName) || (DateTime.Now - File.GetCreationTime(fileName)).TotalDays >= 2) {
 				// update vp
-				string serverFile = @"https://app.suricate-trading.de/ninja/vpbig/" + instrument.MasterInstrument.Name + ".vpbig";
+				string serverFile = @"https://app.suricate-trading.de/ninja/vpbig" + (dev ? "dev/" : "/") + instrument.MasterInstrument.Name + ".vpbig";
 				try {
 					using (WebClient webClient = new WebClient()) {
 						webClient.DownloadFile(serverFile, fileName);
@@ -42,13 +43,13 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon.Vp {
 			return suriVp;
 		}
 
-		public static string GetVpBigFilePath(Instrument instrument, int? year = null, int? week = null) {
+		public static string GetVpBigFilePath(Instrument instrument, bool dev = false, int? year = null, int? week = null) {
 			if (year == null) {
-				string folder = dbPath + @"vpbig\main\";
+				string folder = dbPath + @"vpbig" + (dev ? @"dev" : "") + @"\main\";
 				Directory.CreateDirectory(folder);
 				return folder + instrument.MasterInstrument.Name + ".vpbig";
 			} else {
-				string folder = dbPath + @"vpbig\" + instrument.MasterInstrument.Name + @"\";
+				string folder = dbPath + @"vpbig" + (dev ? @"dev\" : @"\") + instrument.MasterInstrument.Name + @"\";
 				Directory.CreateDirectory(folder);
 				return folder + year + "_" + week + ".vpbig";
 			}
