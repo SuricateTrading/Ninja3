@@ -94,7 +94,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 	        base.OnRender(chartControl, chartScale);
 	        if (SuriAddOn.license == License.None) SuriCommon.NoValidLicenseError(RenderTarget, ChartControl, ChartPanel);
         }
-        
+
 		protected override void OnBarUpdate() {
 			if (SuriAddOn.license == License.None) return;
 			
@@ -104,7 +104,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				Values[0][0] = Volume[0];
 			}
 			
-			if (Values[0][0] > max) {
+			if (Values[0][0] >= max) {
 				maxIndex = CurrentBar;
 				max = Values[0][0];
 			} else {
@@ -112,7 +112,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				if (CurrentBar - maxIndex > days) {
 					max = 0;
 					for (int i=0; i<days; i++) {
-						if (max < Values[0][i]) {
+						if (Values[0][i] >= max) {
 							maxIndex = CurrentBar - i;
 							max = Values[0][i];
 						}

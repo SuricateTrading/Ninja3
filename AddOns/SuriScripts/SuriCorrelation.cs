@@ -1,14 +1,16 @@
-/*#region Using declarations
+#region Using declarations
 using System;
 using System.Collections.Generic;
 using NinjaTrader.NinjaScript;
 using System.IO;
 using System.Linq;
 using MathNet.Numerics.Statistics;
+using Newtonsoft.Json;
 using NinjaTrader.Cbi;
 using NinjaTrader.Core;
 using NinjaTrader.Custom.AddOns.SuriCommon.Vp;
 using NinjaTrader.Data;
+using NinjaTrader.Gui.Tools;
 using Instrument = NinjaTrader.Cbi.Instrument;
 #endregion
 
@@ -22,18 +24,23 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 	    private readonly List<Commodity> commodities = Enum.GetValues(typeof(Commodity)).Cast<Commodity>().ToList();
 	    private readonly Dictionary<Commodity, BarsRequest> data = new Dictionary<Commodity, BarsRequest>();
 
-	    public void LoadData(int index = 0) {
-		    if (index == 0) Code.Output.Process("Start Loading", PrintTo.OutputTab1);
+	    public void LoadData(int index = 0, int years = 15) {
 		    if (index >= commodities.Count) {
 			    Calculate();
+			    //string json = JsonConvert.SerializeObject(data.First().Value.Bars.BarsSeries);
+			    //File.WriteAllText(@"C:\Users\Bo\Documents\NinjaTrader 8\mining\bars.json", json);
 			    return;
 		    }
 		    Commodity commodity = commodities[index];
+		    if (commodity != Commodity.WheatZw && commodity != Commodity.SoybeanMeal) {
+			    LoadData(++index, years);
+			    return;
+		    }
 		    try {
 			    Instrument instrument = SuriRepo.GetInstrument(SuriStrings.data[commodity]);
-			    DateTime from = DateTime.Now.AddYears(-3).Date;
+			    DateTime from = DateTime.Now.AddYears(-years).Date;
 			    DateTime to = DateTime.Now.AddDays(-1).Date;
-			    //Code.Output.Process("Loading " + commodity + " from " + from + " to " + to, PrintTo.OutputTab1);
+			    Code.Output.Process("Loading " + commodity + " from " + from + " to " + to, PrintTo.OutputTab1);
 			    
 			    new BarsRequest(instrument, from, to) {
 				    MergePolicy = MergePolicy.MergeBackAdjusted,
@@ -45,7 +52,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 					    return;
 				    }
 				    data.Add(commodity, bars);
-				    LoadData(++index);
+				    LoadData(++index, years);
 			    });
 		    } catch (Exception e) {
 			    Code.Output.Process("Error in " + commodity + " " + e, PrintTo.OutputTab1);
@@ -63,7 +70,21 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 		    // write header
 		    WriteAll("Commodity\t");
 		    foreach (var pair1 in data) WriteAll(pair1.Key + "\t");
+
+		    for (int endYear = 2009; endYear <= DateTime.Now.Year; endYear++) {
+			    WriteAll( "\n" + endYear);
+			    CalcPeriod(endYear, 1);
+		    }
+		    //CalcPeriod();
 		    
+		    pearsonWriter.Close();
+		    spearmanWriter.Close();
+		    correlationMatchingWriter.Close();
+		    meanWriter.Close();
+		    Code.Output.Process("End calculation", PrintTo.OutputTab1);
+	    }
+
+	    private void CalcPeriod(int? endYear = null, int years = 20) {
 		    foreach (var pair1 in data) {
 			    WriteAll("\n" + pair1.Key + "\t");
 			    foreach (var pair2 in data) {
@@ -78,11 +99,16 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 				    List<double> bars2Matches = new List<double>();
 				    Tuple<int, int> t = new Tuple<int, int>(-1, -1);
 				    while ((t = SynchronizeIndex(new Tuple<int, int>(t.Item1 + 1, t.Item2 + 1), bars1, bars2)) != null) {
+					    if (endYear != null) {
+						    int year = bars1.GetTime(t.Item1).Year;
+						    if (year <= endYear - years) continue;
+						    if (year > endYear) break;
+					    }
 					    bars1Matches.Add(bars1.GetClose(t.Item1));
 					    bars2Matches.Add(bars2.GetClose(t.Item2));
 				    }
-				    if (bars1Matches.Count < bars1.Count * 0.75) {
-					    Code.Output.Process("ERROR zu viel fehlende Tage bei: " + pair1.Key + " " + pair2.Key + " " + (100 * bars1Matches.Count / ((double)bars1.Count)), PrintTo.OutputTab1);
+				    if (bars1Matches.IsNullOrEmpty() /*bars1Matches.Count < bars1.Count * 0.75*/) {
+					    //Code.Output.Process("ERROR zu viel fehlende Tage bei: " + pair1.Key + " " + pair2.Key + " " + (100 * bars1Matches.Count / ((double)bars1.Count)), PrintTo.OutputTab1);
 					    WriteAll("\t");
 					    continue;
 				    }
@@ -95,12 +121,6 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 				    meanWriter.Write(((pearson + spearman)/2.0).ToString("F2") + "\t");
 			    }
 		    }
-		    
-		    pearsonWriter.Close();
-		    spearmanWriter.Close();
-		    correlationMatchingWriter.Close();
-		    meanWriter.Close();
-		    Code.Output.Process("End calculation", PrintTo.OutputTab1);
 	    }
 
 	    private void WriteAll(string text) {
@@ -132,4 +152,3 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 	    
     }
 }
-*/

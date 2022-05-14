@@ -16,6 +16,7 @@ using System.Windows.Forms;
 using System.Windows.Media.Imaging;
 using NinjaTrader.Core;
 using NinjaTrader.Custom.AddOns.SuriCommon;
+using NinjaTrader.NinjaScript;
 using Button = System.Windows.Controls.Button;
 using HorizontalAlignment = System.Windows.HorizontalAlignment;
 using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
@@ -32,7 +33,6 @@ namespace NinjaTrader.Gui.NinjaScript {
 			Caption = "Suricate Trading";
 			Content = LoadXaml();
 			current = this;
-
 			foreach (var window in NinjaTrader.Core.Globals.AllWindows) {
 				Chart.Chart chart = window as Chart.Chart;
 				if (chart == null) continue;
@@ -193,7 +193,7 @@ namespace NinjaTrader.Gui.NinjaScript {
 			downloadVpBig.Click		+= (sender, args) => SuriAdmin.StoreVpBigToFile();
 			downloadVpBigDev.Click	+= (sender, args) => SuriAdmin.StoreVpBigToFile(true);
 			downloadVpIntra.Click	+= (sender, args) => SuriAdmin.StoreVpIntra();
-			//correlation.Click		+= (sender, args) => new DevCorrelation().LoadData();
+			correlation.Click		+= (sender, args) => new DevCorrelation().LoadData();
 			downloadTicks.Click		+= (sender, args) => SuriAdmin.StoreTickData();
 			suriStatistics.Click	+= (sender, args) => new DevStatistics().Start();
 			

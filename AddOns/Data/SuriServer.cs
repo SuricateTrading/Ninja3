@@ -15,7 +15,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
         
         private static string Post(string url, bool post) {
             //Code.Output.Process(url, PrintTo.OutputTab1);
-            ServicePointManager.ServerCertificateValidationCallback = delegate { return true; }; // todo: delete?
+            ServicePointManager.ServerCertificateValidationCallback = delegate { return true; };
             
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
             request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;

@@ -53,6 +53,8 @@ namespace NinjaTrader.Gui.NinjaScript {
 					webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/strikingHigh.png", path + "strikingHigh.png");
 					webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/strikingLow.png", path + "strikingLow.png");
 					webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/ruler.png", path + "ruler.png");
+					webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/cot1.png", path + "cot1.png");
+					webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/cot2.png", path + "cot2.png");
 				}
 				webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/SuriMain.xaml", path + "SuriMain.xaml");
 			}
@@ -72,7 +74,7 @@ namespace NinjaTrader.Gui.NinjaScript {
 			};
 
 			if (!SuriCommon.isUpToDate) {
-				NTMessageBoxSimple.Show(Window.GetWindow(window), "Hallo Trader,\nEs ist eine neue Version verfügbar!", "Neue Version", MessageBoxButton.OK, MessageBoxImage.None);
+				NTMessageBoxSimple.Show(Window.GetWindow(window), "Hallo Trader,\nEs ist eine neue Version vom Suri Tool verfügbar!", "Neue Version", MessageBoxButton.OK, MessageBoxImage.None);
 			}
 			
 			cc.MainMenu.Add(startSuri);

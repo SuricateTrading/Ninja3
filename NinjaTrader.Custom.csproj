@@ -90,6 +90,9 @@
     <Reference Include="Newtonsoft.Json">
       <HintPath>C:\Program Files (x86)\NinjaTrader 8\bin64\Newtonsoft.Json.dll</HintPath>
     </Reference>
+    <Reference Include="MathNet.Numerics">
+      <HintPath>C:\Users\Bo\Documents\NinjaTrader 8\bin\Custom\MathNet.Numerics.dll</HintPath>
+    </Reference>
     <Reference Include="NinjaTrader.Vendor">
       <HintPath>C:\Users\Bo\Documents\NinjaTrader 8\bin\Custom\NinjaTrader.Vendor.dll</HintPath>
     </Reference>
@@ -105,6 +108,7 @@
     <Compile Include="AddOns\Data\Vp\SuriIntraRepo.cs" />
     <Compile Include="AddOns\SuriAddOnWindow.cs" />
     <Compile Include="AddOns\SuriCommon\DevStrategyInterface.cs" />
+    <Compile Include="AddOns\SuriCommon\StrategyTasks.cs" />
     <Compile Include="AddOns\SuriCommon\StrikingCalculator.cs" />
     <Compile Include="AddOns\SuriCommon\SuriCommon.cs" />
     <Compile Include="AddOns\SuriCommon\DevCotStrategy.cs" />
@@ -157,7 +161,9 @@
     <Compile Include="DrawingTools\%40TimeCycles.cs" />
     <Compile Include="DrawingTools\%40TrendChannel.cs" />
     <Compile Include="DrawingTools\BarInfo.cs" />
-    <Compile Include="DrawingTools\StrikingSpot.cs" />
+    <Compile Include="DrawingTools\Cot1Box.cs" />
+    <Compile Include="DrawingTools\MarkableBar.cs" />
+    <Compile Include="DrawingTools\Cot2Box.cs" />
     <Compile Include="DrawingTools\SuriRuler.cs" />
     <Compile Include="ImportTypes\%40TickDataImportType.cs" />
     <Compile Include="Indicators\%40BarTimer.cs" />
@@ -420,7 +426,6 @@
     <Compile Include="Strategies\%40SampleMultiInstrument.cs" />
     <Compile Include="Strategies\%40SampleMultiTimeFrame.cs" />
     <Compile Include="Strategies\%40Strategy.cs" />
-    <Compile Include="Strategies\MyStrategy.cs" />
     <Compile Include="Strategies\StupidStrategy.cs" />
     <Compile Include="SuperDomColumns\%40APQ.cs" />
     <Compile Include="SuperDomColumns\%40Notes.cs" />
@@ -437,7 +442,6 @@
     <Compile Include="Strategies\SuriStrategy.cs" />
     <Compile Include="Indicators\Suri\SuriVolume.cs" />
     <Compile Include="Indicators\Suri\SuriBarRange.cs" />
-    <Compile Include="Strategies\StrategyCOT2.cs" />
     <Compile Include="DrawingTools\DrawRange.cs" />
     <Compile Include="Indicators\Suri\ComShortOpenInterest.cs" />
   </ItemGroup>

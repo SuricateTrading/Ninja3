@@ -156,6 +156,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				lastBar = CurrentBar;
 				suriVpIntraData.barData.Add(new SuriVpBarData(TickSize, e.Time));
 			}
+			//Print(e.Time + "\t" + e.Volume + "\t" + e.Price + "\t" + e.Ask + "\t" + e.Bid);
 			suriVpIntraData.barData.Last().AddTick(e);
 		}
 		

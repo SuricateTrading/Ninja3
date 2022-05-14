@@ -112,7 +112,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		        Values[0][0] = Close[0] - High[0];
 	        }
 			
-	        if (Values[0][0] > max) {
+	        if (Values[0][0] >= max) {
 		        maxIndex = CurrentBar;
 		        max = Values[0][0];
 	        } else {
@@ -120,7 +120,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		        if (CurrentBar - maxIndex > days) {
 			        max = 0;
 			        for (int i = days; i > 0 ; i--) {
-				        if (Values[0][i] > max) {
+				        if (Values[0][i] >= max) {
 					        maxIndex = CurrentBar - i;
 					        max = Values[0][i];
 				        }

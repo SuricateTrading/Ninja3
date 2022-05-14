@@ -105,7 +105,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			}
 		}
 		public override string DisplayName { get { return Name; } }
-		
+
 		protected override void OnRender(ChartControl chartControl, ChartScale chartScale) {
 			base.OnRender(chartControl, chartScale);
 			if (SuriAddOn.license == License.None) SuriCommon.NoValidLicenseError(RenderTarget, ChartControl, ChartPanel);

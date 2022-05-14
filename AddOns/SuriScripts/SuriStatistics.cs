@@ -51,15 +51,12 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 				    data[commodity].commodityId = SuriStrings.GetId(instrument).Value;
 				    SessionIterator sessionIterator = new SessionIterator(bars.Bars);
 				    sessionIterator.GetNextSession(bars.Bars.GetTime(0), true);
-				    if (commodity == Commodity.OrangeJuice) {
-					    Code.Output.Process("1232323: " + errorCode, PrintTo.OutputTab1);
-				    }
 				    data[commodity].tradingHours = sessionIterator.ActualSessionBegin.ToString("t") + " - " + sessionIterator.ActualSessionEnd.ToString("t");
 				    data[commodity].ninjaName = instrument.MasterInstrument.Name;
 				    data[commodity].exchange = String.Join(", ", instrument.MasterInstrument.Exchanges.ToArray());
 				    try {
-					    data[commodity].maintenanceMargin = Risk.Get("NinjaTrader Brokerage Default").ByMasterInstrument[instrument.MasterInstrument].MaintenanceMargin;
-					    data[commodity].initialMargin = Risk.Get("NinjaTrader Brokerage Default").ByMasterInstrument[instrument.MasterInstrument].InitialMargin;
+					    data[commodity].maintenanceMargin = (int) Risk.Get("NinjaTrader Brokerage Default").ByMasterInstrument[instrument.MasterInstrument].MaintenanceMargin;
+					    data[commodity].initialMargin = (int) Risk.Get("NinjaTrader Brokerage Default").ByMasterInstrument[instrument.MasterInstrument].InitialMargin;
 				    } catch (Exception) {/**/}
 				    
 				    data[commodity].tickSize = instrument.MasterInstrument.TickSize;
@@ -68,11 +65,14 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 
 				    // average
 				    double mean = 0;
+				    double volume = 0;
+				    double barSize = 0;
+				    double gap = 0;
 				    for (int i = 0; i < bars.Bars.Count; i++) {
-					    data[commodity].volume += bars.Bars.GetVolume(i);
-					    data[commodity].barSize += bars.Bars.GetHigh(i) - bars.Bars.GetLow(i);
+					    volume += bars.Bars.GetVolume(i);
+					    barSize += bars.Bars.GetHigh(i) - bars.Bars.GetLow(i);
 					    if (i > 0) {
-						    data[commodity].gap += Math.Abs(bars.Bars.GetClose(i - 1) - bars.Bars.GetOpen(i));
+						    gap += Math.Abs(bars.Bars.GetClose(i - 1) - bars.Bars.GetOpen(i));
 					    }
 					    mean += bars.Bars.GetClose(i);
 				    }
@@ -84,11 +84,11 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 				    }
 				    standardDeviation = Math.Sqrt(standardDeviation);
 				    
-				    data[commodity].mean = instrument.MasterInstrument.RoundToTickSize(mean);
-				    data[commodity].volatility = instrument.MasterInstrument.RoundToTickSize(standardDeviation);
-				    data[commodity].volume = (long) Math.Round(data[commodity].volume / (double) bars.Bars.Count);
-				    data[commodity].barSize = instrument.MasterInstrument.RoundToTickSize(data[commodity].barSize / bars.Bars.Count);
-				    data[commodity].gap = instrument.MasterInstrument.RoundToTickSize(data[commodity].gap / (bars.Bars.Count - 1));
+				    data[commodity].mean		= instrument.MasterInstrument.RoundToTickSize(mean);
+				    data[commodity].volatility	= instrument.MasterInstrument.PointValue * instrument.MasterInstrument.RoundToTickSize(standardDeviation);
+				    data[commodity].barSize		= instrument.MasterInstrument.PointValue * instrument.MasterInstrument.RoundToTickSize(barSize / bars.Bars.Count);
+				    data[commodity].gap			= instrument.MasterInstrument.PointValue * instrument.MasterInstrument.RoundToTickSize( gap / (bars.Bars.Count - 1));
+				    data[commodity].volume = (long) Math.Round(volume / bars.Bars.Count);
 				    
 				    LoadData(++index);
 			    });
@@ -117,10 +117,11 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 					    Code.Output.Process("Error: " + errorCode, PrintTo.OutputTab1);
 					    return;
 				    }
+				    double slippage = 0.0;
 				    for (int i = 0; i < bars.Bars.Count; i++) {
-					    data[commodity].slippage += Math.Abs(bars.Bars.GetBid(i) - bars.Bars.GetAsk(i));
+					    slippage += Math.Abs(bars.Bars.GetBid(i) - bars.Bars.GetAsk(i));
 				    }
-				    data[commodity].slippage /= bars.Bars.Count;
+				    data[commodity].slippage = instrument.MasterInstrument.PointValue * instrument.MasterInstrument.RoundToTickSize(slippage / bars.Bars.Count);
 				    LoadTickData(++index);
 			    });
 		    } catch (Exception e) {
@@ -136,8 +137,8 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 	    private class Data {
 		    public int commodityId;
 		    public string tradingHours;
-		    public double maintenanceMargin;
-		    public double initialMargin;
+		    public int maintenanceMargin;
+		    public int initialMargin;
 		    public double tickSize;
 		    public double tickValue;
 		    public double pointValue;

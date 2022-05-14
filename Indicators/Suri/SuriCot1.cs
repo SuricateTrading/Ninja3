@@ -1,5 +1,6 @@
 #region Using declarations
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Windows.Media;
@@ -22,6 +23,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		private DateTime lastReportDate;
 		
 		private bool isCurrentlyASignal;
+		public List<int> signalIndices = new List<int>();
 
 		#region Indicator
 		//[NinjaScriptProperty]
@@ -183,13 +185,16 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			// check if we come from the other side
 			for (int i = 2; i <= CurrentBar-1; i++) {
 				if (Value[i] <= 10 && Value[i - 1] > 10 || Value[i] >= 90 && Value[i - 1] < 90) {
-					return IsValidDataPoint(i) && Math.Abs(Value[i] - Value[0]) >= 80;
+					bool isSignal = IsValidDataPoint(i) && Math.Abs(Value[i] - Value[0]) >= 80;
+					signalIndices.Add(CurrentBar);
+					return isSignal;
 				}
 			}
 			return false;
 		}
 
-    }
+
+	}
 }
 
 

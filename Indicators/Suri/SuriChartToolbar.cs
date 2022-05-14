@@ -1,16 +1,18 @@
 #region Using declarations
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
 using NinjaTrader.Gui.Chart;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media;
 using NinjaTrader.Cbi;
 using NinjaTrader.Custom.AddOns.SuriCommon;
-using NinjaTrader.NinjaScript.Indicators.Suri.dev;
+using NinjaTrader.NinjaScript.DrawingTools;
+using CheckBox = System.Windows.Controls.CheckBox;
+using ComboBox = System.Windows.Controls.ComboBox;
+using HorizontalAlignment = System.Windows.HorizontalAlignment;
+using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using VerticalAlignment = System.Windows.VerticalAlignment;
 #endregion
 
@@ -101,7 +103,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 					new ColumnDefinition(), new ColumnDefinition(), new ColumnDefinition(), new ColumnDefinition(),
 					new ColumnDefinition(), new ColumnDefinition(), new ColumnDefinition(), new ColumnDefinition(),
 					new ColumnDefinition(), new ColumnDefinition(), new ColumnDefinition(), new ColumnDefinition(),
-					new ColumnDefinition {Width = new GridLength(200)}, new ColumnDefinition {Width = new GridLength(200)},
+					new ColumnDefinition {Width = new GridLength(180)}, new ColumnDefinition{Width = new GridLength(70)}
 				},
 				RowDefinitions = { new RowDefinition() },
 			};
@@ -112,10 +114,9 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			chartWindow.MainTabControl.SelectionChanged += TabChangedHandler;
 		}
 
-
 		private void AddCheckBox(string name, bool? visible, int x, int y, RoutedEventHandler onClick) {
 			if (visible == null) return;
-			CheckBox checkBox = new CheckBox() {
+			CheckBox checkBox = new CheckBox {
 				Content = name,
 				IsChecked = visible,
 				Margin = new Thickness(0, 0, 15, 0),
@@ -155,7 +156,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			comList.SelectionChanged += (sender, args) => {
 				Keyboard.ClearFocus();
 				ChartControl.OwnerChart.Focus();
-				loadingText.Text = "Daten werden geladen...";
+				loadingText.Text = "Laden...";
 
 				string change = ((ComboBox) sender).SelectedItem as string;
 				if (change == null) return;
@@ -169,7 +170,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			Grid.SetRow(comList, 0);
 			Grid.SetColumn(comList, ++index);
 			menu.Children.Add(comList);
-
+			
 			loadingText = new TextBlock {
 				Foreground = ChartControl.Properties.ChartText,
 				Margin = new Thickness(15,2,0,0)

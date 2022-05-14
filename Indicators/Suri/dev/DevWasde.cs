@@ -99,9 +99,9 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 				showEstimatedCrop							= true;
 				showProjectedCrop							= true;
 				isAmerica									= true;
-				oldCropBrush								= Brushes.DarkGreen;
+				oldCropBrush								= Brushes.DimGray;
 				estimatedCropBrush							= Brushes.YellowGreen;
-				projectedCropBrush							= Brushes.LightGreen;
+				projectedCropBrush							= Brushes.CornflowerBlue;
 				newCropYearBrush							= Brushes.CornflowerBlue.Clone();
 				newCropYearBrush.Opacity = 0.7;
 				lineWidth									= 2;
@@ -119,6 +119,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 				}
 			}
 		}
+		public override string DisplayName { get { return Name + " " + field.ToString().Replace("WasdeField.", "") + (isAmerica ? " US" : " World"); } }
 		
 		protected override void OnBarUpdate() {
 			if (wasdeData.IsNullOrEmpty()) return;

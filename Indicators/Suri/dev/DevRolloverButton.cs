@@ -7,7 +7,7 @@ using NinjaTrader.Cbi;
 using NinjaTrader.Gui.Chart;
 #endregion
 
-namespace NinjaTrader.NinjaScript.Indicators.Suri {
+namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 	public class DevRolloverButton : Indicator {
 		private ChartTab						chartTab;
 		private Chart							chartWindow;
@@ -20,7 +20,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 
 		protected override void OnStateChange() {
 			if (State == State.SetDefaults) {
-				Name										= "Rollover Button";
+				Name										= "Dev Rollover Button";
 				Description									= @"Button um zum nächsten Kontraktmonat zu springen";
 				Calculate									= Calculate.OnBarClose;
 				IsOverlay									= true;
@@ -191,19 +191,19 @@ namespace NinjaTrader.NinjaScript.Indicators
 {
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
-		private Suri.DevRolloverButton[] cacheDevRolloverButton;
-		public Suri.DevRolloverButton DevRolloverButton()
+		private Suri.dev.DevRolloverButton[] cacheDevRolloverButton;
+		public Suri.dev.DevRolloverButton DevRolloverButton()
 		{
 			return DevRolloverButton(Input);
 		}
 
-		public Suri.DevRolloverButton DevRolloverButton(ISeries<double> input)
+		public Suri.dev.DevRolloverButton DevRolloverButton(ISeries<double> input)
 		{
 			if (cacheDevRolloverButton != null)
 				for (int idx = 0; idx < cacheDevRolloverButton.Length; idx++)
 					if (cacheDevRolloverButton[idx] != null &&  cacheDevRolloverButton[idx].EqualsInput(input))
 						return cacheDevRolloverButton[idx];
-			return CacheIndicator<Suri.DevRolloverButton>(new Suri.DevRolloverButton(), input, ref cacheDevRolloverButton);
+			return CacheIndicator<Suri.dev.DevRolloverButton>(new Suri.dev.DevRolloverButton(), input, ref cacheDevRolloverButton);
 		}
 	}
 }
@@ -212,12 +212,12 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.DevRolloverButton DevRolloverButton()
+		public Indicators.Suri.dev.DevRolloverButton DevRolloverButton()
 		{
 			return indicator.DevRolloverButton(Input);
 		}
 
-		public Indicators.Suri.DevRolloverButton DevRolloverButton(ISeries<double> input )
+		public Indicators.Suri.dev.DevRolloverButton DevRolloverButton(ISeries<double> input )
 		{
 			return indicator.DevRolloverButton(input);
 		}
@@ -228,12 +228,12 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.DevRolloverButton DevRolloverButton()
+		public Indicators.Suri.dev.DevRolloverButton DevRolloverButton()
 		{
 			return indicator.DevRolloverButton(Input);
 		}
 
-		public Indicators.Suri.DevRolloverButton DevRolloverButton(ISeries<double> input )
+		public Indicators.Suri.dev.DevRolloverButton DevRolloverButton(ISeries<double> input )
 		{
 			return indicator.DevRolloverButton(input);
 		}

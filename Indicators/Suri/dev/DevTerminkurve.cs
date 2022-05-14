@@ -67,12 +67,12 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 					Values[0][0] = (tkData[i].TkState+2)*25;
 
 					if (i >= 1) {
-						if (tkData[i-1].TkState >=  1 && tkData[i].TkState <= -2) ExitShort();
-						if (tkData[i-1].TkState <= -1 && tkData[i].TkState >=  2) ExitLong();
+						//if (tkData[i-1].TkState >=  1 && tkData[i].TkState <= -2) ExitShort();
+						//if (tkData[i-1].TkState <= -1 && tkData[i].TkState >=  2) ExitLong();
 					}
 					
-					if (comesFromContango      && tkData[i].TkState <= -1) EnterLong();
-					if (comesFromBackwardation && tkData[i].TkState >=  1) EnterShort();
+					//if (comesFromContango      && tkData[i].TkState <= -1) EnterLong();
+					//if (comesFromBackwardation && tkData[i].TkState >=  1) EnterShort();
 					
 					switch (tkData[i].TkState) {
 						case  3: comesFromContango = true;  comesFromBackwardation = false; break;
@@ -110,7 +110,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 		private double GetStop(bool isLong) {
 			return isLong ? Low[0] - TickSize * 200 : High[0] + TickSize * 200;
 		}
-
+/*
 		private void EnterLong() {
 			Draw.VerticalLine(this, "ToBackwardationSignal " + SuriCommon.random, 0, Brushes.LimeGreen, DashStyleHelper.Solid, 1);
 			if (suriTest == null) return;
@@ -149,7 +149,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 			suriTest.tkOrder = null;
 			suriTest.CancelOrder(suriTest.tkStopLossOrder);
 			suriTest.tkStopLossOrder = null;
-		}
+		}*/
 		
 	}
 }
