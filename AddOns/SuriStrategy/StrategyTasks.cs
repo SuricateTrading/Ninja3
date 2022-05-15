@@ -42,5 +42,13 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
             return null;
         }
         
+        
+        public static bool BarAction(int startIndex, Bars bars, BarIndexCallback callback) {
+            for (int i = startIndex; i < bars.Count; i++) {
+                if (callback(i)) return true;
+            }
+            return false;
+        }
+        
     }
 }

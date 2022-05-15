@@ -15,7 +15,7 @@ namespace NinjaTrader.NinjaScript.Strategies {
 		//private SuriBarRange barRange;
 		//private SuriVolume volume;
 		
-		private readonly Dictionary<int, Signal> cot1Signals = new Dictionary<int, Signal>();
+		private readonly List<Signal> signals = new List<Signal>();
 		
 		protected override void OnStateChange() {
 			if (State == State.SetDefaults) {
@@ -55,11 +55,10 @@ namespace NinjaTrader.NinjaScript.Strategies {
 
 		private void AnalyseSignals() {
 			AnalyzeCot1();
-			Print(JsonConvert.SerializeObject(cot1Signals));
+			Print(JsonConvert.SerializeObject(signals));
 		}
 
 		private void AnalyzeCot1() {
-			// COT 1
 			foreach (int signalIndex in cot1.signalIndices) {
 				try {
 					// check if valid entry
@@ -73,9 +72,10 @@ namespace NinjaTrader.NinjaScript.Strategies {
 					// todo:
 					// TK prüfen: muss z.B. in Richtung BW (long) / CT (short) sein
 					// Richtung BW wäre dann, wenn es danach aussieht, dass demnächst der letzte Kontrakt unter den ersten springt.
-				
+					
 					// calculate entry
 					Signal signal = new Signal {
+						rule = Rule.Cot1,
 						isLong = isCot1Long,
 						signalIndex = signalIndex,
 						signalDate = Bars.GetTime(signalIndex),
@@ -83,7 +83,7 @@ namespace NinjaTrader.NinjaScript.Strategies {
 							? StrategyTasks.GetWeekHigh(signalIndex, Bars) + Instrument.MasterInstrument.TickSize
 							: StrategyTasks.GetWeekLow (signalIndex, Bars) - Instrument.MasterInstrument.TickSize
 					};
-				
+					
 					// check at which index the entry will be filled
 					DateTime signalDate = Bars.GetTime(signalIndex);
 					signal.entryIndex = StrategyTasks.GetIndexOfValueFill(signal.signalIndex, Bars, signal.entry,index => (Bars.GetTime(index) - signalDate).TotalDays >= 42);
@@ -91,20 +91,25 @@ namespace NinjaTrader.NinjaScript.Strategies {
 						Print("Skip " + Bars.GetTime(signalIndex).ToShortDateString() + " @" + signalIndex + ". No entry " + signal.entry + " found after 6 weeks.");
 						continue;
 					}
-				
-					// calculate stop
+					signal.entryDate = Bars.GetTime(signal.entryIndex.Value);
+					
+					// calculate stoploss
 					signal.stoploss = signal.isLong
-							? StrategyTasks.GetLast10DaysLow (signalIndex, Bars) - Instrument.MasterInstrument.TickSize
-							: StrategyTasks.GetLast10DaysHigh(signalIndex, Bars) + Instrument.MasterInstrument.TickSize
-						;
+						? StrategyTasks.GetLast10DaysLow (signal.entryIndex.Value, Bars) - Instrument.MasterInstrument.TickSize
+						: StrategyTasks.GetLast10DaysHigh(signal.entryIndex.Value, Bars) + Instrument.MasterInstrument.TickSize
+					;
 					signal.stoplossCurrency = SuriCommon.PriceToCurrency(Instrument, Math.Abs(signal.stoploss - signal.entry));
 					if (signal.stoplossCurrency > 2000) {
 						Print("Skip " + Bars.GetTime(signalIndex).ToShortDateString() + " @" + signalIndex + ". Stop " + signal.stoplossCurrency + " $ too high.");
 						continue;
 					}
-					signal.stoplossIndex = StrategyTasks.GetIndexOfValueFill(signal.entryIndex.Value, Bars, signal.stoploss);
-				
-					cot1Signals.Add(signalIndex, signal);
+					/*signal.stoplossIndex = StrategyTasks.GetIndexOfValueFill(signal.entryIndex.Value, Bars, signal.stoploss);
+					if (signal.stoplossIndex != null) signal.stoplossDate = Bars.GetTime(signal.stoplossIndex.Value);
+					
+					// exit
+					StrategyTasks.BarAction(signal.entryIndex.Value, Bars, index => cot1.Value.GetValueAt(index) > 90 );*/
+					
+					signals.Add(signal);
 				} catch (Exception e) {
 					Print(e.ToString());
 				}
@@ -121,20 +126,42 @@ namespace NinjaTrader.NinjaScript.Strategies {
 				Bars.CurrentBar = 0;
 				AnalyseSignals();
 			}
+
+			foreach (var signal in signals) {
+				if (CurrentBar+1 == signal.entryIndex) {
+					// enter tomorrow
+					
+				}
+			}
 		}
 
 	}
 
 	public class Signal {
+		public Rule rule;
 		public bool isLong;
+		
 		public int signalIndex;
 		public DateTime signalDate;
+		
 		public int? entryIndex;
+		public DateTime? entryDate;
 		public double entry;
+		
 		public double stoploss;
 		public int? stoplossIndex;
+		public DateTime? stoplossDate;
 		public double stoplossCurrency;
-		public int exitIndex;
+		
+		public int? exitIndex;
+		public DateTime? exitDate;
+		public double exitProfit;
+	}
+
+	public enum Rule {
+		Cot1,
+		Cot2,
+		Tk,
 	}
 	
 }

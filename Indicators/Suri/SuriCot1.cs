@@ -186,7 +186,9 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			for (int i = 2; i <= CurrentBar-1; i++) {
 				if (Value[i] <= 10 && Value[i - 1] > 10 || Value[i] >= 90 && Value[i - 1] < 90) {
 					bool isSignal = IsValidDataPoint(i) && Math.Abs(Value[i] - Value[0]) >= 80;
-					if (isSignal) signalIndices.Add(CurrentBar);
+					if (isSignal && (suriSma[0] > suriSma[1] && Value[0] >= 90 || suriSma[0] < suriSma[1] && Value[0] <= 10)) {
+						signalIndices.Add(CurrentBar);
+					}
 					return isSignal;
 				}
 			}
