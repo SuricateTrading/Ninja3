@@ -23,7 +23,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		private DateTime lastReportDate;
 		
 		private bool isCurrentlyASignal;
-		public List<int> signalIndices = new List<int>();
+		public readonly List<int> signalIndices = new List<int>();
 
 		#region Indicator
 		//[NinjaScriptProperty]
@@ -186,7 +186,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			for (int i = 2; i <= CurrentBar-1; i++) {
 				if (Value[i] <= 10 && Value[i - 1] > 10 || Value[i] >= 90 && Value[i - 1] < 90) {
 					bool isSignal = IsValidDataPoint(i) && Math.Abs(Value[i] - Value[0]) >= 80;
-					signalIndices.Add(CurrentBar);
+					if (isSignal) signalIndices.Add(CurrentBar);
 					return isSignal;
 				}
 			}
