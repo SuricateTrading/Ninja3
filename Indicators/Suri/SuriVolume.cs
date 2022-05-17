@@ -88,7 +88,8 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		}
 		public override string DisplayName { get { return Name; } }
         public double Percentage() { return 100 * Values[0][0] / Values[1][0]; }
-        public bool IsMegaVolume() { return Math.Abs(Values[0][0] - Values[1][0]) < 0.00001; }
+        public bool IsMegaVolume() { return Math.Abs(Values[0][0] - Values[1][0]) < 0.00000001; }
+        public bool IsMegaVolume(int barIndex) { return Math.Abs(Values[0].GetValueAt(barIndex) - Values[1].GetValueAt(barIndex)) < 0.00000001; }
 		
         protected override void OnRender(ChartControl chartControl, ChartScale chartScale) {
 	        base.OnRender(chartControl, chartScale);

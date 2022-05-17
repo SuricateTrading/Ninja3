@@ -1,4 +1,5 @@
 ﻿using System;
+using NinjaTrader.Cbi;
 using NinjaTrader.Data;
 
 namespace NinjaTrader.Custom.AddOns.SuriCommon {
@@ -33,22 +34,34 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
             return stopValue;
         }
 
+        public static int? GetNextWeekIndex(int startIndex, Bars bars) {
+            for (int i = startIndex + 1; i < bars.Count; i++) {
+                if (bars.GetTime(i).DayOfWeek < bars.GetTime(i-1).DayOfWeek) return i;
+            }
+            return null;
+        }
+
         public delegate bool BarIndexCallback(int barIndex);
         /** Returns the index of when the given value would be filled, starting from startIndex. Breaks at the end of Bars, or by an optional stopCondition. Iff stopCondition returns true, then stop searching. */
         public static int? GetIndexOfValueFill(int startIndex, Bars bars, double value, BarIndexCallback stopCondition = null) {
             for (int i = startIndex; i < bars.Count && (stopCondition == null || !stopCondition(i)); i++) {
-                if (value > bars.GetLow(i) && value < bars.GetHigh(i)) return i;
+                if (value >= bars.GetLow(i) && value <= bars.GetHigh(i)) return i;
             }
             return null;
         }
-        
-        
-        public static bool BarAction(int startIndex, Bars bars, BarIndexCallback callback) {
-            for (int i = startIndex; i < bars.Count; i++) {
-                if (callback(i)) return true;
-            }
-            return false;
+
+        public static bool IsFilledTomorrow(int index, double value, Bars bars) {
+            return value >= bars.GetLow(index) && value <= bars.GetHigh(index);
         }
         
+        
+        public static int? BarAction(int startIndex, Bars bars, BarIndexCallback callback) {
+            for (int i = startIndex; i < bars.Count; i++) {
+                if (callback(i)) return i;
+            }
+            return null;
+        }
+
+
     }
 }

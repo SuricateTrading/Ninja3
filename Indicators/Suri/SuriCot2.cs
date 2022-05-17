@@ -104,6 +104,12 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				}
 			}
 		}
+
+		public Series<double> seriesMain { get { return Values[3]; } }
+		public Series<double> series25   { get { return Values[2]; } }
+		public Series<double> series50   { get { return Values[1]; } }
+		public Series<double> series75   { get { return Values[0]; } }
+
 		public override string DisplayName { get { return Name; } }
 
 		protected override void OnRender(ChartControl chartControl, ChartScale chartScale) {
