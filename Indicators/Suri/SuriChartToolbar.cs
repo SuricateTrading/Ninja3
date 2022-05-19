@@ -1,11 +1,13 @@
 #region Using declarations
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
 using NinjaTrader.Gui.Chart;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using NinjaTrader.Cbi;
 using NinjaTrader.Custom.AddOns.SuriCommon;
 using NinjaTrader.NinjaScript.DrawingTools;
@@ -103,7 +105,9 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 					new ColumnDefinition(), new ColumnDefinition(), new ColumnDefinition(), new ColumnDefinition(),
 					new ColumnDefinition(), new ColumnDefinition(), new ColumnDefinition(), new ColumnDefinition(),
 					new ColumnDefinition(), new ColumnDefinition(), new ColumnDefinition(), new ColumnDefinition(),
-					new ColumnDefinition {Width = new GridLength(180)}, new ColumnDefinition{Width = new GridLength(70)}
+					new ColumnDefinition {Width = new GridLength(180)}, // combobox
+					new ColumnDefinition {Width = new GridLength(35)}, // next button
+					new ColumnDefinition{Width = new GridLength(70)}, // loading text
 				},
 				RowDefinitions = { new RowDefinition() },
 			};
@@ -141,43 +145,81 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			AddCheckBox("OI %", IsIndicatorVisible(new []{typeof(ComShortOpenInterest)}), 0, ++index, (sender, args) => OnCheckBoxClick(new []{typeof(ComShortOpenInterest)}));
 			AddCheckBox("VP groß", IsIndicatorVisible(new []{typeof(SuriVolumeProfileBig)}), 0, ++index, (sender, args) => OnCheckBoxClick(new []{typeof(SuriVolumeProfileBig)}));
 			AddCheckBox("Produktionskosten", IsIndicatorVisible(new []{typeof(SuriProductionCost)}), 0, ++index, (sender, args) => OnCheckBoxClick(new []{typeof(SuriProductionCost)}));
-			
-			var comList = new ComboBox();
+
+			var comList = new ComboBox {
+				BorderBrush = Brushes.CornflowerBlue,
+				BorderThickness = new Thickness(1),
+				Height = 23,
+				Margin = new Thickness(0,2,0,0),
+			};
 			foreach (KeyValuePair<Commodity,CommodityData> entry in SuriStrings.data) {
 				comList.Items.Add(entry.Value.shortName + "\t" + entry.Value.longName);
 			}
-			
 			Commodity? currentComm = SuriStrings.GetComm(Instrument.MasterInstrument.Name);
 			if (currentComm != null) {
 				var c = SuriStrings.data[currentComm.Value];
 				comList.SelectedItem = c.shortName + "\t" + c.longName;
 			}
-			
 			comList.SelectionChanged += (sender, args) => {
-				Keyboard.ClearFocus();
-				ChartControl.OwnerChart.Focus();
-				loadingText.Text = "Laden...";
-
 				string change = ((ComboBox) sender).SelectedItem as string;
 				if (change == null) return;
-				string shortName = Regex.Replace(change, "\t.*", "");
-				Instrument ins = Instrument.GetInstrument(shortName + Instrument.GetInstrument(shortName+" ##-##").MasterInstrument.GetNextExpiry(DateTime.Now).ToString(" MM-yy"));
-				
-				Keyboard.FocusedElement.RaiseEvent(new TextCompositionEventArgs(InputManager.Current.PrimaryKeyboardDevice, new TextComposition(InputManager.Current, ChartControl.OwnerChart, "open sesame"))	{ RoutedEvent = TextCompositionManager.PreviewTextInputEvent });
-				Keyboard.FocusedElement.RaiseEvent(new TextCompositionEventArgs(InputManager.Current.PrimaryKeyboardDevice, new TextComposition(InputManager.Current, ChartControl.OwnerChart, ins.FullName))			{ RoutedEvent = TextCompositionManager.TextInputEvent });
-				Keyboard.FocusedElement.RaiseEvent(new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(ChartControl.OwnerChart), 0                                , Key.Enter)				{ RoutedEvent = Keyboard.PreviewKeyDownEvent } );
+				ChangeMarket(change);
 			};
 			Grid.SetRow(comList, 0);
 			Grid.SetColumn(comList, ++index);
 			menu.Children.Add(comList);
+
+			Button nextButton = new Button {
+				Content = ">",
+				Foreground = ChartControl.Properties.ChartText,
+				Margin = new Thickness(5,2,0,0),
+				Padding = new Thickness(0,0,0,0.5),
+				Width = 30,
+				MaxWidth = 30,
+				MinWidth = 30,
+				Height = 23,
+				BorderBrush = Brushes.CornflowerBlue,
+				BorderThickness = new Thickness(1),
+				ToolTip = "Nächster Markt",
+			};
+			nextButton.Click += (sender, args) => {
+				string selectedMarket = comList.SelectedItem as string;
+				if (selectedMarket == null) return;
+				string shortName = Regex.Replace( selectedMarket, "\t.+", "");
+
+				int i = 0;
+				foreach (KeyValuePair<Commodity,CommodityData> entry in SuriStrings.data) {
+					i++;
+					if (entry.Value.shortName.Equals(shortName)) {
+						ChangeMarket(SuriStrings.data.ElementAt(i).Value.shortName);
+						return;
+					}
+				}
+			};
+			Grid.SetRow(nextButton, 0);
+			Grid.SetColumn(nextButton, ++index);
+			menu.Children.Add(nextButton);
 			
 			loadingText = new TextBlock {
 				Foreground = ChartControl.Properties.ChartText,
-				Margin = new Thickness(15,2,0,0)
+				Margin = new Thickness(15,2,0,0),
 			};
 			Grid.SetRow(loadingText, 0);
 			Grid.SetColumn(loadingText, ++index);
 			menu.Children.Add(loadingText);
+		}
+
+		private void ChangeMarket(string marketName) {
+			Keyboard.ClearFocus();
+			ChartControl.OwnerChart.Focus();
+			loadingText.Text = "Laden...";
+
+			string shortName = Regex.Replace(marketName, "\t.*", "");
+			Instrument ins = Instrument.GetInstrument(shortName + Instrument.GetInstrument(shortName+" ##-##").MasterInstrument.GetNextExpiry(DateTime.Now).ToString(" MM-yy"));
+				
+			Keyboard.FocusedElement.RaiseEvent(new TextCompositionEventArgs(InputManager.Current.PrimaryKeyboardDevice, new TextComposition(InputManager.Current, ChartControl.OwnerChart, "open sesame"))	{ RoutedEvent = TextCompositionManager.PreviewTextInputEvent });
+			Keyboard.FocusedElement.RaiseEvent(new TextCompositionEventArgs(InputManager.Current.PrimaryKeyboardDevice, new TextComposition(InputManager.Current, ChartControl.OwnerChart, ins.FullName))			{ RoutedEvent = TextCompositionManager.TextInputEvent });
+			Keyboard.FocusedElement.RaiseEvent(new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(ChartControl.OwnerChart), 0                                , Key.Enter)				{ RoutedEvent = Keyboard.PreviewKeyDownEvent } );
 		}
 		
 		

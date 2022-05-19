@@ -1,6 +1,7 @@
 ﻿using System;
 using NinjaTrader.Cbi;
 using NinjaTrader.Data;
+using NinjaTrader.NinjaScript.Strategies;
 
 namespace NinjaTrader.Custom.AddOns.SuriCommon {
     public static class StrategyTasks {
@@ -50,18 +51,33 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
             return null;
         }
 
-        public static bool IsFilledTomorrow(int index, double value, Bars bars) {
+        /** Returns true iff given value is in bar range of given index, hence a limit order would be filled. Else returns false. */
+        public static bool IsFilledAt(int index, double value, Bars bars) {
             return value >= bars.GetLow(index) && value <= bars.GetHigh(index);
         }
-        
-        
-        public static int? BarAction(int startIndex, Bars bars, BarIndexCallback callback) {
-            for (int i = startIndex; i < bars.Count; i++) {
-                if (callback(i)) return i;
+
+        public static SuriBarType GetBarType(Bars bars, int index, double tickSize) {
+            double	prevCloseValue = bars.GetClose(index-1);
+            double open = bars.GetOpen(index);
+            double close = bars.GetClose(index);
+            if (prevCloseValue > Math.Max(open, close) || prevCloseValue < Math.Min(open, close)) {
+                open = prevCloseValue;
             }
-            return null;
+            double high = Math.Max(bars.GetHigh(index), open);
+            double low = Math.Min(bars.GetLow(index), open);
+            double barSize = high - low + tickSize;
+            double body = Math.Abs(open - close) + tickSize;
+            double upperWick = high - Math.Max(open, close);
+            double bottomWick = Math.Min(open, close) - low;
+
+            double perc = 0.15; // => reversal bar percentage
+            if (body / barSize > perc) return close > open ? SuriBarType.MegabarUp : SuriBarType.MegabarDown;
+            if (upperWick  / body >= 0.5) return SuriBarType.ReversalBarBottom;
+            if (bottomWick / body >= 0.5) return SuriBarType.ReversalBarTop;
+            return upperWick > bottomWick ? SuriBarType.ReversalBarMiddleBottom : SuriBarType.ReversalBarMiddleTop;
         }
 
-
+        public static bool BarGoesUp(Bars bars, int index) { return bars.GetClose(index) > bars.GetOpen(index); }
     }
+    
 }

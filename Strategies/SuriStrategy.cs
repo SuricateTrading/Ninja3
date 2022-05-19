@@ -1,11 +1,9 @@
 #region Using declarations
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Newtonsoft.Json;
 using NinjaTrader.Cbi;
 using NinjaTrader.Custom.AddOns.SuriCommon;
-using NinjaTrader.Gui.Chart;
 using NinjaTrader.NinjaScript.Indicators.Suri;
 #endregion
 
@@ -16,10 +14,8 @@ namespace NinjaTrader.NinjaScript.Strategies {
 		private SuriCot2 cot2;
 		private SuriVolume volume;
 		private SuriBarRange barRange;
-		//private SuriBarRange barRange;
-		//private SuriVolume volume;
 		
-		private readonly List<Signal> signals = new List<Signal>();
+		private readonly List<SuriSignal> signals = new List<SuriSignal>();
 		
 		protected override void OnStateChange() {
 			if (State == State.SetDefaults) {
@@ -85,11 +81,13 @@ namespace NinjaTrader.NinjaScript.Strategies {
 					// todo:
 					// TK prüfen: muss z.B. in Richtung BW (long) / CT (short) sein
 					// Richtung BW wäre dann, wenn es danach aussieht, dass demnächst der letzte Kontrakt unter den ersten springt.
+					// long: wenn cot2 unter 50, dann tk egal. wenn cot2 über 50, dann tk muss in backwardation
+					// short: in contango und cot2 über 50
 					
 					
 					// calculate entry
-					Signal signal = new Signal {
-						rule = Rule.Cot1,
+					SuriSignal signal = new SuriSignal {
+						suriRule = SuriRule.Cot1,
 						isLong = isCot1Long,
 						signalIndex = signalIndex,
 						signalDate = Bars.GetTime(signalIndex),
@@ -105,20 +103,20 @@ namespace NinjaTrader.NinjaScript.Strategies {
 					DateTime signalDate = Bars.GetTime(signalIndex);
 					signal.entryIndex = StrategyTasks.GetIndexOfValueFill(signal.signalIndex, Bars, signal.entry.Value,index => (Bars.GetTime(index) - signalDate).TotalDays >= 42);
 					if (signal.entryIndex == null) {
-						Print("Skip " + Bars.GetTime(signalIndex).ToShortDateString() + " @" + signalIndex + ". No entry " + signal.entry + " found after 6 weeks.");
+						Print("Skip " + Bars.GetTime(signalIndex).ToShortDateString() + " @" + signalIndex + ". No entry " + signal.entry + " found after 6 weeks. Hint: This check is executed before valuating the size of the stop or counter signals!");
 						continue;
 					}
 					signal.entryDate = Bars.GetTime(signal.entryIndex.Value);
 					
 					
 					// calculate stoploss
-					signal.stoploss = signal.isLong
+					signal.AddStop(signal.isLong
 						? StrategyTasks.GetLast10DaysLow (signal.entryIndex.Value, Bars) - Instrument.MasterInstrument.TickSize
 						: StrategyTasks.GetLast10DaysHigh(signal.entryIndex.Value, Bars) + Instrument.MasterInstrument.TickSize
-					;
-					signal.stoplossCurrency = SuriCommon.PriceToCurrency(Instrument, Math.Abs(signal.stoploss - signal.entry.Value));
-					if (signal.stoplossCurrency > 2000) {
-						Print("Skip " + Bars.GetTime(signalIndex).ToShortDateString() + " @" + signalIndex + ". Stop " + signal.stoplossCurrency + " $ too high.");
+					);
+					double stoplossCurrency = SuriCommon.PriceToCurrency(Instrument, Math.Abs(signal.currentStop - signal.entry.Value));
+					if (stoplossCurrency > 2000) {
+						Print("Skip " + Bars.GetTime(signalIndex).ToShortDateString() + " @" + signalIndex + ". Stop " + stoplossCurrency + " $ too high.");
 						continue;
 					}
 					//signal.stoplossIndex = StrategyTasks.GetIndexOfValueFill(signal.entryIndex.Value, Bars, signal.stoploss);
@@ -130,7 +128,7 @@ namespace NinjaTrader.NinjaScript.Strategies {
 					for (int i = signal.entryIndex.Value + 1; i < Bars.Count; i++) {
 						// cot1
 						double value = cot1.Value.GetValueAt(i);
-						if (value >= 90 && !signal.isLong || value <= 10 &&  signal.isLong) {
+						if (value >= 90 && !signal.isLong || value <= 10 && signal.isLong) {
 							exitReason = "COT 1 counter signal";
 							signal.exitIndex = StrategyTasks.GetNextWeekIndex(i, Bars);
 							break;
@@ -142,6 +140,8 @@ namespace NinjaTrader.NinjaScript.Strategies {
 							break;
 						}
 						// tk ...
+						// long: letzter höher als der erste, oder ersten 3 steigen
+						// short: letzter niedriger als der erste
 					}
 					if (exitReason != null && signal.exitIndex != null) {
 						signal.exitDate = Bars.GetTime(signal.exitIndex.Value);
@@ -165,16 +165,95 @@ namespace NinjaTrader.NinjaScript.Strategies {
 					if (!isMegaBar && !isMegaVolume) continue;
 					
 					SuriPosition cot2Position = SuriPosition.None;
-					if (cot2.seriesMain[i] < cot2.series25[i]) cot2Position = SuriPosition.Long;
-					if (cot2.seriesMain[i] > cot2.series75[i]) cot2Position = SuriPosition.Short;
+					if (cot2.seriesMain.GetValueAt(i) <= cot2.series25.GetValueAt(i)) cot2Position = SuriPosition.Long;
+					if (cot2.seriesMain.GetValueAt(i) >= cot2.series75.GetValueAt(i)) cot2Position = SuriPosition.Short;
 					if (cot2Position == SuriPosition.None) continue;
+					
+					// todo: TK
+					// bei long egal
+					// bei short: letzter höher als der erste, oder ersten 3 steigen
 
-					// calculate entry
-					/*StrikingCalculator strikingCalculator = new StrikingCalculator(ChartPanel.Scales[0]);
-					StrikingSpotData strikingSpotData = cot2Position == SuriPosition.Long
-						? strikingCalculator.FindStrikingHigh()*/
 
-					//signals.Add(signal);
+					SuriSignal signal = new SuriSignal {
+						suriRule = SuriRule.Cot2,
+						isLong = cot2Position == SuriPosition.Long,
+						signalIndex = i,
+						signalDate = Bars.GetTime(i),
+						orderType = OrderType.Market,
+						entryIndex = i+1
+					};
+					if (i + 1 < Bars.Count) {
+						signal.entry     = Bars.GetOpen(i + 1);
+						signal.entryDate = Bars.GetTime(i + 1);
+					}
+
+
+					// check iff valid cot 2 versions and calculate initial stoploss
+					bool isEndOfTrend = true; // todo: check if end of trend
+					SuriBarType barType = StrategyTasks.GetBarType(Bars, i, TickSize);
+					if (signal.isLong && barType == SuriBarType.MegabarDown || !signal.isLong && barType == SuriBarType.MegabarUp) {
+						if (!isEndOfTrend) {
+							Print("Skip " + Bars.GetTime(i).ToShortDateString() + " @" + i + ". V1 not end of trend.");
+							continue;
+						}
+						signal.notes += "V1. ";
+						StrikingSpotData strikingSpotData = StrikingCalculator.FindStrikingSpot(cot2Position == SuriPosition.Short, Bars, i);
+						signal.AddStop(strikingSpotData.p2Value + (signal.isLong ? -TickSize : TickSize));
+					} else if (signal.isLong && barType == SuriBarType.MegabarUp || !signal.isLong && barType == SuriBarType.MegabarDown) {
+						signal.notes += "V2. ";
+						if (isEndOfTrend) {
+							signal.AddStop(signal.isLong ? Bars.GetLow(i) - TickSize : Bars.GetHigh(i) + TickSize);
+						} else {
+							StrikingSpotData strikingSpotData = StrikingCalculator.FindStrikingSpot(cot2Position == SuriPosition.Short, Bars, i);
+							signal.AddStop(strikingSpotData.p2Value);
+						}
+					} else if (signal.isLong && (barType == SuriBarType.ReversalBarTop    || barType == SuriBarType.ReversalBarMiddleTop) ||
+						      !signal.isLong && (barType == SuriBarType.ReversalBarBottom || barType == SuriBarType.ReversalBarMiddleBottom)) {
+						signal.notes += "V3. ";
+						if (!isEndOfTrend) {
+							Print("Skip " + Bars.GetTime(i).ToShortDateString() + " @" + i + ". V3 not end of trend.");
+							continue;
+						}
+						signal.AddStop(signal.isLong ? Bars.GetLow(i) - TickSize : Bars.GetHigh(i) + TickSize);
+					} else if (signal.isLong && (barType == SuriBarType.ReversalBarBottom || barType == SuriBarType.ReversalBarMiddleBottom) ||
+					           !signal.isLong && (barType == SuriBarType.ReversalBarTop    || barType == SuriBarType.ReversalBarMiddleTop)) {
+						// v4
+						Print("Skip " + Bars.GetTime(i).ToShortDateString() + " @" + i + ". Bad reversal bar (v4).");
+						continue;
+					} else {
+						continue;
+					}
+
+					double stoplossCurrency = SuriCommon.PriceToCurrency(Instrument, Math.Abs(signal.currentStop - Bars.GetClose(i)));
+					if (stoplossCurrency > 2000) {
+						Print("Skip " + Bars.GetTime(i).ToShortDateString() + " @" + i + ". Stop " + stoplossCurrency + " $ too high.");
+						continue;
+					}
+					
+					
+					// exit and trace stops
+					for (int j = signal.entryIndex.Value; j < Bars.Count; j++) {
+						if (signal.isLong && cot2.seriesMain.GetValueAt(j) >= cot2.series75.GetValueAt(j) || !signal.isLong && cot2.seriesMain.GetValueAt(j) <= cot2.series25.GetValueAt(j)) {
+							signal.exitIndex = j + 1;
+							signal.exitDate = Bars.GetTime(j + 1);
+							signal.exitReason = "COT 2 counter signal";
+							break;
+						}
+						
+						// tk ... todo
+						// long: letzter höher als der erste, oder ersten 3 steigen
+						// short: letzter niedriger als der erste
+
+						// trace stop
+						if ((signal.isLong && cot2.seriesMain.GetValueAt(j) >= cot2.series75.GetValueAt(j) ||
+						    !signal.isLong && cot2.seriesMain.GetValueAt(j) <= cot2.series25.GetValueAt(j)) &&
+						    barRange.IsMegaRange(j) && signal.isLong == StrategyTasks.BarGoesUp(Bars, j)
+						) {
+							signal.AddStop(signal.isLong ? Bars.GetLow(j + i) - TickSize : Bars.GetHigh(j + i) + TickSize, j + 1);
+						}
+					}
+
+					signals.Add(signal);
 				} catch (Exception e) {
 					Print(e.ToString());
 				}
@@ -188,6 +267,8 @@ namespace NinjaTrader.NinjaScript.Strategies {
 				Bars.CurrentBar = Bars.Count - 1;
 				cot1.Update();
 				cot2.Update();
+				volume.Update();
+				barRange.Update();
 				Bars.CurrentBar = 0;
 				AnalyseSignals();
 			}
@@ -203,10 +284,11 @@ namespace NinjaTrader.NinjaScript.Strategies {
 						signal.limitPrice,
 						signal.stopPrice,
 						null,
-						signal.rule + " " + (signal.isLong ? "Long" : "Short") + " @" + signal.entryIndex + ". ID" + SuriCommon.random
+						signal.suriRule + " " + (signal.isLong ? "Long" : "Short") + " @" + signal.entryIndex + ". ID" + SuriCommon.random
 					);
 					signal.orderState = OrderState.Filled;
 				}
+				
 				// check exit
 				if (CurrentBar + 1 == signal.exitIndex) {
 					SubmitOrderUnmanaged(
@@ -217,21 +299,27 @@ namespace NinjaTrader.NinjaScript.Strategies {
 						0,
 						0,
 						null,
-						signal.rule + " " + (signal.isLong ? "Long" : "Short") + " exit " + signal.exitReason + " @" + signal.exitIndex + ". ID" + SuriCommon.random
+						signal.suriRule + " " + (signal.isLong ? "Long" : "Short") + " exit " + signal.exitReason + " @" + signal.exitIndex + ". ID" + SuriCommon.random
 					);
 					signal.orderState = OrderState.Done;
 				}
-				// check stoploss
-				if (signal.orderState == OrderState.Filled && StrategyTasks.IsFilledTomorrow(CurrentBar, signal.stoploss, Bars)) {
+				
+				// check if stoploss has to be traced
+				if (signal.TryTraceStopAt(CurrentBar)) {
+					double stoplossCurrency = SuriCommon.PriceToCurrency(Instrument, Math.Abs(signal.currentStop - Bars.GetClose(CurrentBar)));
+					signal.notes += "Traced stoploss @" + CurrentBar + " to " + signal.currentStop + ". Reduced risk to " + stoplossCurrency + " $. ";
+				}
+				// check if stoploss will be filled
+				if (signal.orderState == OrderState.Filled && StrategyTasks.IsFilledAt(CurrentBar + 1, signal.currentStop, Bars)) {
 					SubmitOrderUnmanaged(
 						0,
 						signal.isLong ? OrderAction.SellShort : OrderAction.BuyToCover,
 						OrderType.Limit,
 						1,
-						signal.stoploss,
+						signal.currentStop,
 						0,
 						null,
-						signal.rule + " " + (signal.isLong ? "Long" : "Short") + " stoploss @" + (CurrentBar + 1) + ". ID" + SuriCommon.random
+						signal.suriRule + " " + (signal.isLong ? "Long" : "Short") + " stoploss @" + (CurrentBar + 1) + ". ID" + SuriCommon.random
 					);
 					signal.exitReason = "Stoploss";
 					signal.orderState = OrderState.Done;
@@ -241,10 +329,11 @@ namespace NinjaTrader.NinjaScript.Strategies {
 		
 	}
 
-	public class Signal {
-		public Rule rule;
+	public class SuriSignal {
+		public SuriRule suriRule;
 		public bool isLong;
 		public OrderState orderState = OrderState.New;
+		public string notes;
 		
 		public OrderType orderType;
 		public double limitPrice;
@@ -257,15 +346,30 @@ namespace NinjaTrader.NinjaScript.Strategies {
 		public DateTime? entryDate;
 		public double? entry;
 		
-		public double stoploss;
-		public double stoplossCurrency;
+		/** Stops may be traced, which is why we need multiple stops -> a dictionary with a bar index (int-key) and a stop (double-value).
+		 * Change current stop by updating the field currentStopBarIndex.
+		 */
+		private readonly SortedList<int, double> stops = new SortedList<int, double>();
+		private int currentStopBarIndex;
+		public double currentStop { get { return stops[currentStopBarIndex]; } }
+		/** Set barIndex to null or omit it iff this is an initial stop. */
+		public void AddStop(double stop, int? barIndex = null) {
+			stops.Add(barIndex ?? -1, stop);
+			currentStopBarIndex = barIndex ?? -1;
+		}
+		/** Tries to trace the current stop to a new stop. Returns true iff this signal has a tracing stop at the given barIndex, else returns false. */
+		public bool TryTraceStopAt(int barIndex) {
+			if (!stops.ContainsKey(barIndex)) return false;
+			currentStopBarIndex = barIndex;
+			return true;
+		}
 		
 		public int? exitIndex;
 		public DateTime? exitDate;
 		public string exitReason;
 	}
 
-	public enum Rule {
+	public enum SuriRule {
 		Cot1,
 		Cot2,
 		Tk,
@@ -281,6 +385,15 @@ namespace NinjaTrader.NinjaScript.Strategies {
 		Long,
 		Short,
 		None,
+	}
+
+	public enum SuriBarType {
+		MegabarUp,
+		MegabarDown,
+		ReversalBarTop,
+		ReversalBarBottom,
+		ReversalBarMiddleTop,
+		ReversalBarMiddleBottom,
 	}
 	
 }

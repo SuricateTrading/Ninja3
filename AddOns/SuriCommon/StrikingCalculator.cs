@@ -1,140 +1,88 @@
-﻿using NinjaTrader.Gui.Chart;
+﻿using NinjaTrader.Data;
 
 namespace NinjaTrader.Custom.AddOns.SuriCommon {
-    public sealed class StrikingCalculator {
-        private readonly ChartScale chartScale;
-        private readonly int currentBar;
-        
-        private double High(int barsAgo) { return chartScale.GetFirstChartBars().Bars.GetHigh(currentBar - barsAgo); }
-        private double Low(int barsAgo)  { return chartScale.GetFirstChartBars().Bars.GetLow(currentBar - barsAgo); }
-        public double Close(int barsAgo)  { return chartScale.GetFirstChartBars().Bars.GetClose(currentBar - barsAgo); }
-        
-        public StrikingCalculator(ChartScale chartScale) {
-            this.chartScale = chartScale;
-            currentBar = chartScale.GetFirstChartBars().Bars.Count - 1;
-        }
-        
+    public static class StrikingCalculator {
         // todo: es sollten mindestens 7-10 Bars zwischen altem und neuem Tief (Hoch) sein. Adi: "ich schaue mir keine kleinen Trendbewegungen an sondern nur Große Trends."
 
-        public StrikingSpotData FindStrikingLow(int barsAgo, int? initialBarsAgo = null) {
-            if (initialBarsAgo == null) initialBarsAgo = barsAgo;
-            StrikingSpotData s = new StrikingSpotData();
-
-            s.Set3(barsAgo, double.MinValue);
-            for (int i = 0; i < 5; i++) {
-                if (High(barsAgo) > s.p3Value) {
-                    s.p3Value = High(barsAgo);
-                    s.p3Bar = barsAgo;
-                    i = 0;
-                }
-                barsAgo++;
-            }
-            barsAgo = s.p3Bar + 1;
-            
-            for (int i = 0; i < 5; i++) {
-                if (i == 0) {
-                    s.Set1(barsAgo, High(barsAgo));
-                }
-                
-                if (High(barsAgo) > s.p1Value) {
-                    s.p1Value = High(barsAgo);
-                    s.p1Bar = barsAgo;
-                    i=0;
-                }
-                barsAgo++;
-
-                if (i==4) {
-                    int belowCounter = 0;
-                    //int barsToCheck = (s.p1Bar - s.p3Bar); 
-                    for (int j = s.p1Bar+1; j > s.p3Bar; j--) {
-                        if (High(j) < s.p1Value) {
-                            belowCounter++;
-                        }
-                    }
-                    if (belowCounter <= 3 /* || belowCounter / (double)(s.p1Bar - s.p3Bar) < 0.5*/) {
-                        // less than 50% of the bars are lower
-                        i = 0;
-                        barsAgo -= 4;
-                        s.p1Value = double.MinValue;
-                    }
-                }
-
-                if (i == 4 && s.p1Value > s.p3Value) {
-                    return FindStrikingLow(s.p1Bar, initialBarsAgo);
-                }
-            }
-            
-            s.p2Value = double.MaxValue;
-            for (int i = s.p3Bar; i < s.p1Bar; i++) {
-                if (Low(i) < s.p2Value) {
-                    s.Set2(i, Low(i));
-                }
-            }
-            if (s.p2Value > Low(initialBarsAgo.Value)) {
-                return FindStrikingLow(s.p1Bar, initialBarsAgo);
-            }
-            
-            return s;
-        }
+        private static double Get(bool high, int i, Bars bars) { return high ? bars.GetHigh(i) : bars.GetLow(i); }
         
-        public StrikingSpotData FindStrikingHigh(int barsAgo, int? initialBarsAgo = null) {
-            if (initialBarsAgo == null) initialBarsAgo = barsAgo;
+        public static StrikingSpotData FindStrikingSpot(bool high, Bars bars, int index, int? initialIndex = null) {
+            if (initialIndex == null) initialIndex = index;
             StrikingSpotData s = new StrikingSpotData();
+            double value;
 
-            s.Set3(barsAgo, double.MaxValue);
+            s.Set3(index, high ? double.MaxValue : double.MinValue);
             for (int i = 0; i < 5; i++) {
-                if (Low(barsAgo) < s.p3Value) {
-                    s.p3Value = Low(barsAgo);
-                    s.p3Bar = barsAgo;
+                value = Get(!high, index, bars);
+                if (high ? value < s.p3Value : value > s.p3Value) {
+                    s.p3Value = value;
+                    s.p3Bar = index;
                     i = 0;
                 }
-                barsAgo++;
+                index--;
             }
-            barsAgo = s.p3Bar + 1;
+            index = s.p3Bar - 1;
             
             for (int i = 0; i < 5; i++) {
-                if (i == 0) {
-                    s.Set1(barsAgo, Low(barsAgo));
-                }
+                value = Get(!high, index, bars);
+                if (i == 0) s.Set1(index, value);
                 
-                if (Low(barsAgo) < s.p1Value) {
-                    s.p1Value = Low(barsAgo);
-                    s.p1Bar = barsAgo;
+                if (high ? value < s.p1Value : value > s.p1Value) {
+                    s.p1Value = value;
+                    s.p1Bar = index;
                     i=0;
                 }
-                barsAgo++;
+                index--;
 
                 if (i==4) {
+                    /* explenation for searching a striking low:
+                        1. find the highest local high (p1)
+                        2. check if there are enough bars between p1 and p3 which have a lower high than p1
+                        3. if not enough bars, then reset search and continue, starting with p1
+                    */ 
                     int belowCounter = 0;
                     //int barsToCheck = (s.p1Bar - s.p3Bar); 
-                    for (int j = s.p1Bar+1; j > s.p3Bar; j--) {
-                        if (Low(j) > s.p1Value) {
+                    for (int j = s.p1Bar+1; j < s.p3Bar; j++) {
+                        value = Get(!high, j, bars);
+                        if (high ? value > s.p1Value : value < s.p1Value) {
                             belowCounter++;
                         }
                     }
                     if (belowCounter <= 3 /* || belowCounter / (double)(s.p1Bar - s.p3Bar) < 0.5*/) {
                         // less than 50% of the bars are lower
                         i = 0;
-                        barsAgo -= 4;
-                        s.p1Value = double.MaxValue;
+                        index += 4;
+                        s.p1Value = high ? double.MaxValue : double.MinValue;
                     }
                 }
 
-                if (i == 4 && s.p1Value < s.p3Value) {
-                    return FindStrikingHigh(s.p1Bar, initialBarsAgo);
+                if (i == 4 && (high ? s.p1Value < s.p3Value : s.p1Value > s.p3Value)) {
+                    return FindStrikingSpot(high, bars, s.p1Bar, initialIndex);
                 }
             }
             
-            s.p2Value = double.MinValue;
-            for (int i = s.p3Bar; i < s.p1Bar; i++) {
-                if (High(i) > s.p2Value) {
-                    s.Set2(i, High(i));
+            s.p2Value = high ? double.MinValue : double.MaxValue;
+            for (int i = s.p1Bar + 1; i <= s.p3Bar; i++) {
+                value = Get(high, i, bars);
+                if (high ? value > s.p2Value : value < s.p2Value) {
+                    s.Set2(i, value);
                 }
             }
-            if (s.p2Value < High(initialBarsAgo.Value)) {
-                return FindStrikingHigh(s.p1Bar, initialBarsAgo);
+            value = Get(high, initialIndex.Value, bars);
+            if (high ? s.p2Value < value : s.p2Value > value) {
+                return FindStrikingSpot(high, bars, s.p1Bar, initialIndex);
             }
             
+            /*if (s.p1Bar == s.p2Bar) {
+                // special case: iff p1 and p2 is the same bar and p1 has neighboured lower lows, we have to search again
+                for (int i = 1; i < 4; i++) {
+                    value = Get(!high, index - i, bars);
+                    if (high ? value > s.p1Value : value < s.p1Value) {
+                        return FindStrikingSpot(high, bars, s.p1Bar, initialIndex);
+                    }
+                }
+            }*/
+
             return s;
         }
     }

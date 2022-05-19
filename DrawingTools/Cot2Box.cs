@@ -9,7 +9,9 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Xml.Serialization;
+using Newtonsoft.Json;
 using NinjaTrader.Custom.AddOns.SuriCommon;
+using NinjaTrader.Data;
 using NinjaTrader.Gui;
 using NinjaTrader.Gui.Chart;
 using NinjaTrader.Gui.NinjaScript;
@@ -34,26 +36,25 @@ namespace NinjaTrader.NinjaScript.DrawingTools {
 		
 		protected override void DoCustomRenderWork(ChartScale chartScale, ChartControl chartControl, Point startPoint) {
 			SharpDX.Direct2D1.Brush textBrush = chartControl.Properties.ChartText.ToDxBrush(RenderTarget);
-			
-			int barIndex = chartScale.GetFirstChartBars().GetBarIdxByTime(chartControl, StartAnchor.Time);
-			int maxIndex = chartScale.GetFirstChartBars().Bars.Count - 1;
-			int barsAgo  = chartScale.GetFirstChartBars().Bars.Count - 1 - barIndex;
+			ChartBars chartBars = chartScale.GetFirstChartBars();
+			Bars bars = chartBars.Bars;
+			int barIndex = chartBars.GetBarIdxByTime(chartControl, StartAnchor.Time);
+			int barsAgo  = bars.Count - 1 - barIndex;
 			if (barsAgo < 0) return;
 			
-			StrikingCalculator strikingCalculator = new StrikingCalculator(chartScale);
 			StrikingSpotData s;
 			try {
-				s = isLong ? strikingCalculator.FindStrikingLow(barsAgo) : strikingCalculator.FindStrikingHigh(barsAgo);
+				s = StrikingCalculator.FindStrikingSpot(!isLong, bars, barIndex);
 			} catch (Exception e) {
 				Print(e.ToString());
 				return;
 			}
 
-			double stopLoss = SuriCommon.PriceToCurrency(chartControl.Instrument, Math.Abs(s.p3Value - s.p2Value));
+			double stopLoss = SuriCommon.PriceToCurrency(chartControl.Instrument, Math.Abs(bars.GetClose(barIndex) - s.p2Value));
 
-			Vector2 v1		= new Vector2(chartControl.GetXByBarIndex(chartScale.GetFirstChartBars(), maxIndex - s.p1Bar), chartScale.GetYByValue(s.p1Value));
-			Vector2 v2		= new Vector2(chartControl.GetXByBarIndex(chartScale.GetFirstChartBars(), maxIndex - s.p2Bar), chartScale.GetYByValue(s.p2Value));
-			Vector2 v3		= new Vector2(chartControl.GetXByBarIndex(chartScale.GetFirstChartBars(), maxIndex - s.p3Bar), chartScale.GetYByValue(s.p3Value));
+			Vector2 v1		= new Vector2(chartControl.GetXByBarIndex(chartBars, s.p1Bar), chartScale.GetYByValue(s.p1Value));
+			Vector2 v2		= new Vector2(chartControl.GetXByBarIndex(chartBars, s.p2Bar), chartScale.GetYByValue(s.p2Value));
+			Vector2 v3		= new Vector2(chartControl.GetXByBarIndex(chartBars, s.p3Bar), chartScale.GetYByValue(s.p3Value));
 			Vector2 vEnd1 = new Vector2((float) startPoint.X, chartScale.GetYByValue(s.p3Value));
 			Vector2 vEnd2 = new Vector2((float) startPoint.X, chartScale.GetYByValue(s.p2Value));
 			

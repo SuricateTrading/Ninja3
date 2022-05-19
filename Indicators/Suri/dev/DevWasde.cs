@@ -113,6 +113,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 			} else if (State == State.DataLoaded) {
 				int? id = SuriStrings.GetId(Instrument);
 				if (id != null) {
+					if (id == 14) id = 15;
 					string oldDate = ChartBars.Bars.GetTime(0).AddMonths(-1).Date.ToString("yyyy-MM-dd");
 					string newDate = ChartBars.Bars.LastBarTime    .AddMonths(+1).Date.ToString("yyyy-MM-dd");
 					wasdeData = SuriServer.GetWasdeData(id.Value, isAmerica, oldDate, newDate);

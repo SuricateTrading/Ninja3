@@ -57,13 +57,9 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				IsSuspendedWhileInactive		= true;
 				Left							= 300;
 				Top								= 0;
-			} else if (State == State.Historical) {
-				if (IsVisible) {
-					if (ChartControl != null) {
-						if (Top < 0) Top = 0;
-						ChartControl.Dispatcher.InvokeAsync(() => { UserControlCollection.Add(CreateControl()); });
-					}
-				}
+			} else if (State == State.Historical && IsVisible && ChartControl != null) {
+				if (Top < 0) Top = 0;
+				ChartControl.Dispatcher.InvokeAsync(() => { UserControlCollection.Add(CreateControl()); });
 			}
 		}
 		
