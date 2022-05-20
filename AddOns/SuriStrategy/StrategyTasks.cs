@@ -5,7 +5,6 @@ using NinjaTrader.NinjaScript.Strategies;
 
 namespace NinjaTrader.Custom.AddOns.SuriCommon {
     public static class StrategyTasks {
-
         public  static double GetWeekHigh     (int barIndex, Bars bars) { return GetWeekHighOrLow(barIndex, bars, true ); }
         public  static double GetWeekLow      (int barIndex, Bars bars) { return GetWeekHighOrLow(barIndex, bars, false); }
         private static double GetWeekHighOrLow(int barIndex, Bars bars, bool returnHigh) {
@@ -79,5 +78,4 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 
         public static bool BarGoesUp(Bars bars, int index) { return bars.GetClose(index) > bars.GetOpen(index); }
     }
-    
 }

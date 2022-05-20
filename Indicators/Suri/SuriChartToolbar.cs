@@ -173,7 +173,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				Content = ">",
 				Foreground = ChartControl.Properties.ChartText,
 				Margin = new Thickness(5,2,0,0),
-				Padding = new Thickness(0,0,0,0.5),
+				Padding = new Thickness(0,0,0,0),
 				Width = 30,
 				MaxWidth = 30,
 				MinWidth = 30,
@@ -186,10 +186,10 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				string selectedMarket = comList.SelectedItem as string;
 				if (selectedMarket == null) return;
 				string shortName = Regex.Replace( selectedMarket, "\t.+", "");
-
 				int i = 0;
 				foreach (KeyValuePair<Commodity,CommodityData> entry in SuriStrings.data) {
 					i++;
+					if (i == SuriStrings.data.Count) i = 0;
 					if (entry.Value.shortName.Equals(shortName)) {
 						ChangeMarket(SuriStrings.data.ElementAt(i).Value.shortName);
 						return;
@@ -202,7 +202,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			
 			loadingText = new TextBlock {
 				Foreground = ChartControl.Properties.ChartText,
-				Margin = new Thickness(15,2,0,0),
+				Margin = new Thickness(15,5,0,0),
 			};
 			Grid.SetRow(loadingText, 0);
 			Grid.SetColumn(loadingText, ++index);

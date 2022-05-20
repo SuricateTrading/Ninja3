@@ -5,6 +5,8 @@ using Newtonsoft.Json;
 using NinjaTrader.Cbi;
 using NinjaTrader.Custom.AddOns.SuriCommon;
 using NinjaTrader.NinjaScript.Indicators.Suri;
+using NinjaTrader.NinjaScript.Indicators.Suri.dev;
+
 #endregion
 
 namespace NinjaTrader.NinjaScript.Strategies {
@@ -14,6 +16,7 @@ namespace NinjaTrader.NinjaScript.Strategies {
 		private SuriCot2 cot2;
 		private SuriVolume volume;
 		private SuriBarRange barRange;
+		private DevTerminkurve devTerminkurve;
 		
 		private readonly List<SuriSignal> signals = new List<SuriSignal>();
 		
@@ -48,21 +51,25 @@ namespace NinjaTrader.NinjaScript.Strategies {
 				cot2 = SuriCot2();
 				volume = SuriVolume(125);
 				barRange = SuriBarRange(125);
+				devTerminkurve = DevTerminkurve();
 				AddChartIndicator(cot1);
 				AddChartIndicator(cot2);
 				AddChartIndicator(volume);
 				AddChartIndicator(barRange);
+				AddChartIndicator(devTerminkurve);
 				cot1.Update();
 				cot2.Update();
 				volume.Update();
 				barRange.Update();
+				devTerminkurve.Update();
 			}
 		}
 
 		private void AnalyseSignals() {
 			Print("Start " + Instrument.MasterInstrument.Name);
 			//AnalyzeCot1();
-			AnalyzeCot2();
+			//AnalyzeCot2();
+			//AnalyzeTk();
 			Print(JsonConvert.SerializeObject(signals));
 		}
 
@@ -73,17 +80,17 @@ namespace NinjaTrader.NinjaScript.Strategies {
 					// check if valid entry
 					bool isCot1Long = cot1.Value.GetValueAt(signalIndex) > 89.9;
 					bool isCot2Long = cot2.seriesMain.GetValueAt(signalIndex) < cot2.series50.GetValueAt(signalIndex);
-					//bool isTkLong = true; // todo
-					if (isCot1Long != isCot2Long /*&& (isCot1Long && !isCot2Long && isTkLong) == false*/) {
-						Print("Skip " + Bars.GetTime(signalIndex).ToShortDateString() + " @" + signalIndex + ". COT2 or TK contradict.");
+					TkState tkState = devTerminkurve.GetTkState(signalIndex);
+					if (isCot1Long && !isCot2Long && tkState.IsAnyBackwardation() != true) {
+						// long: wenn cot2 unter 50, dann tk egal. wenn cot2 über 50, dann tk muss in backwardation
+						Print("Skip " + Bars.GetTime(signalIndex).ToShortDateString() + " @" + signalIndex + ". COT2 and TK contradict COT1 long trade.");
 						continue;
 					}
-					// todo:
-					// TK prüfen: muss z.B. in Richtung BW (long) / CT (short) sein
-					// Richtung BW wäre dann, wenn es danach aussieht, dass demnächst der letzte Kontrakt unter den ersten springt.
-					// long: wenn cot2 unter 50, dann tk egal. wenn cot2 über 50, dann tk muss in backwardation
-					// short: in contango und cot2 über 50
-					
+					if (!isCot1Long && (isCot2Long || tkState.IsAnyBackwardation() == true)) {
+						// short: in contango und cot2 über 50
+						Print("Skip " + Bars.GetTime(signalIndex).ToShortDateString() + " @" + signalIndex + ". COT2 or TK contradict COT1 short trade.");
+						continue;
+					}
 					
 					// calculate entry
 					SuriSignal signal = new SuriSignal {
@@ -139,9 +146,14 @@ namespace NinjaTrader.NinjaScript.Strategies {
 							signal.exitIndex = StrategyTasks.GetNextWeekIndex(i, Bars);
 							break;
 						}
-						// tk ...
-						// long: letzter höher als der erste, oder ersten 3 steigen
-						// short: letzter niedriger als der erste
+						// tk
+						tkState = devTerminkurve.GetTkState(i);
+						TkState prevTkState = devTerminkurve.GetTkState(i - 1);
+						if (signal.isLong && tkState.IsBackwardationToContango(prevTkState) || !signal.isLong && tkState.IsContangoToBackwardation(prevTkState)) {
+							exitReason = "TK counter signal";
+							signal.exitIndex = i + 1;
+							break;
+						}
 					}
 					if (exitReason != null && signal.exitIndex != null) {
 						signal.exitDate = Bars.GetTime(signal.exitIndex.Value);
@@ -169,9 +181,12 @@ namespace NinjaTrader.NinjaScript.Strategies {
 					if (cot2.seriesMain.GetValueAt(i) >= cot2.series75.GetValueAt(i)) cot2Position = SuriPosition.Short;
 					if (cot2Position == SuriPosition.None) continue;
 					
-					// todo: TK
-					// bei long egal
-					// bei short: letzter höher als der erste, oder ersten 3 steigen
+					// tk
+					TkState tkState = devTerminkurve.GetTkState(i);
+					if (cot2Position == SuriPosition.Short && tkState.IsAnyBackwardation() == true) {
+						Print("Skip " + Bars.GetTime(i).ToShortDateString() + " @" + i + ". COT2 short but TK was in backwardation.");
+						continue;
+					}
 
 
 					SuriSignal signal = new SuriSignal {
@@ -233,17 +248,21 @@ namespace NinjaTrader.NinjaScript.Strategies {
 					
 					// exit and trace stops
 					for (int j = signal.entryIndex.Value; j < Bars.Count; j++) {
+						// cot2
 						if (signal.isLong && cot2.seriesMain.GetValueAt(j) >= cot2.series75.GetValueAt(j) || !signal.isLong && cot2.seriesMain.GetValueAt(j) <= cot2.series25.GetValueAt(j)) {
 							signal.exitIndex = j + 1;
 							signal.exitDate = Bars.GetTime(j + 1);
 							signal.exitReason = "COT 2 counter signal";
 							break;
 						}
-						
-						// tk ... todo
-						// long: letzter höher als der erste, oder ersten 3 steigen
-						// short: letzter niedriger als der erste
-
+						// tk
+						tkState = devTerminkurve.GetTkState(j);
+						TkState prevTkState = devTerminkurve.GetTkState(j - 1);
+						if (signal.isLong && tkState.IsBackwardationToContango(prevTkState) || !signal.isLong && tkState.IsContangoToBackwardation(prevTkState)) {
+							signal.exitReason = "TK counter signal";
+							signal.exitIndex = j + 1;
+							break;
+						}
 						// trace stop
 						if ((signal.isLong && cot2.seriesMain.GetValueAt(j) >= cot2.series75.GetValueAt(j) ||
 						    !signal.isLong && cot2.seriesMain.GetValueAt(j) <= cot2.series25.GetValueAt(j)) &&
@@ -260,6 +279,10 @@ namespace NinjaTrader.NinjaScript.Strategies {
 			}
 		}
 
+		private void AnalyzeTk() {
+			
+		}
+
 		protected override void OnBarUpdate() {
 			if (BarsInProgress != 0) return;
 			if (!prepared) {
@@ -269,6 +292,7 @@ namespace NinjaTrader.NinjaScript.Strategies {
 				cot2.Update();
 				volume.Update();
 				barRange.Update();
+				devTerminkurve.Update();
 				Bars.CurrentBar = 0;
 				AnalyseSignals();
 			}

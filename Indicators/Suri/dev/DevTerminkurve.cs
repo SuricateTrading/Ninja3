@@ -1,16 +1,11 @@
 #region Using declarations
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Windows.Media;
-using System.Xml.Serialization;
-using NinjaTrader.Cbi;
 using NinjaTrader.Custom.AddOns.SuriCommon;
 using NinjaTrader.Gui;
 using NinjaTrader.Gui.Chart;
 using NinjaTrader.Gui.Tools;
-using NinjaTrader.NinjaScript.DrawingTools;
-using NinjaTrader.NinjaScript.Strategies;
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
@@ -21,9 +16,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 		public int days { get; set; }
 		private bool comesFromContango;
 		private bool comesFromBackwardation;
-		
-		[NinjaScriptProperty] [Display(Name="SuriTest", Order=2, GroupName="Parameter")] [Browsable(false)] [XmlIgnore]
-		public SuriTest suriTest { get; set; }
 		
 		protected override void OnStateChange() {
 			if (State == State.SetDefaults) {
@@ -107,9 +99,10 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 			}
 		}
 
-		private double GetStop(bool isLong) {
-			return isLong ? Low[0] - TickSize * 200 : High[0] + TickSize * 200;
+		public TkState GetTkState(int barIndex) {
+			return TkState.None; // todo
 		}
+		
 /*
 		private void EnterLong() {
 			Draw.VerticalLine(this, "ToBackwardationSignal " + SuriCommon.random, 0, Brushes.LimeGreen, DashStyleHelper.Solid, 1);
@@ -152,6 +145,36 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 		}*/
 		
 	}
+
+	public enum TkState {
+		Backwardation,
+		FirstHighestAndLastLowest,
+		FirstHigherThanLast,
+		None,
+		FirstLowerThanLast,
+		FirstLowestAndLastHighest,
+		Contango,
+		FirstThreeContango,
+	}
+	public static class TkStateExtensions {
+		public static bool? IsAnyBackwardation(this TkState tkState) {
+			switch (tkState) {
+				case TkState.Backwardation: return true;
+				case TkState.FirstHighestAndLastLowest: return true;
+				case TkState.FirstHigherThanLast: return true;
+				case TkState.None: return null;
+				case TkState.FirstLowerThanLast: return false;
+				case TkState.FirstLowestAndLastHighest: return false;
+				case TkState.Contango: return false;
+				case TkState.FirstThreeContango: return false;
+			}
+			return null;
+		}
+		public static bool? IsAnyContango(this TkState tkState) { return !tkState.IsAnyBackwardation(); }
+		public static bool IsBackwardationToContango(this TkState tkState, TkState prevTkState) { return prevTkState.IsAnyBackwardation() == true && tkState.IsAnyContango() == true; }
+		public static bool IsContangoToBackwardation(this TkState tkState, TkState prevTkState) { return prevTkState.IsAnyContango() == true && tkState.IsAnyBackwardation() == true; }
+	}
+	
 }
 
 
@@ -192,18 +215,18 @@ namespace NinjaTrader.NinjaScript.Indicators
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
 		private Suri.dev.DevTerminkurve[] cacheDevTerminkurve;
-		public Suri.dev.DevTerminkurve DevTerminkurve(SuriTest suriTest)
+		public Suri.dev.DevTerminkurve DevTerminkurve()
 		{
-			return DevTerminkurve(Input, suriTest);
+			return DevTerminkurve(Input);
 		}
 
-		public Suri.dev.DevTerminkurve DevTerminkurve(ISeries<double> input, SuriTest suriTest)
+		public Suri.dev.DevTerminkurve DevTerminkurve(ISeries<double> input)
 		{
 			if (cacheDevTerminkurve != null)
 				for (int idx = 0; idx < cacheDevTerminkurve.Length; idx++)
-					if (cacheDevTerminkurve[idx] != null && cacheDevTerminkurve[idx].suriTest == suriTest && cacheDevTerminkurve[idx].EqualsInput(input))
+					if (cacheDevTerminkurve[idx] != null &&  cacheDevTerminkurve[idx].EqualsInput(input))
 						return cacheDevTerminkurve[idx];
-			return CacheIndicator<Suri.dev.DevTerminkurve>(new Suri.dev.DevTerminkurve(){ suriTest = suriTest }, input, ref cacheDevTerminkurve);
+			return CacheIndicator<Suri.dev.DevTerminkurve>(new Suri.dev.DevTerminkurve(), input, ref cacheDevTerminkurve);
 		}
 	}
 }
@@ -212,14 +235,14 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.dev.DevTerminkurve DevTerminkurve(SuriTest suriTest)
+		public Indicators.Suri.dev.DevTerminkurve DevTerminkurve()
 		{
-			return indicator.DevTerminkurve(Input, suriTest);
+			return indicator.DevTerminkurve(Input);
 		}
 
-		public Indicators.Suri.dev.DevTerminkurve DevTerminkurve(ISeries<double> input , SuriTest suriTest)
+		public Indicators.Suri.dev.DevTerminkurve DevTerminkurve(ISeries<double> input )
 		{
-			return indicator.DevTerminkurve(input, suriTest);
+			return indicator.DevTerminkurve(input);
 		}
 	}
 }
@@ -228,14 +251,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.dev.DevTerminkurve DevTerminkurve(SuriTest suriTest)
+		public Indicators.Suri.dev.DevTerminkurve DevTerminkurve()
 		{
-			return indicator.DevTerminkurve(Input, suriTest);
+			return indicator.DevTerminkurve(Input);
 		}
 
-		public Indicators.Suri.dev.DevTerminkurve DevTerminkurve(ISeries<double> input , SuriTest suriTest)
+		public Indicators.Suri.dev.DevTerminkurve DevTerminkurve(ISeries<double> input )
 		{
-			return indicator.DevTerminkurve(input, suriTest);
+			return indicator.DevTerminkurve(input);
 		}
 	}
 }
