@@ -8,6 +8,7 @@ using NinjaTrader.Custom.AddOns.SuriCommon;
 using NinjaTrader.Gui;
 using NinjaTrader.Gui.Chart;
 using NinjaTrader.Gui.NinjaScript;
+using NinjaTrader.NinjaScript.Strategies;
 using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
 
 #endregion
@@ -109,6 +110,15 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		public Series<double> series25   { get { return Values[2]; } }
 		public Series<double> series50   { get { return Values[1]; } }
 		public Series<double> series75   { get { return Values[0]; } }
+		public bool IsInLongHalf(int barIndex) { return Values[3].GetValueAt(barIndex) < Values[1].GetValueAt(barIndex); }
+		public bool IsInShortHalf(int barIndex) { return !IsInLongHalf(barIndex); }
+
+		/** Returns a position iff over 75% or under 25%. */
+		public SuriPosition GetSuriPosition(int i) {
+			if (seriesMain.GetValueAt(i) <= series25.GetValueAt(i)) return SuriPosition.Long;
+			if (seriesMain.GetValueAt(i) >= series75.GetValueAt(i)) return SuriPosition.Short;
+			return SuriPosition.None;
+		}
 
 		public override string DisplayName { get { return Name; } }
 

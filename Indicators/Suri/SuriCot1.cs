@@ -93,6 +93,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			set { noNewCotBrush = Serialize.StringToBrush(value); }
 		}
 		#endregion
+		#endregion
 
 		protected override void OnStateChange() {
 			if (State == State.SetDefaults) {
@@ -140,7 +141,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 	        base.OnRender(chartControl, chartScale);
 	        if (SuriAddOn.license == License.None) SuriCommon.NoValidLicenseError(RenderTarget, ChartControl, ChartPanel);
         }
-        #endregion
 
 		protected override void OnBarUpdate() {
 			if (SuriAddOn.license == License.None || suriCotHelper == null) return;
