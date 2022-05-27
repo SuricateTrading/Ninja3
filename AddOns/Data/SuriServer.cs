@@ -58,6 +58,15 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
             return serializer.Deserialize<List<DbCotData>>(response);
         }
 		
+        /** urlT must be 'cot/get' for example */
+        public static List<T> GetGenericData<T>(int commId, DateTime oldDate, DateTime newDate, string urlT, string urlSuffix = null) {
+            string url = "https://cloud2.suricate-trading.de:8443/" + urlT + "?commId=" + commId + "&oldDate=" + oldDate.Date.ToString("yyyy-MM-dd") + "&newDate=" + newDate.Date.ToString("yyyy-MM-dd");
+            if (urlSuffix != null) url += urlSuffix;
+            string response = Post(url, true);
+            var serializer = new JavaScriptSerializer();
+            return serializer.Deserialize<List<T>>(response);
+        }
+		
         public static Suri GetSuri(string license) {
             try {
                 string url = "https://cloud2.suricate-trading.de:8443/suriguard/nt?license=" + license;

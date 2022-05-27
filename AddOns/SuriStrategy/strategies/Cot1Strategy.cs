@@ -10,7 +10,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon.strategies {
 	    private readonly SuriCot1 cot1;
 	    private readonly SuriCot2 cot2;
         private readonly DevTerminkurve terminkurve;
-        
+
         public Cot1Strategy(Bars bars, Instrument instrument, SuriCot1 cot1, SuriCot2 cot2, DevTerminkurve terminkurve) : base(bars, instrument) {
 	        this.cot1 = cot1;
 	        this.cot2 = cot2;
@@ -21,9 +21,11 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon.strategies {
 	        cot2.Update();
 	        terminkurve.Update();
         }
+        protected override string name { get { return "COT1"; } }
+        protected override int startBarIndex { get { return 0; } }
 
         public override void Analyze() {
-	        Print("Start COT 1");
+	        Print("Start COT1");
 	        foreach (int signalIndex in cot1.signalIndices) {
 		        try {
 			        if (!IsEntry(signalIndex)) continue;
@@ -38,7 +40,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon.strategies {
 			        }
 			        signal.entryDate = bars.GetTime(signal.entryIndex.Value);
 					
-			        if (!SetAndCheckInitialStoploss(signal, signalIndex)) continue;
+			        if (!SetAndCheckInitialStoploss(signal)) continue;
 			        SetExit(signal);
 			        signals.Add(signal);
 		        } catch (Exception e) {
@@ -80,14 +82,14 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon.strategies {
 	        return signal;
         }
 
-        protected override bool SetAndCheckInitialStoploss(SuriSignal signal, int index) {
+        protected override bool SetAndCheckInitialStoploss(SuriSignal signal) {
 	        signal.AddStop(signal.isLong
 		        ? StrategyTasks.GetLast10DaysLow (signal.entryIndex.Value, bars) - instrument.MasterInstrument.TickSize
 		        : StrategyTasks.GetLast10DaysHigh(signal.entryIndex.Value, bars) + instrument.MasterInstrument.TickSize
 	        );
 	        double stoplossCurrency = SuriCommon.PriceToCurrency(instrument, Math.Abs(signal.currentStop - signal.entry.Value));
 	        if (stoplossCurrency > 2000) {
-		        Print("Skip COT1 " + bars.GetTime(index).ToShortDateString() + " @" + index + ". Stop " + stoplossCurrency + " $ too high.");
+		        Print("Skip COT1 " + bars.GetTime(signal.signalIndex).ToShortDateString() + " @" + signal.signalIndex + ". Stop " + stoplossCurrency + " $ too high.");
 		        return false;
 	        }
 	        //signal.stoplossIndex = StrategyTasks.GetIndexOfValueFill(signal.entryIndex.Value, bars, signal.stoploss);

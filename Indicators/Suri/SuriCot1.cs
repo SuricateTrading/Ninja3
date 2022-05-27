@@ -121,9 +121,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				//useWeeks									= true;
 			} else if (State == State.Configure) {
 				suriSma = SuriSma(125);
-				if (Bars.Count > 0) {
-					suriCotHelper = new SuriCotHelper(Instrument, Bars.GetTime(0), Bars.LastBarTime.Date);
-				}
+				if (Bars.Count > 0) suriCotHelper = new SuriCotHelper(Instrument, Bars.GetTime(0), Bars.LastBarTime.Date);
 				AddPlot(new Stroke(regularLineBrush, lineWidth), PlotStyle.Line, "COT1");
 				AddPlot(new Stroke(shortBrush, lineWidthSecondary), PlotStyle.Line, "10%");
 				AddPlot(new Stroke(brush50Percent, lineWidthSecondary), PlotStyle.Line, "50%");

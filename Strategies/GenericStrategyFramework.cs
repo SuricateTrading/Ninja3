@@ -3,9 +3,6 @@ using System;
 using System.Collections.Generic;
 using NinjaTrader.Cbi;
 using NinjaTrader.Custom.AddOns.SuriCommon;
-using NinjaTrader.Custom.AddOns.SuriCommon.strategies;
-using NinjaTrader.NinjaScript.Indicators.Suri;
-using NinjaTrader.NinjaScript.Indicators.Suri.dev;
 #endregion
 
 namespace NinjaTrader.NinjaScript.Strategies {

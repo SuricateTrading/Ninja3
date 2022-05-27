@@ -98,11 +98,13 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AddOns\Data\GenericDbRepo.cs" />
     <Compile Include="AddOns\Data\SuriCotHelper.cs" />
     <Compile Include="AddOns\Data\SuriCotRepo.cs" />
     <Compile Include="AddOns\Data\SuriRepo.cs" />
     <Compile Include="AddOns\Data\SuriServer.cs" />
     <Compile Include="AddOns\Data\SuriStrings.cs" />
+    <Compile Include="AddOns\Data\TkDbRepo.cs" />
     <Compile Include="AddOns\Data\Vp\SuriBigRepo.cs" />
     <Compile Include="AddOns\Data\Vp\SuriVpData.cs" />
     <Compile Include="AddOns\Data\Vp\SuriIntraRepo.cs" />
@@ -118,6 +120,7 @@
     <Compile Include="AddOns\SuriStrategy\DevStrategyInterface.cs" />
     <Compile Include="AddOns\SuriStrategy\strategies\Cot1Strategy.cs" />
     <Compile Include="AddOns\SuriStrategy\strategies\Cot2Strategy.cs" />
+    <Compile Include="AddOns\SuriStrategy\strategies\TkStrategy.cs" />
     <Compile Include="AddOns\SuriStrategy\StrategyInterface.cs" />
     <Compile Include="AddOns\SuriStrategy\StrategyTasks.cs" />
     <Compile Include="BarsTypes\%40DayBarsType.cs" />

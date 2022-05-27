@@ -7,7 +7,6 @@ using NinjaTrader.NinjaScript.Strategies;
 
 namespace NinjaTrader.Custom.AddOns.SuriCommon.strategies {
     public class Cot2Strategy : StrategyInterface {
-        
 	    private readonly SuriCot2 cot2;
 	    private readonly SuriBarRange barRange;
 	    private readonly SuriVolume volume;
@@ -25,88 +24,8 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon.strategies {
 	        volume.Update();
 	        terminkurve.Update();
         }
-
-        
-        public override void Analyze() {
-			Print("Start COT 2");
-			for (int i = 125; i < bars.Count; i++) {
-				try {
-					if (!IsEntry(i)) continue;
-					SuriSignal signal = PrepareSignal(i);
-
-
-					// check iff valid cot 2 versions and calculate initial stoploss
-					bool isEndOfTrend = true; // todo: check if end of trend
-					SuriBarType barType = StrategyTasks.GetBarType(bars, i, TickSize);
-					if (signal.isLong && barType == SuriBarType.MegabarDown || !signal.isLong && barType == SuriBarType.MegabarUp) {
-						if (!isEndOfTrend) {
-							Print("Skip COT2 " + bars.GetTime(i).ToShortDateString() + " @" + i + ". V1 not end of trend.");
-							continue;
-						}
-						signal.notes += "V1. ";
-						StrikingSpotData strikingSpotData = StrikingCalculator.FindStrikingSpot(!signal.isLong, bars, i);
-						signal.AddStop(strikingSpotData.p2Value + (signal.isLong ? -TickSize : TickSize));
-					} else if (signal.isLong && barType == SuriBarType.MegabarUp || !signal.isLong && barType == SuriBarType.MegabarDown) {
-						signal.notes += "V2. ";
-						if (isEndOfTrend) {
-							signal.AddStop(signal.isLong ? bars.GetLow(i) - TickSize : bars.GetHigh(i) + TickSize);
-						} else {
-							StrikingSpotData strikingSpotData = StrikingCalculator.FindStrikingSpot(!signal.isLong, bars, i);
-							signal.AddStop(strikingSpotData.p2Value);
-						}
-					} else if (signal.isLong && (barType == SuriBarType.ReversalBarTop    || barType == SuriBarType.ReversalBarMiddleTop) ||
-						      !signal.isLong && (barType == SuriBarType.ReversalBarBottom || barType == SuriBarType.ReversalBarMiddleBottom)) {
-						signal.notes += "V3. ";
-						if (!isEndOfTrend) {
-							Print("Skip COT2 " + bars.GetTime(i).ToShortDateString() + " @" + i + ". V3 not end of trend.");
-							continue;
-						}
-						signal.AddStop(signal.isLong ? bars.GetLow(i) - TickSize : bars.GetHigh(i) + TickSize);
-					} else if (signal.isLong && (barType == SuriBarType.ReversalBarBottom || barType == SuriBarType.ReversalBarMiddleBottom) ||
-					           !signal.isLong && (barType == SuriBarType.ReversalBarTop    || barType == SuriBarType.ReversalBarMiddleTop)) {
-						// v4
-						Print("Skip COT2 " + bars.GetTime(i).ToShortDateString() + " @" + i + ". Bad reversal bar (v4).");
-						continue;
-					} else {
-						continue;
-					}
-
-					double stoplossCurrency = SuriCommon.PriceToCurrency(instrument, Math.Abs(signal.currentStop - bars.GetClose(i)));
-					if (stoplossCurrency > 2000) {
-						Print("Skip COT2 " + bars.GetTime(i).ToShortDateString() + " @" + i + ". Stop " + stoplossCurrency + " $ too high.");
-						continue;
-					}
-					
-					
-					// exit and trace stops
-					for (int j = signal.entryIndex.Value; j < bars.Count; j++) {
-						// cot2
-						if (signal.isLong && cot2.seriesMain.GetValueAt(j) >= cot2.series75.GetValueAt(j) || !signal.isLong && cot2.seriesMain.GetValueAt(j) <= cot2.series25.GetValueAt(j)) {
-							signal.exitIndex = j + 1;
-							signal.exitDate = bars.GetTime(j + 1);
-							signal.exitReason = "COT 2 counter signal";
-							break;
-						}
-						// tk
-						TkState tkState = terminkurve.GetTkState(j);
-						TkState prevTkState = terminkurve.GetTkState(j - 1);
-						if (signal.isLong && tkState.IsBackwardationToContango(prevTkState) || !signal.isLong && tkState.IsContangoToBackwardation(prevTkState)) {
-							signal.exitReason = "TK counter signal";
-							signal.exitIndex = j + 1;
-							break;
-						}
-						// trace stop
-						if (signal.isLong != cot2.IsInLongHalf(j) && barRange.IsMegaRange(j) && signal.isLong == StrategyTasks.BarGoesUp(bars, j)) {
-							signal.AddStop(signal.isLong ? bars.GetLow(j + i) - TickSize : bars.GetHigh(j + i) + TickSize, j + 1);
-						}
-					}
-
-					signals.Add(signal);
-				} catch (Exception e) {
-					Print(e.ToString());
-				}
-			}
-		}
+        protected override string name { get { return "COT2"; } }
+        protected override int startBarIndex { get { return 125; } }
 
         protected override bool IsEntry(int index) {
 	        bool isMegaBar = barRange.IsMegaRange(index);
@@ -144,14 +63,75 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon.strategies {
 	        return signal;
         }
 
-        protected override bool SetAndCheckInitialStoploss(SuriSignal signal, int index) {
-	        throw new NotImplementedException();
+        protected override bool SetAndCheckInitialStoploss(SuriSignal signal) {
+			// check iff valid cot 2 versions and calculate initial stoploss
+			bool isEndOfTrend = true; // todo: check if end of trend
+			SuriBarType barType = StrategyTasks.GetBarType(bars, signal.signalIndex, tickSize);
+			if (signal.isLong && barType == SuriBarType.MegabarDown || !signal.isLong && barType == SuriBarType.MegabarUp) {
+				if (!isEndOfTrend) {
+					Print("Skip COT2 " + bars.GetTime(signal.signalIndex).ToShortDateString() + " @" + signal.signalIndex + ". V1 not end of trend.");
+					return false;
+				}
+				signal.notes += "V1. ";
+				StrikingSpotData strikingSpotData = StrikingCalculator.FindStrikingSpot(!signal.isLong, bars, signal.signalIndex);
+				signal.AddStop(strikingSpotData.p2Value + (signal.isLong ? -tickSize : tickSize));
+			} else if (signal.isLong && barType == SuriBarType.MegabarUp || !signal.isLong && barType == SuriBarType.MegabarDown) {
+				signal.notes += "V2. ";
+				if (isEndOfTrend) {
+					signal.AddStop(signal.isLong ? bars.GetLow(signal.signalIndex) - tickSize : bars.GetHigh(signal.signalIndex) + tickSize);
+				} else {
+					StrikingSpotData strikingSpotData = StrikingCalculator.FindStrikingSpot(!signal.isLong, bars, signal.signalIndex);
+					signal.AddStop(strikingSpotData.p2Value);
+				}
+			} else if (signal.isLong && (barType == SuriBarType.ReversalBarTop    || barType == SuriBarType.ReversalBarMiddleTop) ||
+				      !signal.isLong && (barType == SuriBarType.ReversalBarBottom || barType == SuriBarType.ReversalBarMiddleBottom)) {
+				signal.notes += "V3. ";
+				if (!isEndOfTrend) {
+					Print("Skip COT2 " + bars.GetTime(signal.signalIndex).ToShortDateString() + " @" + signal.signalIndex + ". V3 not end of trend.");
+					return false;
+				}
+				signal.AddStop(signal.isLong ? bars.GetLow(signal.signalIndex) - tickSize : bars.GetHigh(signal.signalIndex) + tickSize);
+			} else if (signal.isLong && (barType == SuriBarType.ReversalBarBottom || barType == SuriBarType.ReversalBarMiddleBottom) ||
+			           !signal.isLong && (barType == SuriBarType.ReversalBarTop    || barType == SuriBarType.ReversalBarMiddleTop)) {
+				// v4
+				Print("Skip COT2 " + bars.GetTime(signal.signalIndex).ToShortDateString() + " @" + signal.signalIndex + ". Bad reversal bar (v4).");
+				return false;
+			} else {
+				Print("Skip COT2 " + bars.GetTime(signal.signalIndex).ToShortDateString() + " @" + signal.signalIndex + ". No valid COT2 version.");
+				return false;
+			}
+
+			double stoplossCurrency = SuriCommon.PriceToCurrency(instrument, Math.Abs(signal.currentStop - bars.GetClose(signal.signalIndex)));
+			if (stoplossCurrency > 2000) {
+				Print("Skip COT2 " + bars.GetTime(signal.signalIndex).ToShortDateString() + " @" + signal.signalIndex + ". Stop " + stoplossCurrency + " $ too high.");
+				return false;
+			}
+			return true;
         }
 
         protected override void SetExit(SuriSignal signal) {
-	        throw new NotImplementedException();
+	        for (int j = signal.entryIndex.Value; j < bars.Count; j++) {
+		        // cot2
+		        if (signal.isLong && cot2.seriesMain.GetValueAt(j) >= cot2.series75.GetValueAt(j) || !signal.isLong && cot2.seriesMain.GetValueAt(j) <= cot2.series25.GetValueAt(j)) {
+			        signal.exitIndex = j + 1;
+			        signal.exitDate = bars.GetTime(j + 1);
+			        signal.exitReason = "COT 2 counter signal";
+			        break;
+		        }
+		        // tk
+		        TkState tkState = terminkurve.GetTkState(j);
+		        TkState prevTkState = terminkurve.GetTkState(j - 1);
+		        if (signal.isLong && tkState.IsBackwardationToContango(prevTkState) || !signal.isLong && tkState.IsContangoToBackwardation(prevTkState)) {
+			        signal.exitReason = "TK counter signal";
+			        signal.exitIndex = j + 1;
+			        break;
+		        }
+		        // trace stop
+		        if (signal.isLong != cot2.IsInLongHalf(j) && barRange.IsMegaRange(j) && signal.isLong == StrategyTasks.BarGoesUp(bars, j)) {
+			        signal.AddStop(signal.isLong ? bars.GetLow(j) - tickSize : bars.GetHigh(j) + tickSize, j + 1);
+		        }
+	        }
         }
-        
 
     }
 }
