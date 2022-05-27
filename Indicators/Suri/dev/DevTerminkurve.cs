@@ -1,21 +1,17 @@
 #region Using declarations
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Windows.Media;
-using NinjaTrader.Custom.AddOns.SuriCommon;
+using NinjaTrader.Custom.AddOns.Data;
 using NinjaTrader.Gui;
 using NinjaTrader.Gui.Chart;
-using NinjaTrader.Gui.Tools;
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 	public class DevTerminkurve : Indicator {
-		private List<TkData> tkData;
-		private int nextIndex;
+		private TkRepo tkRepo;
+		
 		[Display(Name = "Tage", Order = 0)]
 		public int days { get; set; }
-		private bool comesFromContango;
-		private bool comesFromBackwardation;
 		
 		protected override void OnStateChange() {
 			if (State == State.SetDefaults) {
@@ -40,141 +36,39 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 				AddLine(new Stroke(Brushes.DimGray, 1), 50, "50");
 				AddLine(new Stroke(Brushes.DimGray, 1), 90, "100");
 			} else if (State == State.DataLoaded) {
-				int? id = SuriStrings.GetId(Instrument);
-				if (id != null) {
-					string oldDate = Bars.GetTime(0).Date.ToString("yyyy-MM-dd");
-					string newDate = Bars.LastBarTime    .Date.ToString("yyyy-MM-dd");
-					tkData = SuriServer.GetTkData(id.Value, oldDate, newDate);
-				}
+				if (Bars.Count > 0) tkRepo = new TkRepo(Instrument, Bars);
 			}
 		}
-		
-		//public override void OnCalculateMinMax() { MinValue = -2; MaxValue = 2; }
 		public override void OnCalculateMinMax() { MinValue = -25; MaxValue = 125; }
-		
-		protected override void OnBarUpdate() {
-			if (tkData.IsNullOrEmpty()) return;
-			for (int i = nextIndex; i < tkData.Count; i++) {
-				if (tkData[i].Date.Date.Equals(Time[0].Date)) {
-					Values[0][0] = (tkData[i].TkState+2)*25;
-
-					if (i >= 1) {
-						//if (tkData[i-1].TkState >=  1 && tkData[i].TkState <= -2) ExitShort();
-						//if (tkData[i-1].TkState <= -1 && tkData[i].TkState >=  2) ExitLong();
-					}
-					
-					//if (comesFromContango      && tkData[i].TkState <= -1) EnterLong();
-					//if (comesFromBackwardation && tkData[i].TkState >=  1) EnterShort();
-					
-					switch (tkData[i].TkState) {
-						case  3: comesFromContango = true;  comesFromBackwardation = false; break;
-						case -3: comesFromContango = false; comesFromBackwardation = true;  break;
-						case  1: case  2:                   comesFromBackwardation = false; break;
-						case -1: case -2: comesFromContango = false;                        break;
-					}
-					
-					Values[1][0] = tkData[i].Delta;
-					
-					// calculate delta osci
-					if (CurrentBar >= days) {
-						double min = double.MaxValue;
-						double max = double.MinValue;
-						for (int barsAgo = 0; barsAgo < days; barsAgo++) {
-							double v = Values[1][barsAgo];
-							if (min > v) min = v;
-							if (max < v) max = v;
-						}
-						Values[2][0] = 100.0 * (tkData[i].Delta - min) / (max - min);
-					}
-				
-					nextIndex = i;
-					return;
-				}
-				if (tkData[i].Date.Date > Time[0].Date) {
-					Values[0][0] = Values[0][1];
-					Values[1][0] = Values[1][1];
-					Values[2][0] = Values[2][1];
-					return;
-				}
-			}
-		}
+		public override string DisplayName { get { return Name; } }
 
 		public TkState GetTkState(int barIndex) {
-			return TkState.None; // todo
+			var tkData = (TkData) tkRepo.Get(barIndex);
+			if (tkData == null) return TkState.None;
+			return tkData.tkState;
 		}
+		public TkData GetTkData(int barIndex) { return (TkData) tkRepo.Get(barIndex); }
 		
-/*
-		private void EnterLong() {
-			Draw.VerticalLine(this, "ToBackwardationSignal " + SuriCommon.random, 0, Brushes.LimeGreen, DashStyleHelper.Solid, 1);
-			if (suriTest == null) return;
-			ExitShort();
-			double stop = GetStop(true);
-			if (stop < 2000) {
-				suriTest.tkOrder = suriTest.SubmitOrderUnmanaged(0, OrderAction.Buy, OrderType.Market, 1, 0, 0, null, "TK Long");
-				suriTest.tkStopLossOrder = suriTest.SubmitOrderUnmanaged(0, OrderAction.SellShort, OrderType.StopMarket, 1, 0, stop, null, "TK Long Stoploss");	
+		protected override void OnBarUpdate() {
+			TkData tkData = (TkData) tkRepo.Get(CurrentBar);
+			if (tkData == null) return;
+			
+			Values[0][0] = (int) tkData.tkState * 10;
+			Values[1][0] = tkData.delta;
+			
+			// calculate delta osci
+			if (CurrentBar >= days) {
+				var min = double.MaxValue;
+				var max = double.MinValue;
+				for (int barsAgo = 0; barsAgo < days; barsAgo++) {
+					double v = Values[1][barsAgo];
+					if (min > v) min = v;
+					if (max < v) max = v;
+				}
+				Values[2][0] = 100.0 * (tkData.delta - min) / (max - min);
 			}
 		}
-		private void EnterShort() {
-			Draw.VerticalLine(this, "ToContangoSignal " + SuriCommon.random, 0, Brushes.LimeGreen, DashStyleHelper.Solid, 1);
-			if (suriTest == null) return;
-			ExitLong();
-			double stop = GetStop(false);
-			if (CurrentBar > 1000 && stop < 2000) {
-				suriTest.tkOrder = suriTest.SubmitOrderUnmanaged(0, OrderAction.Sell, OrderType.Market, 1, 0, 0, null, "TK Short");
-				suriTest.tkStopLossOrder = suriTest.SubmitOrderUnmanaged(0, OrderAction.BuyToCover, OrderType.StopMarket, 1, 0, stop, null, "TK Short Stoploss");
-			}
-		}
-
-		private void ExitLong() {
-			if (suriTest == null) return;
-			if (suriTest.tkOrder != null && suriTest.tkOrder.IsLong && suriTest.tkStopLossOrder.OrderState != OrderState.Filled) {
-				suriTest.SubmitOrderUnmanaged(0, OrderAction.SellShort, OrderType.Market, 1, 0, 0, null,"TK SellShort");
-			}
-			suriTest.tkOrder = null;
-			suriTest.CancelOrder(suriTest.tkStopLossOrder);
-			suriTest.tkStopLossOrder = null;
-		}
-		private void ExitShort() {
-			if (suriTest == null) return;
-			if (suriTest.tkOrder != null && suriTest.tkOrder.IsShort && suriTest.tkStopLossOrder.OrderState != OrderState.Filled) {
-				suriTest.SubmitOrderUnmanaged(0, OrderAction.BuyToCover, OrderType.Market, 1, 0, 0, null,"TK BuyToCover");
-			}
-			suriTest.tkOrder = null;
-			suriTest.CancelOrder(suriTest.tkStopLossOrder);
-			suriTest.tkStopLossOrder = null;
-		}*/
-		
 	}
-
-	public enum TkState {
-		Backwardation,
-		FirstHighestAndLastLowest,
-		FirstHigherThanLast,
-		None,
-		FirstLowerThanLast,
-		FirstLowestAndLastHighest,
-		Contango,
-		FirstThreeContango,
-	}
-	public static class TkStateExtensions {
-		public static bool? IsAnyBackwardation(this TkState tkState) {
-			switch (tkState) {
-				case TkState.Backwardation: return true;
-				case TkState.FirstHighestAndLastLowest: return true;
-				case TkState.FirstHigherThanLast: return true;
-				case TkState.None: return null;
-				case TkState.FirstLowerThanLast: return false;
-				case TkState.FirstLowestAndLastHighest: return false;
-				case TkState.Contango: return false;
-				case TkState.FirstThreeContango: return false;
-			}
-			return null;
-		}
-		public static bool? IsAnyContango(this TkState tkState) { return !tkState.IsAnyBackwardation(); }
-		public static bool IsBackwardationToContango(this TkState tkState, TkState prevTkState) { return prevTkState.IsAnyBackwardation() == true && tkState.IsAnyContango() == true; }
-		public static bool IsContangoToBackwardation(this TkState tkState, TkState prevTkState) { return prevTkState.IsAnyContango() == true && tkState.IsAnyBackwardation() == true; }
-	}
-	
 }
 
 

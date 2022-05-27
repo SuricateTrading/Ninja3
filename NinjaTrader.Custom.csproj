@@ -104,7 +104,7 @@
     <Compile Include="AddOns\Data\SuriRepo.cs" />
     <Compile Include="AddOns\Data\SuriServer.cs" />
     <Compile Include="AddOns\Data\SuriStrings.cs" />
-    <Compile Include="AddOns\Data\TkDbRepo.cs" />
+    <Compile Include="AddOns\Data\TkRepo.cs" />
     <Compile Include="AddOns\Data\Vp\SuriBigRepo.cs" />
     <Compile Include="AddOns\Data\Vp\SuriVpData.cs" />
     <Compile Include="AddOns\Data\Vp\SuriIntraRepo.cs" />
@@ -212,12 +212,10 @@
     <Compile Include="Indicators\Suri\dev\DevCot1Strategy.cs" />
     <Compile Include="Indicators\Suri\dev\DevTerminkurve.cs" />
     <Compile Include="Indicators\Suri\dev\DevTickExtractor.cs" />
-    <Compile Include="Indicators\Suri\dev\DevTkDelta.cs" />
     <Compile Include="Indicators\Suri\dev\DevVpMeta.cs" />
     <Compile Include="Indicators\Suri\dev\DevWasde.cs" />
     <Compile Include="Indicators\Suri\dev\DevCot.cs" />
     <Compile Include="Indicators\Suri\dev\DevCot1.cs" />
-    <Compile Include="Indicators\Suri\dev\DevDailyOpenInterest.cs" />
     <Compile Include="Indicators\Suri\dev\DevSwing.cs" />
     <Compile Include="Indicators\Suri\dev\DevSwing2.cs" />
     <Compile Include="Indicators\Suri\SuriMega.cs" />

@@ -7,7 +7,6 @@ using System.Text;
 using System.Web.Script.Serialization;
 using NinjaTrader.Gui.NinjaScript;
 using NinjaTrader.NinjaScript;
-
 #endregion
 
 namespace NinjaTrader.Custom.AddOns.SuriCommon {
@@ -36,13 +35,6 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
             }
         }
         
-        public static List<TkData> GetTkData(int id, string oldDate, string newDate) {
-            string url = "https://cloud2.suricate-trading.de:8443/tk/getTK?commId=" + id + "&oldDate=" + oldDate + "&newDate=" + newDate;
-            string response = Post(url, true);
-            var serializer = new JavaScriptSerializer();
-            return serializer.Deserialize<List<TkData>>(response);
-        }
-        
         public static List<WasdeData> GetWasdeData(int id, bool isAmerica, string oldDate, string newDate) {
             string url = "https://cloud2.suricate-trading.de:8443/wasde/get?commId=" + id + "&isGlobal=" + !isAmerica + "&oldDate=" + oldDate + "&newDate=" + newDate;
             string response = Post(url, true);
@@ -61,6 +53,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
         /** urlT must be 'cot/get' for example */
         public static List<T> GetGenericData<T>(int commId, DateTime oldDate, DateTime newDate, string urlT, string urlSuffix = null) {
             string url = "https://cloud2.suricate-trading.de:8443/" + urlT + "?commId=" + commId + "&oldDate=" + oldDate.Date.ToString("yyyy-MM-dd") + "&newDate=" + newDate.Date.ToString("yyyy-MM-dd");
+            Code.Output.Process(url, PrintTo.OutputTab1);
             if (urlSuffix != null) url += urlSuffix;
             string response = Post(url, true);
             var serializer = new JavaScriptSerializer();
@@ -93,15 +86,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
             }
         }
     }
-    
-    public sealed class TkData {
-        public DateTime Date {get; set;}
-        public int TkState {get; set;}
-        public double Delta {get; set;}
-        public int Volume {get; set;}
-        public int OpenInterest {get; set;}
-    }
-    
+
     public sealed class WasdeData {
         public DateTime Date {get; set;}	
         public bool IsGlobal {get; set;}
