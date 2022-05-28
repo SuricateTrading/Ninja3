@@ -12,17 +12,17 @@ using Instrument = NinjaTrader.Cbi.Instrument;
 #endregion
 
 namespace NinjaTrader.Custom.AddOns.SuriCommon.Vp {
-    public class SuriIntraRepo : SuriRepo {
+    public class SuriIntraRepo {
         private static readonly Dictionary<Commodity, Mutex> state = new Dictionary<Commodity, Mutex>();
         public static readonly DateTime startOfCachedData = DateTime.Parse("2021-05-01");
 
         static SuriIntraRepo() {
-            Directory.CreateDirectory(dbPath + @"vpintra\");
+            Directory.CreateDirectory(SuriCommon.dbPath + @"vpintra\");
             foreach (var commodity in Enum.GetValues(typeof(Commodity)).Cast<Commodity>()) {
                 state.Add(commodity, new Mutex());
             }
         }
-        private static string GetPath(int commId, int year, int month) { return dbPath + @"vpintra\" + commId + "_" + year + "_" + month + ".vpintra"; }
+        private static string GetPath(int commId, int year, int month) { return SuriCommon.dbPath + @"vpintra\" + commId + "_" + year + "_" + month + ".vpintra"; }
         
         
         public static void GetVpIntra(Instrument instrument, DateTime start, DateTime end, Action<SuriVpIntraData> result) {

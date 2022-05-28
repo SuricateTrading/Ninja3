@@ -8,18 +8,18 @@ using Instrument = NinjaTrader.Cbi.Instrument;
 #endregion
 
 namespace NinjaTrader.Custom.AddOns.SuriCommon.Vp {
-    public class SuriBigRepo : SuriRepo {
+    public class SuriBigRepo {
         
 	    static SuriBigRepo() {
-		    Directory.CreateDirectory(dbPath + @"vpbig/");
-		    Directory.CreateDirectory(dbPath + @"vpbigdev/");
+		    Directory.CreateDirectory(SuriCommon.dbPath + @"vpbig/");
+		    Directory.CreateDirectory(SuriCommon.dbPath + @"vpbigdev/");
 	    }
 	    
 		public static SuriVpBigData GetVpBig(Instrument instrument, bool dev = false, DateTime? date = null) {
 			int? year = null, week = null;
 			if (date != null) {
 				year = date.Value.Year;
-				week = Week(date.Value);
+				week = SuriCommon.Week(date.Value);
 			}
 			
 			string fileName = GetVpBigFilePath(instrument, dev, year, week);
@@ -45,11 +45,11 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon.Vp {
 
 		public static string GetVpBigFilePath(Instrument instrument, bool dev = false, int? year = null, int? week = null) {
 			if (year == null) {
-				string folder = dbPath + @"vpbig" + (dev ? @"dev" : "") + @"\main\";
+				string folder = SuriCommon.dbPath + @"vpbig" + (dev ? @"dev" : "") + @"\main\";
 				Directory.CreateDirectory(folder);
 				return folder + instrument.MasterInstrument.Name + ".vpbig";
 			} else {
-				string folder = dbPath + @"vpbig" + (dev ? @"dev\" : @"\") + instrument.MasterInstrument.Name + @"\";
+				string folder = SuriCommon.dbPath + @"vpbig" + (dev ? @"dev\" : @"\") + instrument.MasterInstrument.Name + @"\";
 				Directory.CreateDirectory(folder);
 				return folder + year + "_" + week + ".vpbig";
 			}

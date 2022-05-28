@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Globalization;
+using System.Linq;
 using NinjaTrader.Data;
 using System.Windows.Media;
 using NinjaTrader.Cbi;
+using NinjaTrader.Core;
 using NinjaTrader.Gui;
 using NinjaTrader.Gui.Chart;
 using NinjaTrader.Gui.Tools;
@@ -63,6 +65,19 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
             textFormat.WordWrapping		= WordWrapping.NoWrap;
             renderTarget.DrawText("Deine Lizenz ist abgelaufen oder Deine Maschinen ID hat sich verändert.", textFormat, new RectangleF(10, chartPanel.Y + 30, 100, 100), chartControl.Properties.ChartText.ToDxBrush(renderTarget));
         }
+        
+        
+        public static readonly string dbPath = Globals.UserDataDir + @"db\suri\";
+
+        public static Instrument GetInstrument(CommodityData commodity) {
+            return Instrument.GetInstrument(commodity.shortName + Instrument.GetInstrument(commodity.shortName+" ##-##").MasterInstrument.GetNextExpiry(DateTime.Now).ToString(" MM-yy"));
+        }
+        public static Instrument GetInstrument(int index) {
+            try {
+                return GetInstrument(SuriStrings.data.ElementAt(index).Value);
+            } catch (Exception) { return null; }
+        }
+        
         
     }
 }

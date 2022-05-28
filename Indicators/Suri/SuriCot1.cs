@@ -6,6 +6,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Windows.Media;
 using System.Xml.Serialization;
 using NinjaTrader.Custom.AddOns.SuriCommon;
+using NinjaTrader.Custom.AddOns.SuriData;
 using NinjaTrader.Data;
 using NinjaTrader.Gui;
 using NinjaTrader.Gui.Chart;
@@ -17,7 +18,7 @@ using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
 	public sealed class SuriCot1 : Indicator {
-		private SuriCotHelper suriCotHelper;
+		private CotRepo cotRepo;
 		private SuriSma suriSma;
 		private SessionIterator sessionIterator;
 		private DateTime lastReportDate;
@@ -126,7 +127,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				AddPlot(new Stroke(brush50Percent, lineWidthSecondary), PlotStyle.Line, "50%");
 				AddPlot(new Stroke(longBrush, lineWidthSecondary), PlotStyle.Line, "90%");
 			} else if (State == State.DataLoaded) {
-				if (Bars.Count > 0) suriCotHelper = new SuriCotHelper(Instrument, Bars.GetTime(0), Bars.LastBarTime.Date);
+				if (Bars.Count > 0) cotRepo = new CotRepo(Instrument, Bars);
 				sessionIterator = new SessionIterator(Bars);
 			}
 		}
@@ -141,20 +142,19 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
         }
 
 		protected override void OnBarUpdate() {
-			if (SuriAddOn.license == License.None || suriCotHelper == null) return;
+			if (SuriAddOn.license == License.None || cotRepo == null) return;
 			if (!(Bars.BarsPeriod.BarsPeriodType == BarsPeriodType.Day && Bars.BarsPeriod.Value == 1 || Bars.BarsPeriod.BarsPeriodType == BarsPeriodType.Minute && Bars.BarsPeriod.Value == 1440)) {
 				Draw.TextFixed(this, "Warning", "CoT 1 ist nur für ein 1-Tages Chart oder 1440-Minuten Chart verfügbar.", TextPosition.Center);
 				return;
 			}
-			int? index = suriCotHelper.Update(Time[0]);
-			if (index == null) {
-				if (CurrentBar > 10) {
-					Value[0] = Value[1];
-				}
-			} else {
+			
+			try {
+				DbCotData cotData = cotRepo.Get(CurrentBar);
 				lastReportDate = Time[0];
-				if (suriCotHelper.dbCotData[index.Value].Cot1 == null) return;
-				Values[0][0] = suriCotHelper.dbCotData[index.Value].Cot1.Value;
+				if (cotData.Cot1 == null) return;
+				Values[0][0] = cotData.Cot1.Value;
+			} catch (IndexOutOfRangeException) {
+				if (CurrentBar > 10) Value[0] = Value[1];
 			}
 
 			Values[1][0] = 10;

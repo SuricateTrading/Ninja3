@@ -53,7 +53,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
         /** urlT must be 'cot/get' for example */
         public static List<T> GetGenericData<T>(int commId, DateTime oldDate, DateTime newDate, string urlT, string urlSuffix = null) {
             string url = "https://cloud2.suricate-trading.de:8443/" + urlT + "?commId=" + commId + "&oldDate=" + oldDate.Date.ToString("yyyy-MM-dd") + "&newDate=" + newDate.Date.ToString("yyyy-MM-dd");
-            Code.Output.Process(url, PrintTo.OutputTab1);
+            //Code.Output.Process(url, PrintTo.OutputTab1);
             if (urlSuffix != null) url += urlSuffix;
             string response = Post(url, true);
             var serializer = new JavaScriptSerializer();

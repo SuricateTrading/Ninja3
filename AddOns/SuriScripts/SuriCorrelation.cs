@@ -37,7 +37,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			    return;
 		    }
 		    try {
-			    Instrument instrument = SuriRepo.GetInstrument(SuriStrings.data[commodity]);
+			    Instrument instrument = SuriCommon.GetInstrument(SuriStrings.data[commodity]);
 			    DateTime from = DateTime.Now.AddYears(-years).Date;
 			    DateTime to = DateTime.Now.AddDays(-1).Date;
 			    Code.Output.Process("Loading " + commodity + " from " + from + " to " + to, PrintTo.OutputTab1);

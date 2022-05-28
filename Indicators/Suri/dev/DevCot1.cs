@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Windows.Media;
 using System.Xml.Serialization;
 using NinjaTrader.Custom.AddOns.SuriCommon;
+using NinjaTrader.Custom.AddOns.SuriData;
 using NinjaTrader.Data;
 using NinjaTrader.Gui;
 using NinjaTrader.Gui.Chart;
@@ -17,7 +18,7 @@ using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 	public sealed class DevCot1 : Indicator {
-		private SuriCotHelper suriCotHelper;
+		private CotRepo cotRepo;
 		private SuriSma suriSma;
 		private SessionIterator sessionIterator;
 		
@@ -126,44 +127,21 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 				//useWeeks									= true;
 			} else if (State == State.Configure) {
 				suriSma = SuriSma(days);
-				suriCotHelper = new SuriCotHelper(Instrument, Bars.GetTime(0).AddYears(-1), Bars.LastBarTime.Date);
 				AddPlot(new Stroke(regularLineBrush, lineWidth), PlotStyle.Line, "COT1");
 				AddPlot(new Stroke(shortBrush, lineWidthSecondary), PlotStyle.Line, "10%");
 				AddPlot(new Stroke(brush50Percent, lineWidthSecondary), PlotStyle.Line, "50%");
 				AddPlot(new Stroke(longBrush, lineWidthSecondary), PlotStyle.Line, "90%");
 			} else if (State == State.DataLoaded) {
+				if (Bars.Count > 0) cotRepo = new CotRepo(Instrument, Bars);
 				sessionIterator = new SessionIterator(Bars);
 			}
 		}
 		public override string DisplayName { get { return Name; } }
-        public override void OnCalculateMinMax() {
-	        MinValue = 0;
-	        MaxValue = 100;
-        }
-        
+        public override void OnCalculateMinMax() { MinValue = 0; MaxValue = 100; }
         protected override void OnRender(ChartControl chartControl, ChartScale chartScale) {
-	        /*Print(IsInHitTest + " " + IsSelected);
-	        if (IsInHitTest && IsSelected) return;*/
 	        base.OnRender(chartControl, chartScale);
-	        //if (IsInHitTest && !IsSelected) return;
-	        
-	        /*chartScale.Properties.AutoScaleMarginType = AutoScaleMarginType.Percent;
-	        chartScale.Properties.AutoScaleMarginUpper = 30;
-	        chartScale.Properties.AutoScaleMarginLower = 30;*/
-	        
-	        /*RectangleF rect = new RectangleF {
-		        X = 0,
-		        Y = ChartPanel.Y,
-		        Width = 10000f,
-		        Height = 10000f,
-	        };
-	        Brush b = Brushes.Black.Clone();
-	        b.Opacity = 0.1;
-	        RenderTarget.FillRectangle(rect, b.ToDxBrush(RenderTarget));*/
-	        
 	        if (SuriAddOn.license == License.None) SuriCommon.NoValidLicenseError(RenderTarget, ChartControl, ChartPanel);
         }
-        
         #endregion
 
         private bool hasStarted;
@@ -181,8 +159,19 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 			Values[2][0] = 50;
 			Values[3][0] = 90;
 
-			int? index = suriCotHelper.Update(Time[0]);
-			if (index == null) {
+			try {
+				DbCotData currentCotData = cotRepo.Get(CurrentBar);
+				double min = double.MaxValue;
+				double max = double.MinValue;
+				for (int i = 0; i < 26; i++) {
+					DbCotData prevCotData = cotRepo.Get(CurrentBar - i);
+					if ((currentCotData.Date - prevCotData.Date).Days / 7.0 <= 26) break;
+					double v = prevCotData.CommercialsNetto();
+					if (min > v) min = v;
+					if (max < v) max = v;
+				}
+				Value[0] = 100.0 * (currentCotData.CommercialsNetto() - min) / (max - min);
+			} catch (IndexOutOfRangeException) {
 				if (noNewCotSince > 12) {
 					PlotBrushes[0][0] = noNewCotBrush;
 				}
@@ -192,14 +181,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 				noNewCotSince++;
 				return;
 			}
-			double min = double.MaxValue;
-			double max = double.MinValue;
-			for (int i = 0; i < 26 && (suriCotHelper.dbCotData[index.Value].Date - suriCotHelper.dbCotData[index.Value - i].Date).Days/7.0 <= 26; i++) {
-				double v = suriCotHelper.dbCotData[index.Value - i].CommercialsNetto();
-				if (min > v) min = v;
-				if (max < v) max = v;
-			}
-			Value[0] = 100.0 * (suriCotHelper.dbCotData[index.Value].CommercialsNetto() - min) / (max - min);
+			
 			
 			if (!isCurrentlyASignal || Value[0] < 90 && Value[0] > 10 ) {
 				isCurrentlyASignal = IsSignal();

@@ -44,8 +44,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 
 		public TkState GetTkState(int barIndex) {
 			var tkData = (TkData) tkRepo.Get(barIndex);
-			if (tkData == null) return TkState.None;
-			return tkData.tkState;
+			return tkData == null ? TkState.None : tkData.tkState;
 		}
 		public TkData GetTkData(int barIndex) { return (TkData) tkRepo.Get(barIndex); }
 		

@@ -34,7 +34,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 		    }
 		    try {
 			    Commodity commodity = commodities[index];
-			    Instrument instrument = SuriRepo.GetInstrument(SuriStrings.data[commodity]);
+			    Instrument instrument = SuriCommon.GetInstrument(SuriStrings.data[commodity]);
 			    DateTime from = DateTime.Now.AddDays(-30).Date;
 			    DateTime to = DateTime.Now.AddDays(-1).Date;
 			    
@@ -104,7 +104,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 		    }
 		    try {
 			    Commodity commodity = commodities[index];
-			    Instrument instrument = SuriRepo.GetInstrument(SuriStrings.data[commodity]);
+			    Instrument instrument = SuriCommon.GetInstrument(SuriStrings.data[commodity]);
 			    DateTime from = DateTime.Now.AddDays(-7).Date;
 			    DateTime to = DateTime.Now.AddDays(-1).Date;
 			    

@@ -22,7 +22,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			    return;
 		    }
 			try {
-				Instrument instrument = SuriRepo.GetInstrument(entry.Value);
+				Instrument instrument = SuriCommon.GetInstrument(entry.Value);
 				DateTime from = DateTime.Parse("2018-01-01").Date;
 				DateTime to = DateTime.Now.AddDays(-1).Date;
 				Code.Output.Process("Loading " + instrument.MasterInstrument.Name + " from " + from + " to " + to, PrintTo.OutputTab1);
@@ -43,7 +43,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 							
 							if (prevMonth != time.Month) {
 								File.WriteAllText(
-									SuriRepo.dbPath + @"vpintra\" + entry.Value.id + "_" + (prevMonth == 12 ? time.Year-1 : time.Year) + "_" + prevMonth + ".vpintra",
+									SuriCommon.dbPath + @"vpintra\" + entry.Value.id + "_" + (prevMonth == 12 ? time.Year-1 : time.Year) + "_" + prevMonth + ".vpintra",
 									Newtonsoft.Json.JsonConvert.SerializeObject(suriVpIntraData)
 								);
 								prevMonth = time.Month;
@@ -58,7 +58,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 					}
 					DateTime lastDate = bars.Bars.GetTime(bars.Bars.Count - 1);
 					File.WriteAllText(
-						SuriRepo.dbPath + @"vpintra\" + entry.Value.id + "_" + lastDate.Year + "_" + lastDate.Month + ".vpintra",
+						SuriCommon.dbPath + @"vpintra\" + entry.Value.id + "_" + lastDate.Year + "_" + lastDate.Month + ".vpintra",
 						Newtonsoft.Json.JsonConvert.SerializeObject(suriVpIntraData)
 					);
 					Code.Output.Process("Done", PrintTo.OutputTab1);
@@ -81,7 +81,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			}
 
 			try {
-				Instrument instrument = SuriRepo.GetInstrument(entry.Value);
+				Instrument instrument = SuriCommon.GetInstrument(entry.Value);
 				DateTime from;
 				if (dev) {
 					from = entry.Key != Commodity.Rice ? DateTime.Parse("2010-01-01") : DateTime.Parse("2012-01-01");
@@ -102,14 +102,14 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 					}
 					
 					SuriVpBigData suriVpBigData = new SuriVpBigData(instrument.MasterInstrument.TickSize);
-					string path = SuriRepo.dbPath + @"vpbig" + (dev ? @"dev\" : @"\") + instrument.MasterInstrument.Name + @"\";
+					string path = SuriCommon.dbPath + @"vpbig" + (dev ? @"dev\" : @"\") + instrument.MasterInstrument.Name + @"\";
 					Directory.CreateDirectory(path);
 					for (int i = 0; i < bars.Bars.Count; i++) {
 						DateTime date = bars.Bars.GetTime(i).Date;
 						if (!onlyRecent && (date - bars.Bars.GetTime(0).Date).Days > 365 * 6) {
 							DateTime oldDate = bars.Bars.GetTime(i-1).Date;
-							int newWeek = SuriRepo.Week(date);
-							int oldWeek = SuriRepo.Week(oldDate);
+							int newWeek = SuriCommon.Week(date);
+							int oldWeek = SuriCommon.Week(oldDate);
 							if (oldWeek - newWeek > 1 && newWeek == 2) {
 								// this happens if a new year started and the first week of the year did not have a single trading day.
 								Code.Output.Process("Fehlende erste Woche bei " + instrument.MasterInstrument.Name + " " + date, PrintTo.OutputTab1);
@@ -168,7 +168,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			    return;
 		    }*/
 			try {
-				Instrument instrument = SuriRepo.GetInstrument(entry.Value);
+				Instrument instrument = SuriCommon.GetInstrument(entry.Value);
 				DateTime from = DateTime.Parse("2015-01-01").Date;
 				DateTime to = DateTime.Now.AddDays(-1).Date;
 				Code.Output.Process("Loading " + instrument.MasterInstrument.Name + " from " + from + " to " + to, PrintTo.OutputTab1);
@@ -179,11 +179,11 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 					TradingHours = instrument.MasterInstrument.TradingHours,
 				}.Request((bars, errorCode, errorMessage) => {
 					if (errorCode != ErrorCode.NoError) return;
-					StreamWriter stream = File.CreateText(SuriRepo.dbPath + @"ticks\" + instrument.MasterInstrument.Name + "_" + bars.Bars.GetTime(0).Year + "_" + bars.Bars.GetTime(0).Month + ".tickdata");
+					StreamWriter stream = File.CreateText(SuriCommon.dbPath + @"ticks\" + instrument.MasterInstrument.Name + "_" + bars.Bars.GetTime(0).Year + "_" + bars.Bars.GetTime(0).Month + ".tickdata");
 					for (int i = 0; i < bars.Bars.Count; i++) {
 						if (i > 0 && bars.Bars.GetTime(i).Month != bars.Bars.GetTime(i - 1).Month) {
 							stream.Close();
-							stream = File.CreateText(SuriRepo.dbPath + @"ticks\" + instrument.MasterInstrument.Name + "_" + bars.Bars.GetTime(i).Year + "_" + bars.Bars.GetTime(i).Month + ".tickdata");
+							stream = File.CreateText(SuriCommon.dbPath + @"ticks\" + instrument.MasterInstrument.Name + "_" + bars.Bars.GetTime(i).Year + "_" + bars.Bars.GetTime(i).Month + ".tickdata");
 						}
 						if (Math.Abs(3.0 * bars.Bars.GetClose(i) - bars.Bars.GetLow(i) - bars.Bars.GetHigh(i) - bars.Bars.GetOpen(i)) > 0.0000000001) {
 							Code.Output.Process("ERROR", PrintTo.OutputTab1);

@@ -7,13 +7,14 @@ using NinjaTrader.Gui.Chart;
 using System.ComponentModel.DataAnnotations;
 using System.Xml.Serialization;
 using NinjaTrader.Custom.AddOns.SuriCommon;
+using NinjaTrader.Custom.AddOns.SuriData;
 using NinjaTrader.Gui.NinjaScript;
 using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
 	public sealed class ComShortOpenInterest : Indicator {
-		private SuriCotHelper suriCotHelper;
+		private CotRepo cotRepo;
 		private double min = double.MaxValue;
 		private double max = double.MinValue;
 		private int minIndex;
@@ -101,14 +102,13 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				lineWidthSecondary							= 1;
 				days										= 1000;
 			} else if (State == State.Configure) {
-				if (Bars.Count > 0) {
-					suriCotHelper = new SuriCotHelper(Instrument, Bars.GetTime(0), Bars.LastBarTime.Date);
-				}
 				AddPlot(new Stroke(regularLineBrush, lineWidth), PlotStyle.Line, "Com Short / OI in %");
 				if (drawLines) {
 					AddPlot(new Stroke(brush20, lineWidthSecondary), PlotStyle.Line, "20%");
 					AddPlot(new Stroke(brush80, lineWidthSecondary), PlotStyle.Line, "80%");
 				}
+			} else if (State == State.DataLoaded) {
+				if (Bars.Count > 0) cotRepo = new CotRepo(Instrument, Bars);
 			}
 		}
 		
@@ -118,17 +118,17 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		}
 
 		protected override void OnBarUpdate() {
-			if (SuriAddOn.license == License.None || suriCotHelper == null) return;
-			int? index = suriCotHelper.Update(Time[0]);
-			if (index == null) {
-				if (CurrentBar > 10) {
-					Value[0] = Value[1];
-				}
-			} else {
+			if (SuriAddOn.license == License.None || cotRepo == null) return;
+			
+			
+			try {
+				DbCotData cotData = cotRepo.Get(CurrentBar);
 				lastReportDate = Time[0];
-				Values[0][0] = 100 * suriCotHelper.dbCotData[index.Value].CommercialsShort / (double) suriCotHelper.dbCotData[index.Value].OpenInterest;
+				Values[0][0] = 100 * cotData.CommercialsShort / (double) cotData.OpenInterest;
+			} catch (IndexOutOfRangeException) {
+				if (CurrentBar > 10) Value[0] = Value[1];
 			}
-
+			
 			if (drawLines) {
 				SetMinMax();
 				if (CurrentBar > days) {

@@ -98,26 +98,21 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AddOns\Data\GenericDbRepo.cs" />
-    <Compile Include="AddOns\Data\SuriCotHelper.cs" />
-    <Compile Include="AddOns\Data\SuriCotRepo.cs" />
-    <Compile Include="AddOns\Data\SuriRepo.cs" />
-    <Compile Include="AddOns\Data\SuriServer.cs" />
-    <Compile Include="AddOns\Data\SuriStrings.cs" />
-    <Compile Include="AddOns\Data\TkRepo.cs" />
-    <Compile Include="AddOns\Data\Vp\SuriBigRepo.cs" />
-    <Compile Include="AddOns\Data\Vp\SuriVpData.cs" />
-    <Compile Include="AddOns\Data\Vp\SuriIntraRepo.cs" />
+    <Compile Include="AddOns\SuriData\CotRepo.cs" />
+    <Compile Include="AddOns\SuriData\GenericDbRepo.cs" />
+    <Compile Include="AddOns\SuriData\TkRepo.cs" />
+    <Compile Include="AddOns\SuriData\Vp\SuriBigRepo.cs" />
+    <Compile Include="AddOns\SuriData\Vp\SuriVpData.cs" />
+    <Compile Include="AddOns\SuriData\Vp\SuriIntraRepo.cs" />
     <Compile Include="AddOns\SuriAddOnWindow.cs" />
     <Compile Include="AddOns\SuriCommon\StrikingCalculator.cs" />
     <Compile Include="AddOns\SuriCommon\SuriCommon.cs" />
     <Compile Include="AddOns\SuriCommon\SuriHelper.cs" />
+    <Compile Include="AddOns\SuriCommon\SuriServer.cs" />
+    <Compile Include="AddOns\SuriCommon\SuriStrings.cs" />
     <Compile Include="AddOns\SuriScripts\SuriCorrelation.cs" />
     <Compile Include="AddOns\SuriScripts\SuriAdmin.cs" />
     <Compile Include="AddOns\SuriScripts\SuriStatistics.cs" />
-    <Compile Include="AddOns\SuriStrategy\DevCotStrategy.cs" />
-    <Compile Include="AddOns\SuriStrategy\DevOrder.cs" />
-    <Compile Include="AddOns\SuriStrategy\DevStrategyInterface.cs" />
     <Compile Include="AddOns\SuriStrategy\strategies\Cot1Strategy.cs" />
     <Compile Include="AddOns\SuriStrategy\strategies\Cot2Strategy.cs" />
     <Compile Include="AddOns\SuriStrategy\strategies\TkStrategy.cs" />
@@ -207,7 +202,6 @@
     <Compile Include="Indicators\Suri\dev\DevAverageMovement.cs" />
     <Compile Include="Indicators\Suri\dev\DevCot2.cs" />
     <Compile Include="Indicators\Suri\dev\DevDelayedCot.cs" />
-    <Compile Include="Indicators\Suri\dev\DevDbCot.cs" />
     <Compile Include="Indicators\Suri\dev\DevRolloverButton.cs" />
     <Compile Include="Indicators\Suri\dev\DevCot1Strategy.cs" />
     <Compile Include="Indicators\Suri\dev\DevTerminkurve.cs" />

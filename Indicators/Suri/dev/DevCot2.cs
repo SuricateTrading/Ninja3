@@ -13,7 +13,7 @@ using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
-	public sealed class DevCot2 : StrategyIndicator {
+	public sealed class DevCot2 : Indicator {
 		private DevCot suriCotData;
 		private double min = double.MaxValue;
 		private double max = double.MinValue;
@@ -218,124 +218,30 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 			}
 		}
 		
-		
-		
-		
-		#region Strategy
-		[XmlIgnore]
-		[Browsable(false)]
-		public override TradePosition tradePosition {
-			get {
-				if (CurrentBar<=days) return TradePosition.Middle;
-				if (Values[3][0] > Values[1][0]) return TradePosition.Short;
-				if (Values[3][0] < Values[1][0]) return TradePosition.Long;
-				return TradePosition.Middle;
-			}
-		}
-
-		[XmlIgnore]
-		[Browsable(false)]
-		public override double? stop {
-			set { }
-			get {
-
-				return null;
-			}
-		}
-
-		[XmlIgnore]
-		[Browsable(false)]
-		public override bool? isSignal {
-			set { }
-			get { return Values[3][0] > Values[0][0] || Values[3][0] < Values[2][0]; }
-		}
-
-		/// Used to be called iff a mega bar / mega volume occured.
-		/// Calculations include gaps !
-		public SignalVariant? GetSignalVariant(bool useGap = false) {
-			TradePosition t = tradePosition;
-			if (t == TradePosition.Middle) return null;
-
-			double candleSize;
-			double upperBody;
-			double lowerBody;
-			if (useGap) {
-				candleSize = Math.Max(Close[1], High[0]) - Math.Min(Close[1], Low[0]);
-				upperBody = Math.Max(Close[1], Math.Max(Open[0], Close[0]));
-				lowerBody = Math.Min(Close[1], Math.Min(Open[0], Close[0]));
-			} else {
-				candleSize = High[0] - Low[0];
-				upperBody = Math.Max(Open[0], Close[0]);
-				lowerBody = Math.Min(Open[0], Close[0]);
-			}
-			double bodySizeWithGap = upperBody - lowerBody;
-			
-			if (bodySizeWithGap < candleSize * 0.10) {
-				double upperCandleWickSize = candleSize - upperBody;
-				double lowerCandleWickSize = candleSize - upperCandleWickSize - bodySizeWithGap;
-				Print(CurrentBar + " Found a reversal bar @ " + Time[0] + " " + candleSize + " " + upperBody + " " + lowerBody + " " + bodySizeWithGap + " " + upperCandleWickSize + " " + lowerCandleWickSize);
-
-				if (lowerCandleWickSize / candleSize > 0.6) return t == TradePosition.Long ? SignalVariant.V3 : SignalVariant.V4;
-				if (upperCandleWickSize / candleSize > 0.6) return t == TradePosition.Long ? SignalVariant.V4 : SignalVariant.V3;
-				Print(CurrentBar + " The reversal bar is positioned too much in the middle.");
-			}
-			Print(CurrentBar + " Found a mega bar @ " + Time[0] + " " + candleSize + " " + upperBody + " " + lowerBody + " " + bodySizeWithGap);
-			if (Open[0] > Close[0]) return t == TradePosition.Long ? SignalVariant.V1 : SignalVariant.V2;
-			if (Open[0] < Close[0]) return t == TradePosition.Long ? SignalVariant.V2 : SignalVariant.V1;
-			
-			Print(CurrentBar + " Did not found a variant! " + Time[0]);
-			return null;
-		}
-
-		
-        // German: "Markantes Tief / Hoch".
-        public Tuple<Tuple<int, double?>, Tuple<int, double?>> StrikingSpot(bool searchForHigh, int barsAgo = 0) {
-            int initialBarsAgo = barsAgo;
-			
-            // first we have to check if the bar was in an upward or downward trend.
-            Tuple<int, double?> t1 = SearchForLowHigh(!searchForHigh, barsAgo);
-            Tuple<int, double?> t2 = SearchForLowHigh(searchForHigh, barsAgo);
-            // iff inDirection = true and searchForHigh = true, then there was a high before there was a low.
-            bool inDirection = t1.Item1 > t2.Item1;
-			
-            while (barsAgo < CurrentBar && barsAgo - initialBarsAgo < 500) {
-                if (inDirection) {
-                    t1 = SearchForLowHigh(!searchForHigh, barsAgo);
-                    t2 = SearchForLowHigh(searchForHigh, t1.Item1);
-                } else {
-                    t1 = SearchForLowHigh(searchForHigh, barsAgo);
-                    t2 = SearchForLowHigh(!searchForHigh, t1.Item1);
-                }
-                if (t2.Item2 != null && (searchForHigh && t2.Item2 < High[barsAgo] || !searchForHigh && t2.Item2 > Low[barsAgo])) {
-                    return new Tuple<Tuple<int, double?>, Tuple<int, double?>>(t1, t2);
-                }
-                barsAgo = t2.Item1;
-            }
-            return null;
-        }
-        
-        /// Returns a Tuple of a high or low with index inclusive before the given barsAgo.
-        private Tuple<int, double?> SearchForLowHigh(bool searchForHigh, int barsAgo, int adjacentsToCheck = 4) {
-            double? value = null;
-            int adjacentsChecked = 0;
-            Tuple<int, double?> tuple = null;
-            while (barsAgo < CurrentBar && adjacentsChecked < adjacentsToCheck) {
-                if (value==null || searchForHigh && High[barsAgo] > value || !searchForHigh && Low[barsAgo] < value) {
-                    value = searchForHigh ? High[barsAgo] : Low[barsAgo];
-                    adjacentsChecked = 0;
-                    tuple = new Tuple<int, double?>(barsAgo, value);
-                } else {
-                    adjacentsChecked++;
-                }
-                barsAgo++;
-            }
-            return tuple;
-        }
-        #endregion
 	}
-	public enum SignalVariant { V1, V2, V3, V4 }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//
 #region NinjaScript generated code. Neither change nor remove.
 
 namespace NinjaTrader.NinjaScript.Indicators

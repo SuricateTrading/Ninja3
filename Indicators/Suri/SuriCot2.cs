@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Windows.Media;
 using System.Xml.Serialization;
 using NinjaTrader.Custom.AddOns.SuriCommon;
+using NinjaTrader.Custom.AddOns.SuriData;
 using NinjaTrader.Gui;
 using NinjaTrader.Gui.Chart;
 using NinjaTrader.Gui.NinjaScript;
@@ -15,7 +16,7 @@ using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
 	public sealed class SuriCot2 : Indicator {
-		private SuriCotHelper suriCotHelper;
+		private CotRepo cotRepo;
 		private DateTime lastReportDate;
 
 		#region Properties
@@ -100,9 +101,8 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				AddPlot(new Stroke(brush50Percent, lineWidthSecondary), PlotStyle.Line, "50%");
 				AddPlot(new Stroke(longBrush, lineWidthSecondary), PlotStyle.Line, "25%");
 				AddPlot(new Stroke(regularLineBrush, lineWidth), PlotStyle.Line, "Com Short");
-				if (Bars.Count > 0) {
-					suriCotHelper = new SuriCotHelper(Instrument, Bars.GetTime(0), Bars.LastBarTime.Date);
-				}
+			} else if (State == State.DataLoaded) {
+				if (Bars.Count > 0) cotRepo = new CotRepo(Instrument, Bars);
 			}
 		}
 
@@ -128,23 +128,25 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		}
 		
 		protected override void OnBarUpdate() {
-			if (SuriAddOn.license == License.None || suriCotHelper == null) return;
-			int? index = suriCotHelper.Update(Time[0]);
-			if (index == null) {
+			if (SuriAddOn.license == License.None || cotRepo == null) return;
+			
+			try {
+				DbCotData cotData = cotRepo.Get(CurrentBar);
+				lastReportDate = Time[0];
+				if (cotData.Cot2Max == null) return;
+				Values[0][0] = cotData.Cot2Max.Value;
+				Values[1][0] = cotData.Cot2Mid.Value;
+				Values[2][0] = cotData.Cot2Min.Value;
+				Values[3][0] = cotData.CommercialsShort;
+			} catch (IndexOutOfRangeException) {
 				if (CurrentBar > 10) {
 					Values[0][0] = Values[0][1];
 					Values[1][0] = Values[1][1];
 					Values[2][0] = Values[2][1];
 					Values[3][0] = Values[3][1];
 				}
-			} else {
-				lastReportDate = Time[0];
-				if (suriCotHelper.dbCotData[index.Value].Cot2Max == null) return;
-				Values[0][0] = suriCotHelper.dbCotData[index.Value].Cot2Max.Value;
-				Values[1][0] = suriCotHelper.dbCotData[index.Value].Cot2Mid.Value;
-				Values[2][0] = suriCotHelper.dbCotData[index.Value].Cot2Min.Value;
-				Values[3][0] = suriCotHelper.dbCotData[index.Value].CommercialsShort;
 			}
+			
 			if (lastReportDate != null && (Time[0].Date - lastReportDate.Date).TotalDays > 10) {
 				PlotBrushes[0][0] = noNewCotBrush;
 				PlotBrushes[1][0] = noNewCotBrush;

@@ -29,7 +29,7 @@ namespace NinjaTrader.Custom.AddOns.Data {
         protected Commodity? commodity;
 
         /** Used to map each Bars-index to an index of the data-list. */
-        protected List<int?> dataIndices = new List<int?>();
+        protected List<int> dataIndices = new List<int>();
         protected Bars bars;
 
         static GenericDbRepo() {
@@ -40,7 +40,7 @@ namespace NinjaTrader.Custom.AddOns.Data {
         
         protected GenericDbRepo(Instrument instrument, Bars bars) {
             this.bars = bars;
-            DateTime start = bars.GetTime(0);
+            DateTime start = bars.GetTime(0).AddDays(-14);
             DateTime end = bars.LastBarTime.Date;
             Directory.CreateDirectory(dbPath);
             commodity = SuriStrings.GetComm(instrument);
@@ -89,16 +89,12 @@ namespace NinjaTrader.Custom.AddOns.Data {
                         break;
                     }
                 }
-                if (!hasStarted) dataIndices.Add(null);
-                else dataIndices.Add(dataIndex);
+                dataIndices.Add(dataIndex);
             }
         }
         
-        public object Get(int barIndex) {
-            int? index = dataIndices[barIndex];
-            if (index == null) return null;
-            return data[index.Value];
-        }
+        /** May throw IndexOutOfRangeException */
+        public T Get(int barIndex) { return data[dataIndices[barIndex]]; }
 
     }
 }

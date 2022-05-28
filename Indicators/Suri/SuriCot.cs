@@ -7,6 +7,7 @@ using System.Globalization;
 using System.Windows.Media;
 using System.Xml.Serialization;
 using NinjaTrader.Custom.AddOns.SuriCommon;
+using NinjaTrader.Custom.AddOns.SuriData;
 using NinjaTrader.Gui;
 using NinjaTrader.Gui.Chart;
 using NinjaTrader.Gui.NinjaScript;
@@ -16,7 +17,7 @@ using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
 	public sealed class SuriCot : Indicator {
-		private SuriCotHelper suriCotHelper;
+		private CotRepo cotRepo;
 		private double min = double.MaxValue;
 		private double max = double.MinValue;
 		private int minIndex;
@@ -119,14 +120,13 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				reportField									= SuriCotReportField.CommercialLong;
 				days										= 1000;
 			} else if (State == State.Configure) {
-				if (Bars.Count > 0) {
-					suriCotHelper = new SuriCotHelper(Instrument, Bars.GetTime(0).Date, Bars.LastBarTime.Date);
-				}
 				AddPlot(new Stroke(regularLineBrush, lineWidth), PlotStyle.Line, "CoT-Daten");
 				if (drawLines) {
 					AddPlot(new Stroke(brush20, lineWidthSecondary), PlotStyle.Line, "20%");
 					AddPlot(new Stroke(brush80, lineWidthSecondary), PlotStyle.Line, "80%");
 				}
+			} else if (State == State.DataLoaded) {
+				if (Bars.Count > 0) cotRepo = new CotRepo(Instrument, Bars);
 			}
 		}
 		public override string DisplayName { get { return Name + " " + CotReportMaper.ReportToString(reportField); } }
@@ -137,17 +137,17 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		}
 
 		protected override void OnBarUpdate() {
-			if (SuriAddOn.license == License.None || suriCotHelper == null) return;
-			int? index = suriCotHelper.Update(Time[0]);
-			if (!suriCotHelper.hasStarted) return;
-			if (index == null) {
-				if (CurrentBar > 10) Value[0] = Value[1];
-			} else {
-				int? value = GetCotValue(reportField, index.Value);
+			if (SuriAddOn.license == License.None || cotRepo == null) return;
+			
+			try {
+				DbCotData cotData = cotRepo.Get(CurrentBar);
+				int? value = GetCotValue(reportField, cotData);
 				if (value == null) return;
 				Value[0] = value.Value;
+			} catch (IndexOutOfRangeException) {
+				if (CurrentBar > 10) Value[0] = Value[1];
 			}
-
+			
 			if (drawLines) {
 				SetMinMax();
 				if (CurrentBar >= days) {
@@ -160,32 +160,32 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			if (lastReportDate != null && (Time[0].Date - lastReportDate.Date).TotalDays > 10)	PlotBrushes[0][0] = noNewCotBrush;
 		}
 
-		private int? GetCotValue(SuriCotReportField field, int index) {
+		private int? GetCotValue(SuriCotReportField field, DbCotData cotData) {
 			switch (field) {
-				case SuriCotReportField.OpenInterest: return suriCotHelper.dbCotData[index].OpenInterest;
-				case SuriCotReportField.NoncommercialLong: return suriCotHelper.dbCotData[index].NonCommercialsLong;
-				case SuriCotReportField.NoncommercialShort: return suriCotHelper.dbCotData[index].NonCommercialsShort;
-				case SuriCotReportField.NoncommercialNet: return suriCotHelper.dbCotData[index].NonCommercialsLong - suriCotHelper.dbCotData[index].NonCommercialsShort;
+				case SuriCotReportField.OpenInterest: return cotData.OpenInterest;
+				case SuriCotReportField.NoncommercialLong: return cotData.NonCommercialsLong;
+				case SuriCotReportField.NoncommercialShort: return cotData.NonCommercialsShort;
+				case SuriCotReportField.NoncommercialNet: return cotData.NonCommercialsLong - cotData.NonCommercialsShort;
 				
-				//case SuriCotReportField.NoncommercialSpreads: return suriCotHelper.dbCotData[index].NoncommercialSpreads;
+				//case SuriCotReportField.NoncommercialSpreads: return cotData.NoncommercialSpreads;
 				
-				case SuriCotReportField.CommercialLong: return suriCotHelper.dbCotData[index].CommercialsLong;
-				case SuriCotReportField.CommercialShort: return suriCotHelper.dbCotData[index].CommercialsShort;
-				case SuriCotReportField.CommercialNet: return suriCotHelper.dbCotData[index].CommercialsLong - suriCotHelper.dbCotData[index].CommercialsShort;
-				//case SuriCotReportField.TotalLong: return suriCotHelper.dbCotData[index].TotalLong;
-				//case SuriCotReportField.TotalShort: return suriCotHelper.dbCotData[index].TotalShort;
-				//case SuriCotReportField.TotalNet: return suriCotHelper.dbCotData[index].TotalNet;
-				case SuriCotReportField.NonreportablePositionsLong: return suriCotHelper.dbCotData[index].NonReportablesLong;
-				case SuriCotReportField.NonreportablePositionsShort: return suriCotHelper.dbCotData[index].NonReportablesShort;
-				case SuriCotReportField.NonreportablePositionsNet: return suriCotHelper.dbCotData[index].NonReportablesLong - suriCotHelper.dbCotData[index].NonReportablesShort;
-				//case SuriCotReportField.TotalTraders: return suriCotHelper.dbCotData[index].TotalTraders;
-				/*case SuriCotReportField.TradersInNoncommercialLong: return suriCotHelper.dbCotData[index].OpenInterest;
-				case SuriCotReportField.TradersInNoncommercialShort: return suriCotHelper.dbCotData[index].OpenInterest;
-				case SuriCotReportField.TradersInNoncommercialSpreads: return suriCotHelper.dbCotData[index].OpenInterest;
-				case SuriCotReportField.TradersInCommercialLong: return suriCotHelper.dbCotData[index].OpenInterest;
-				case SuriCotReportField.TradersInCommercialShort: return suriCotHelper.dbCotData[index].OpenInterest;
-				case SuriCotReportField.TradersInTotalLong: return suriCotHelper.dbCotData[index].OpenInterest;
-				case SuriCotReportField.TradersInTotalShort: return suriCotHelper.dbCotData[index].OpenInterest;*/
+				case SuriCotReportField.CommercialLong: return cotData.CommercialsLong;
+				case SuriCotReportField.CommercialShort: return cotData.CommercialsShort;
+				case SuriCotReportField.CommercialNet: return cotData.CommercialsLong - cotData.CommercialsShort;
+				//case SuriCotReportField.TotalLong: return cotData.TotalLong;
+				//case SuriCotReportField.TotalShort: return cotData.TotalShort;
+				//case SuriCotReportField.TotalNet: return cotData.TotalNet;
+				case SuriCotReportField.NonreportablePositionsLong: return cotData.NonReportablesLong;
+				case SuriCotReportField.NonreportablePositionsShort: return cotData.NonReportablesShort;
+				case SuriCotReportField.NonreportablePositionsNet: return cotData.NonReportablesLong - cotData.NonReportablesShort;
+				//case SuriCotReportField.TotalTraders: return cotData.TotalTraders;
+				/*case SuriCotReportField.TradersInNoncommercialLong: return cotData.OpenInterest;
+				case SuriCotReportField.TradersInNoncommercialShort: return cotData.OpenInterest;
+				case SuriCotReportField.TradersInNoncommercialSpreads: return cotData.OpenInterest;
+				case SuriCotReportField.TradersInCommercialLong: return cotData.OpenInterest;
+				case SuriCotReportField.TradersInCommercialShort: return cotData.OpenInterest;
+				case SuriCotReportField.TradersInTotalLong: return cotData.OpenInterest;
+				case SuriCotReportField.TradersInTotalShort: return cotData.OpenInterest;*/
 			}
 			return null;
 		}
