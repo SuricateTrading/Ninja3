@@ -49,12 +49,16 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 		
         public static double PriceToCurrency(Instrument instrument, double price) {
             double yDiffPrice	= Math.Abs(instrument.MasterInstrument.RoundToTickSize(price));
-            double yDiffTicks	= yDiffPrice / instrument.MasterInstrument.TickSize;
-            double currency		= yDiffTicks * instrument.MasterInstrument.TickSize * instrument.MasterInstrument.PointValue;
+            double currency		= yDiffPrice * instrument.MasterInstrument.PointValue;
             if (instrument.MasterInstrument.InstrumentType == InstrumentType.Forex) {
                 currency *= Account.All[0].ForexLotSize;
             }
             return currency;
+        }
+
+        public static double CurrencyToPrice(Instrument instrument, double currency) {
+            return currency / instrument.MasterInstrument.PointValue;
+            // todo: forex
         }
 
 

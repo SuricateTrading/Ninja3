@@ -162,22 +162,22 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 
 		private int? GetCotValue(SuriCotReportField field, DbCotData cotData) {
 			switch (field) {
-				case SuriCotReportField.OpenInterest: return cotData.OpenInterest;
-				case SuriCotReportField.NoncommercialLong: return cotData.NonCommercialsLong;
-				case SuriCotReportField.NoncommercialShort: return cotData.NonCommercialsShort;
-				case SuriCotReportField.NoncommercialNet: return cotData.NonCommercialsLong - cotData.NonCommercialsShort;
+				case SuriCotReportField.OpenInterest: return cotData.openInterest;
+				case SuriCotReportField.NoncommercialLong: return cotData.nonCommercialsLong;
+				case SuriCotReportField.NoncommercialShort: return cotData.nonCommercialsShort;
+				case SuriCotReportField.NoncommercialNet: return cotData.nonCommercialsLong - cotData.nonCommercialsShort;
 				
 				//case SuriCotReportField.NoncommercialSpreads: return cotData.NoncommercialSpreads;
 				
-				case SuriCotReportField.CommercialLong: return cotData.CommercialsLong;
-				case SuriCotReportField.CommercialShort: return cotData.CommercialsShort;
-				case SuriCotReportField.CommercialNet: return cotData.CommercialsLong - cotData.CommercialsShort;
+				case SuriCotReportField.CommercialLong: return cotData.commercialsLong;
+				case SuriCotReportField.CommercialShort: return cotData.commercialsShort;
+				case SuriCotReportField.CommercialNet: return cotData.commercialsLong - cotData.commercialsShort;
 				//case SuriCotReportField.TotalLong: return cotData.TotalLong;
 				//case SuriCotReportField.TotalShort: return cotData.TotalShort;
 				//case SuriCotReportField.TotalNet: return cotData.TotalNet;
-				case SuriCotReportField.NonreportablePositionsLong: return cotData.NonReportablesLong;
-				case SuriCotReportField.NonreportablePositionsShort: return cotData.NonReportablesShort;
-				case SuriCotReportField.NonreportablePositionsNet: return cotData.NonReportablesLong - cotData.NonReportablesShort;
+				case SuriCotReportField.NonreportablePositionsLong: return cotData.nonReportablesLong;
+				case SuriCotReportField.NonreportablePositionsShort: return cotData.nonReportablesShort;
+				case SuriCotReportField.NonreportablePositionsNet: return cotData.nonReportablesLong - cotData.nonReportablesShort;
 				//case SuriCotReportField.TotalTraders: return cotData.TotalTraders;
 				/*case SuriCotReportField.TradersInNoncommercialLong: return cotData.OpenInterest;
 				case SuriCotReportField.TradersInNoncommercialShort: return cotData.OpenInterest;

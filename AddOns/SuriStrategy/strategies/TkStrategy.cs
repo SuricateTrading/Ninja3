@@ -66,28 +66,31 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon.strategies {
 	    }
 
 	    protected override bool SetAndCheckInitialStoploss(SuriSignal signal) {
-		    StrikingSpotData strikingSpotData = StrikingCalculator.FindStrikingSpot(!signal.isLong, bars, signal.signalIndex);
+		    /*StrikingSpotData strikingSpotData = StrikingCalculator.FindStrikingSpot(!signal.isLong, bars, signal.signalIndex);
 		    signal.AddStop(strikingSpotData.p2Value + (signal.isLong ? -tickSize : tickSize));
 		    double stoplossCurrency = SuriCommon.PriceToCurrency(instrument, Math.Abs(signal.currentStop - bars.GetClose(signal.signalIndex)));
 		    if (stoplossCurrency > 2000) {
 			    Print("Skip TK " + bars.GetTime(signal.signalIndex).ToShortDateString() + " @" + signal.signalIndex + ". Stop " + stoplossCurrency + " $ too high.");
 			    return false;
-		    }
+		    }*/
+		    double t = SuriCommon.CurrencyToPrice(instrument, 2000);
+		    signal.AddStop(bars.GetClose(signal.entryIndex - 1) + (signal.isLong ? -t : t));
 		    return true;
 	    }
 
 	    protected override void SetExit(SuriSignal signal) {
-		    for (int j = signal.entryIndex.Value; j < bars.Count; j++) {
-			    TkState tkState = terminkurve.GetTkState(j);
-			    TkState prevTkState = terminkurve.GetTkState(j - 1);
-			    if (signal.isLong && tkState.IsBackwardationToContango(prevTkState) || !signal.isLong && tkState.IsContangoToBackwardation(prevTkState)) {
+		    for (int i = signal.entryIndex; i < bars.Count; i++) {
+			    TkState tkState = terminkurve.GetTkState(i);
+			    if ( signal.isLong && (tkState == TkState.FirstHighestAndLastLowest || tkState == TkState.Contango || tkState == TkState.FirstThreeContango) ||
+			        !signal.isLong && (tkState == TkState.FirstLowestAndLastHighest || tkState == TkState.Backwardation)
+			    ) {
 				    signal.exitReason = "TK counter signal";
-				    signal.exitIndex = j + 1;
+				    signal.exitIndex = i + 1;
 				    break;
 			    }
 			    // trace stop
-			    if ((signal.isLong || !signal.isLong && cot2.IsInLongHalf(j)) && barRange.IsMegaRange(j) && signal.isLong == StrategyTasks.BarGoesUp(bars, j)) {
-				    signal.AddStop(signal.isLong ? bars.GetLow(j) - tickSize : bars.GetHigh(j) + tickSize, j + 1);
+			    if (barRange.IsMegaBar(i) && (signal.isLong || !signal.isLong && cot2.IsInLongHalf(i)) && signal.isLong == StrategyTasks.BarGoesUp(bars, i)) {
+				    signal.AddStop(signal.isLong ? bars.GetLow(i) - tickSize : bars.GetHigh(i) + tickSize, i + 1);
 			    }
 		    }
 	    }

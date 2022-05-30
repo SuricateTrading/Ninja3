@@ -107,7 +107,6 @@
     <Compile Include="AddOns\SuriAddOnWindow.cs" />
     <Compile Include="AddOns\SuriCommon\StrikingCalculator.cs" />
     <Compile Include="AddOns\SuriCommon\SuriCommon.cs" />
-    <Compile Include="AddOns\SuriCommon\SuriHelper.cs" />
     <Compile Include="AddOns\SuriCommon\SuriServer.cs" />
     <Compile Include="AddOns\SuriCommon\SuriStrings.cs" />
     <Compile Include="AddOns\SuriScripts\SuriCorrelation.cs" />
@@ -115,6 +114,7 @@
     <Compile Include="AddOns\SuriScripts\SuriStatistics.cs" />
     <Compile Include="AddOns\SuriStrategy\strategies\Cot1Strategy.cs" />
     <Compile Include="AddOns\SuriStrategy\strategies\Cot2Strategy.cs" />
+    <Compile Include="AddOns\SuriStrategy\strategies\MyTkStrategy.cs" />
     <Compile Include="AddOns\SuriStrategy\strategies\TkStrategy.cs" />
     <Compile Include="AddOns\SuriStrategy\StrategyInterface.cs" />
     <Compile Include="AddOns\SuriStrategy\StrategyTasks.cs" />

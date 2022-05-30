@@ -165,7 +165,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 				double max = double.MinValue;
 				for (int i = 0; i < 26; i++) {
 					DbCotData prevCotData = cotRepo.Get(CurrentBar - i);
-					if ((currentCotData.Date - prevCotData.Date).Days / 7.0 <= 26) break;
+					if ((currentCotData.date - prevCotData.date).Days / 7.0 <= 26) break;
 					double v = prevCotData.CommercialsNetto();
 					if (min > v) min = v;
 					if (max < v) max = v;

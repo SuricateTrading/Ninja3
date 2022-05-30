@@ -124,7 +124,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			try {
 				DbCotData cotData = cotRepo.Get(CurrentBar);
 				lastReportDate = Time[0];
-				Values[0][0] = 100 * cotData.CommercialsShort / (double) cotData.OpenInterest;
+				Values[0][0] = 100 * cotData.commercialsShort / (double) cotData.openInterest;
 			} catch (IndexOutOfRangeException) {
 				if (CurrentBar > 10) Value[0] = Value[1];
 			}

@@ -3,16 +3,19 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using Newtonsoft.Json;
 using NinjaTrader.Cbi;
 using NinjaTrader.Core;
 using NinjaTrader.Custom.AddOns.SuriCommon;
 using NinjaTrader.Data;
+using NinjaTrader.NinjaScript;
 
 namespace NinjaTrader.Custom.AddOns.Data {
     public abstract class GenericDbRepo<T> {
         private readonly string dbPath = Globals.UserDataDir + @"db\suri\" + typeof(T) + @"\";
         private string GetPath(int commId, int year) { return dbPath + commId + "_" + year + ".json"; }
         private static readonly Dictionary<Commodity, Mutex> state = new Dictionary<Commodity, Mutex>();
+        protected static void Print(string s) { Code.Output.Process(s, PrintTo.OutputTab1); }
         
         /** urlT must be 'cot/get' for example */
         protected abstract string urlT { get; }
@@ -23,14 +26,14 @@ namespace NinjaTrader.Custom.AddOns.Data {
         protected virtual void OnPartialDataLoaded(List<T> partialData) {}
         protected virtual bool reverseList { get { return false; } }
 
-        public List<T> data = new List<T>();
+        protected List<T> data = new List<T>();
         //public int nextIndex;
         //public bool hasStarted;
         protected Commodity? commodity;
 
         /** Used to map each Bars-index to an index of the data-list. */
-        protected List<int> dataIndices = new List<int>();
-        protected Bars bars;
+        protected readonly List<int> dataIndices = new List<int>();
+        protected readonly Bars bars;
 
         static GenericDbRepo() {
             foreach (var commodity in Enum.GetValues(typeof(Commodity)).Cast<Commodity>()) {
@@ -68,14 +71,14 @@ namespace NinjaTrader.Custom.AddOns.Data {
                     }
                     data.AddRange(Newtonsoft.Json.JsonConvert.DeserializeObject<List<T>>(File.ReadAllText(path)));
                 }
-                OnDataLoaded();
                 SetIndices();
+                OnDataLoaded();
             } finally {
                 state[commodity.Value].ReleaseMutex();
             }
         }
 
-        private void SetIndices() {
+        private void SetIndices2() {
             int dataIndex = 0;
             bool hasStarted = false;
             for (int i = 0; i < bars.Count; i++) {
@@ -88,6 +91,21 @@ namespace NinjaTrader.Custom.AddOns.Data {
                     if (hasStarted && GetDate(j).Date > bars.GetTime(i).Date) {
                         break;
                     }
+                }
+                dataIndices.Add(dataIndex);
+            }
+        }
+        private void SetIndices() {
+            // get first index
+            int dataIndex = 0;
+            DateTime startDate = bars.GetTime(0).Date;
+            for (; dataIndex < data.Count && startDate > GetDate(dataIndex).Date; dataIndex++) {}
+            dataIndex--;
+
+            // map all indices
+            for (int i = 0; i < bars.Count; i++) {
+                while (dataIndex < data.Count - 2 && bars.GetTime(i).Date >= GetDate(dataIndex + 1).Date) {
+                    dataIndex++;
                 }
                 dataIndices.Add(dataIndex);
             }

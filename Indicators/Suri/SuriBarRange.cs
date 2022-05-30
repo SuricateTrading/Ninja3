@@ -97,8 +97,8 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		}
 		public override string DisplayName { get { return Name; } }
         public double Percentage() { return 100 * Values[0][0] / Values[1][0]; }
-        public bool IsMegaRange() { return CurrentBar > days && Math.Abs(Values[0][0] - Values[1][0]) < 0.00000001; }
-        public bool IsMegaRange(int barIndex) { return Math.Abs(Values[0].GetValueAt(barIndex) - Values[1].GetValueAt(barIndex)) < 0.00000001; }
+        public bool IsMegaBar() { return CurrentBar > days && Math.Abs(Values[0][0] - Values[1][0]) < 0.00000001; }
+        public bool IsMegaBar(int barIndex) { return Math.Abs(Values[0].GetValueAt(barIndex) - Values[1].GetValueAt(barIndex)) < 0.00000001; }
 
         protected override void OnRender(ChartControl chartControl, ChartScale chartScale) {
 	        base.OnRender(chartControl, chartScale);
@@ -131,7 +131,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 	        Values[1][0] = max;
 	        if (CurrentBar < days) {
 		        PlotBrushes[0][0] = notEnoughDataBrush;
-	        } else if(SuriAddOn.license != License.Basic && IsMegaRange()) {
+	        } else if(SuriAddOn.license != License.Basic && IsMegaBar()) {
 		        if (Open[0] <= Close[0]) {
 			        PlotBrushes[0][0] = signalUpBrush;
 		        } else {

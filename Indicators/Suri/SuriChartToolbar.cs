@@ -1,6 +1,7 @@
 #region Using declarations
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -10,12 +11,15 @@ using System.Windows.Input;
 using System.Windows.Media;
 using NinjaTrader.Cbi;
 using NinjaTrader.Custom.AddOns.SuriCommon;
-using NinjaTrader.NinjaScript.DrawingTools;
+using Button = System.Windows.Controls.Button;
 using CheckBox = System.Windows.Controls.CheckBox;
 using ComboBox = System.Windows.Controls.ComboBox;
 using HorizontalAlignment = System.Windows.HorizontalAlignment;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using VerticalAlignment = System.Windows.VerticalAlignment;
+using System.ComponentModel.DataAnnotations;
+using System.Xml.Serialization;
+
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
@@ -31,6 +35,10 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		public override string DisplayName { get { return "Toolbar"; } }
 		protected override void OnBarUpdate() {}
 		
+		[XmlIgnore]
+		[Display(Name="Zeige Verfallsdatum", Order=0, GroupName="Parameter")]
+		public bool showExpiry { get; set; }
+		
 		protected override void OnStateChange() {
 			if (State == State.SetDefaults) {
 				Name								= "Toolbar";
@@ -39,6 +47,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				IsOverlay							= true;
 				DisplayInDataBox					= false;
 				IsSuspendedWhileInactive			= true;
+				showExpiry							= true;
 			} else if (State == State.Historical) {
 				if (ChartControl != null) ChartControl.Dispatcher.InvokeAsync(CreateWpfControls);
 			} else if (State == State.Terminated) {
@@ -102,12 +111,16 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				HorizontalAlignment = HorizontalAlignment.Left,
 				VerticalAlignment = VerticalAlignment.Top,
 				ColumnDefinitions = {
-					new ColumnDefinition(), new ColumnDefinition(), new ColumnDefinition(), new ColumnDefinition(),
-					new ColumnDefinition(), new ColumnDefinition(), new ColumnDefinition(), new ColumnDefinition(),
-					new ColumnDefinition(), new ColumnDefinition(), new ColumnDefinition(), new ColumnDefinition(),
-					new ColumnDefinition {Width = new GridLength(180)}, // combobox
-					new ColumnDefinition {Width = new GridLength(35)}, // next button
-					new ColumnDefinition{Width = new GridLength(70)}, // loading text
+					new ColumnDefinition{Width = new GridLength(100, GridUnitType.Auto)}, new ColumnDefinition{Width = new GridLength(100, GridUnitType.Auto)},
+					new ColumnDefinition{Width = new GridLength(100, GridUnitType.Auto)}, new ColumnDefinition{Width = new GridLength(100, GridUnitType.Auto)},
+					new ColumnDefinition{Width = new GridLength(100, GridUnitType.Auto)}, new ColumnDefinition{Width = new GridLength(100, GridUnitType.Auto)},
+					new ColumnDefinition{Width = new GridLength(100, GridUnitType.Auto)}, new ColumnDefinition{Width = new GridLength(100, GridUnitType.Auto)},
+					new ColumnDefinition{Width = new GridLength(100, GridUnitType.Auto)}, new ColumnDefinition{Width = new GridLength(100, GridUnitType.Auto)},
+					new ColumnDefinition{Width = new GridLength(100, GridUnitType.Auto)}, new ColumnDefinition{Width = new GridLength(100, GridUnitType.Auto)},
+					new ColumnDefinition{Width = new GridLength(180)}, // combobox
+					new ColumnDefinition{Width = new GridLength(100, GridUnitType.Auto)}, // next button
+					new ColumnDefinition{Width = new GridLength(100, GridUnitType.Auto)}, // expiry
+					new ColumnDefinition{Width = new GridLength(100, GridUnitType.Auto)}, // loading text
 				},
 				RowDefinitions = { new RowDefinition() },
 			};
@@ -199,6 +212,17 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			Grid.SetRow(nextButton, 0);
 			Grid.SetColumn(nextButton, ++index);
 			menu.Children.Add(nextButton);
+			
+			if (showExpiry) {
+				TextBlock expiryText = new TextBlock {
+					Foreground = ChartControl.Properties.ChartText,
+					Margin = new Thickness(15,5,0,0),
+					Text = "Verfallsdatum: " + Instrument.Expiry.ToString("dd.MM.yyy")
+				};
+				Grid.SetRow(expiryText, 0);
+				Grid.SetColumn(expiryText, ++index);
+				menu.Children.Add(expiryText);
+			}
 			
 			loadingText = new TextBlock {
 				Foreground = ChartControl.Properties.ChartText,

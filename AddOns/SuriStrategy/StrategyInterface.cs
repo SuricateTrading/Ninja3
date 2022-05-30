@@ -33,7 +33,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
                     SetExit(signal);
                     signals.Add(signal);
                 } catch (Exception e) {
-                    Print(e.ToString());
+                    Print("StrategyInterface Analyze Error @" + i + " " + bars.GetTime(i) + "\t\t" + e);
                 }
             }
         }

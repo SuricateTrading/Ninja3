@@ -1,4 +1,6 @@
 #region Using declarations
+
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.Windows.Media;
 using NinjaTrader.Custom.AddOns.Data;
@@ -27,7 +29,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 				ScaleJustification							= ScaleJustification.Right;
 				IsSuspendedWhileInactive					= true;
 				BarsRequiredToPlot							= 0;
-				days = 250;
+				days = 150;
 			} else if (State == State.Configure) {
 				AddPlot(new Stroke(Brushes.CornflowerBlue, 2), PlotStyle.Line, "Status");
 				AddPlot(new Stroke(Brushes.DarkGray, 2), PlotStyle.Line, "Delta");
@@ -43,16 +45,26 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 		public override string DisplayName { get { return Name; } }
 
 		public TkState GetTkState(int barIndex) {
-			var tkData = (TkData) tkRepo.Get(barIndex);
+			var tkData = tkRepo.Get(barIndex);
 			return tkData == null ? TkState.None : tkData.tkState;
 		}
-		public TkData GetTkData(int barIndex) { return (TkData) tkRepo.Get(barIndex); }
+		public TkData GetTkData(int barIndex) { return tkRepo.Get(barIndex); }
 		
 		protected override void OnBarUpdate() {
-			TkData tkData = (TkData) tkRepo.Get(CurrentBar);
+			TkData tkData = tkRepo.Get(CurrentBar);
 			if (tkData == null) return;
-			
-			Values[0][0] = (int) tkData.tkState * 10;
+
+			switch (tkData.tkState) {
+				case TkState.Backwardation:				Values[0][0] = 100; break;
+				case TkState.FirstHighestAndLastLowest:	Values[0][0] = 84; break;
+				case TkState.FirstHigherThanLast:		Values[0][0] = 57; break;
+				case TkState.None:						Values[0][0] = 50; break;
+				case TkState.FirstLowerThanLast:		Values[0][0] = 34; break;
+				case TkState.FirstLowestAndLastHighest:	Values[0][0] = 17; break;
+				case TkState.Contango:					Values[0][0] = 0; break;
+				case TkState.FirstThreeContango:		Values[0][0] = -10; break;
+			}
+			//Values[0][0] = (int) tkData.tkState * 10;
 			Values[1][0] = tkData.delta;
 			
 			// calculate delta osci
@@ -65,6 +77,8 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 					if (max < v) max = v;
 				}
 				Values[2][0] = 100.0 * (tkData.delta - min) / (max - min);
+			} else {
+				Values[2][0] = double.NaN;
 			}
 		}
 	}

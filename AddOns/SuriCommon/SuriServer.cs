@@ -96,16 +96,17 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
     }
 
     public sealed class DbCotData {
-        public DateTime Date {get; set;}	
+        public DateTime date {get; set;}
+        //public DateTime releaseDate {get; set;}
         
-        public int OpenInterest {get; set;}
-        public int NonCommercialsLong {get; set;}
-        public int NonCommercialsShort {get; set;}
-        public int NonCommercialsSpread {get; set;}
-        public int CommercialsLong {get; set;}
-        public int CommercialsShort {get; set;}
-        public int NonReportablesLong {get; set;}
-        public int NonReportablesShort {get; set;}
+        public int openInterest {get; set;}
+        public int nonCommercialsLong {get; set;}
+        public int nonCommercialsShort {get; set;}
+        public int nonCommercialsSpread {get; set;}
+        public int commercialsLong {get; set;}
+        public int commercialsShort {get; set;}
+        public int nonReportablesLong {get; set;}
+        public int nonReportablesShort {get; set;}
         
         public float? Cot1 {get; set;}
         public int? Cot2Min {get; set;}
@@ -113,7 +114,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
         public int? Cot2Max {get; set;}
 
         public int CommercialsNetto() {
-            return CommercialsLong - CommercialsShort;
+            return commercialsLong - commercialsShort;
         }
     }
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Newtonsoft.Json;
 using NinjaTrader.Cbi;
 using NinjaTrader.Custom.AddOns.SuriCommon;
 using NinjaTrader.Data;
@@ -16,6 +17,7 @@ namespace NinjaTrader.Custom.AddOns.Data {
             if (commodity == null) return;
             foreach (var tkData in data) {
                 foreach (var month in tkData.months) {
+	                
                     double price = month.GetPrice();
                     if (month.count > SuriStrings.data[commodity.Value].count) break;
                     if (tkData.highestVolume < month.volume) {
@@ -28,8 +30,12 @@ namespace NinjaTrader.Custom.AddOns.Data {
                     tkData.volume += month.volume;
                     tkData.openInterest += month.openInterest;
                 }
-                
+
+                int i = 0;
                 foreach (var month in tkData.months) {
+
+	                if (i > SuriStrings.data[commodity.Value].count - 1) break; // todo
+	                
                     double price = month.GetPrice();
                     if (month.count < tkData.highestVolIndex && month.volume * 10 < tkData.highestVolume) {
                         month.isIgnored = true;
@@ -38,6 +44,7 @@ namespace NinjaTrader.Custom.AddOns.Data {
                         if (tkData.lowestValidPrice  > price) tkData.lowestValidPrice  = price;
                         if (tkData.highestValidPrice < price) tkData.highestValidPrice = price;
                     }
+                    i++;
                 }
 
                 tkData.delta = tkData.highestPrice - tkData.lowestPrice;
@@ -48,12 +55,13 @@ namespace NinjaTrader.Custom.AddOns.Data {
         }
         
         
+        
 		private TkState GetTkState(TkData tkData) {
 			bool isContango = true; 
 			bool isBackwardation = true;
 			double contangoDeviation = 0.0;
 			double backwardationDeviation = 0.0;
-			double maxDeviation = tkData.delta * (tkData.validMonths / 180.0);
+			double maxDeviation = tkData.delta * tkData.validMonths / 180.0;
 
 			for (int i = 1; i < tkData.months.Count; i++) {
 				var month = tkData.months[i];
@@ -104,39 +112,39 @@ namespace NinjaTrader.Custom.AddOns.Data {
 
 
 public sealed class TkData {
-    public DateTime date {get; set;}
-    public TkState tkState {get; set;}
-    //public double delta {get; set;}
-    //public int volume {get; set;}
-    //public int openInterest {get; set;}
-    public List<TkMonth> months {get; set;}
+    public DateTime date;
+    [JsonIgnore] public TkState tkState;
+    //public double delta;
+    //public int volume;
+    //public int openInterest;
+    public List<TkMonth> months;
 
-    public double mainPrice;
-    public long highestVolume;
-    public int highestVolIndex;
-    public double highestPrice;
-    public double lowestPrice;
-    public double delta;
-    public double lowestValidPrice;
-    public double highestValidPrice;
-    public int validMonths;
-    public long volume;
-    public long openInterest;
+    [JsonIgnore] public double mainPrice;
+    [JsonIgnore] public long highestVolume;
+    [JsonIgnore] public int highestVolIndex;
+    [JsonIgnore] public double highestPrice = double.MinValue;
+    [JsonIgnore] public double lowestPrice = double.MaxValue;
+    [JsonIgnore] public double delta;
+    [JsonIgnore] public double highestValidPrice = double.MinValue;
+    [JsonIgnore] public double lowestValidPrice = double.MaxValue;
+    [JsonIgnore] public int validMonths;
+    [JsonIgnore] public long volume;
+    [JsonIgnore] public long openInterest;
 }
 
 public sealed class TkMonth {
-    public int monthValue {get; set;}
-    public int year {get; set;}
-    public double open {get; set;}
-    public double high {get; set;}
-    public double low {get; set;}
-    public double last {get; set;}
-    public double? settle {get; set;}
-    public long volume {get; set;}
-    public long openInterest {get; set;}
-    public int count {get; set;}
+    public int monthValue;
+    public int year;
+    public double open;
+    public double high;
+    public double low;
+    public double last;
+    public double? settle;
+    public long volume;
+    public long openInterest;
+    public int count;
 
-    public bool isIgnored;
+    [JsonIgnore] public bool isIgnored;
     public double GetPrice() { return settle ?? last; }
 }
 public enum TkState {

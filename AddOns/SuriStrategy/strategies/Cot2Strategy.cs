@@ -28,7 +28,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon.strategies {
         protected override int startBarIndex { get { return 125; } }
 
         protected override bool IsEntry(int index) {
-	        bool isMegaBar = barRange.IsMegaRange(index);
+	        bool isMegaBar = barRange.IsMegaBar(index);
 	        bool isMegaVolume = volume.IsMegaVolume(index);
 	        if (!isMegaBar && !isMegaVolume) return false;
 					
@@ -36,7 +36,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon.strategies {
 	        if (cot2.seriesMain.GetValueAt(index) <= cot2.series25.GetValueAt(index)) cot2Position = SuriPosition.Long;
 	        if (cot2.seriesMain.GetValueAt(index) >= cot2.series75.GetValueAt(index)) cot2Position = SuriPosition.Short;
 	        if (cot2Position == SuriPosition.None) return false;
-					
+			
 	        // tk
 	        TkState tkState = terminkurve.GetTkState(index);
 	        if (cot2Position == SuriPosition.Short && tkState.IsAnyBackwardation() == true) {
@@ -110,7 +110,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon.strategies {
         }
 
         protected override void SetExit(SuriSignal signal) {
-	        for (int j = signal.entryIndex.Value; j < bars.Count; j++) {
+	        for (int j = signal.entryIndex; j < bars.Count; j++) {
 		        // cot2
 		        if (signal.isLong && cot2.seriesMain.GetValueAt(j) >= cot2.series75.GetValueAt(j) || !signal.isLong && cot2.seriesMain.GetValueAt(j) <= cot2.series25.GetValueAt(j)) {
 			        signal.exitIndex = j + 1;
@@ -127,7 +127,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon.strategies {
 			        break;
 		        }
 		        // trace stop
-		        if (signal.isLong != cot2.IsInLongHalf(j) && barRange.IsMegaRange(j) && signal.isLong == StrategyTasks.BarGoesUp(bars, j)) {
+		        if (signal.isLong != cot2.IsInLongHalf(j) && barRange.IsMegaBar(j) && signal.isLong == StrategyTasks.BarGoesUp(bars, j)) {
 			        signal.AddStop(signal.isLong ? bars.GetLow(j) - tickSize : bars.GetHigh(j) + tickSize, j + 1);
 		        }
 	        }

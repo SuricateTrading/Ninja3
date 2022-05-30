@@ -20,6 +20,12 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		private DateTime lastReportDate;
 
 		#region Properties
+		
+		[NinjaScriptProperty]
+		[Browsable(false)]
+		public bool isDelayed
+		{ get; set; }
+		
 		[XmlIgnore]
 		[Range(1, int.MaxValue)]
 		[Display(Name="Breite der Hauptlinie", Order=2, GroupName="Parameter")]
@@ -96,13 +102,14 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				noNewCotBrush								= Brushes.Orange;
 				lineWidth									= 4;
 				lineWidthSecondary							= 2;
+				isDelayed									= false;
 			} else if (State == State.Configure) {
 				AddPlot(new Stroke(shortBrush, lineWidthSecondary), PlotStyle.Line, "75%");
 				AddPlot(new Stroke(brush50Percent, lineWidthSecondary), PlotStyle.Line, "50%");
 				AddPlot(new Stroke(longBrush, lineWidthSecondary), PlotStyle.Line, "25%");
 				AddPlot(new Stroke(regularLineBrush, lineWidth), PlotStyle.Line, "Com Short");
 			} else if (State == State.DataLoaded) {
-				if (Bars.Count > 0) cotRepo = new CotRepo(Instrument, Bars);
+				if (Bars.Count > 0) cotRepo = new CotRepo(Instrument, Bars, isDelayed);
 			}
 		}
 
@@ -120,7 +127,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			return SuriPosition.None;
 		}
 
-		public override string DisplayName { get { return Name; } }
+		public override string DisplayName { get { return isDelayed ? Name + " delayed" : Name; } }
 
 		protected override void OnRender(ChartControl chartControl, ChartScale chartScale) {
 			base.OnRender(chartControl, chartScale);
@@ -137,7 +144,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				Values[0][0] = cotData.Cot2Max.Value;
 				Values[1][0] = cotData.Cot2Mid.Value;
 				Values[2][0] = cotData.Cot2Min.Value;
-				Values[3][0] = cotData.CommercialsShort;
+				Values[3][0] = cotData.commercialsShort;
 			} catch (IndexOutOfRangeException) {
 				if (CurrentBar > 10) {
 					Values[0][0] = Values[0][1];
@@ -208,18 +215,18 @@ namespace NinjaTrader.NinjaScript.Indicators
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
 		private Suri.SuriCot2[] cacheSuriCot2;
-		public Suri.SuriCot2 SuriCot2()
+		public Suri.SuriCot2 SuriCot2(bool isDelayed)
 		{
-			return SuriCot2(Input);
+			return SuriCot2(Input, isDelayed);
 		}
 
-		public Suri.SuriCot2 SuriCot2(ISeries<double> input)
+		public Suri.SuriCot2 SuriCot2(ISeries<double> input, bool isDelayed)
 		{
 			if (cacheSuriCot2 != null)
 				for (int idx = 0; idx < cacheSuriCot2.Length; idx++)
-					if (cacheSuriCot2[idx] != null &&  cacheSuriCot2[idx].EqualsInput(input))
+					if (cacheSuriCot2[idx] != null && cacheSuriCot2[idx].isDelayed == isDelayed && cacheSuriCot2[idx].EqualsInput(input))
 						return cacheSuriCot2[idx];
-			return CacheIndicator<Suri.SuriCot2>(new Suri.SuriCot2(), input, ref cacheSuriCot2);
+			return CacheIndicator<Suri.SuriCot2>(new Suri.SuriCot2(){ isDelayed = isDelayed }, input, ref cacheSuriCot2);
 		}
 	}
 }
@@ -228,14 +235,14 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.SuriCot2 SuriCot2()
+		public Indicators.Suri.SuriCot2 SuriCot2(bool isDelayed)
 		{
-			return indicator.SuriCot2(Input);
+			return indicator.SuriCot2(Input, isDelayed);
 		}
 
-		public Indicators.Suri.SuriCot2 SuriCot2(ISeries<double> input )
+		public Indicators.Suri.SuriCot2 SuriCot2(ISeries<double> input , bool isDelayed)
 		{
-			return indicator.SuriCot2(input);
+			return indicator.SuriCot2(input, isDelayed);
 		}
 	}
 }
@@ -244,14 +251,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.SuriCot2 SuriCot2()
+		public Indicators.Suri.SuriCot2 SuriCot2(bool isDelayed)
 		{
-			return indicator.SuriCot2(Input);
+			return indicator.SuriCot2(Input, isDelayed);
 		}
 
-		public Indicators.Suri.SuriCot2 SuriCot2(ISeries<double> input )
+		public Indicators.Suri.SuriCot2 SuriCot2(ISeries<double> input , bool isDelayed)
 		{
-			return indicator.SuriCot2(input);
+			return indicator.SuriCot2(input, isDelayed);
 		}
 	}
 }
