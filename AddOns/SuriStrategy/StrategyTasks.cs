@@ -51,8 +51,16 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
         }
 
         /** Returns true iff given value is in bar range of given index, hence a limit order would be filled. Else returns false. */
-        public static bool IsFilledAt(int index, double value, Bars bars) {
-            return value >= bars.GetLow(index) && value <= bars.GetHigh(index);
+        public static bool IsFilledAt(bool isLong, OrderType orderType, int index, double value, Bars bars) {
+            switch (orderType) {
+                case OrderType.Limit:       return  isLong && value >= bars.GetLow(index) || !isLong && value <= bars.GetHigh(index);
+                case OrderType.StopMarket:  return !isLong && value >= bars.GetLow(index) ||  isLong && value <= bars.GetHigh(index);
+                case OrderType.Market:      return true;
+                case OrderType.MIT:         return value >= bars.GetLow(index) && value <= bars.GetHigh(index);
+                case OrderType.StopLimit:   throw new NotImplementedException();
+                case OrderType.Unknown:     throw new NotImplementedException();
+                default:                    throw new NotImplementedException();
+            }
         }
 
         public static SuriBarType GetBarType(Bars bars, int index, double tickSize) {

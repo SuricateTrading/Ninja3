@@ -40,13 +40,13 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			           (SuriAddOn.license == License.Premium || SuriAddOn.license == License.Dev) &&
 			           Bars.BarsPeriod.BarsPeriodType == BarsPeriodType.Minute && Bars.BarsPeriod.Value == 1440
 			) {
-				SuriIntraRepo.GetVpIntra(Instrument, Bars.GetTime(0).Date, Bars.LastBarTime.Date, data => {
+				/*SuriIntraRepo.GetVpIntra(Instrument, Bars.GetTime(0).Date, Bars.LastBarTime.Date, data => {
 					suriVpIntraData = data;
 					for (int i = CurrentBar - 1; i >= 0; i--) {
 						UpdateData(i);
 					}
 					ForceRefresh();
-				});
+				});*/
 			}
 		}
 		

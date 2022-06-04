@@ -1,6 +1,8 @@
 ﻿#region Using declarations
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Windows;
 using Newtonsoft.Json;
 using NinjaTrader.Cbi;
 using NinjaTrader.Custom.AddOns.SuriCommon;
@@ -49,17 +51,20 @@ namespace NinjaTrader.NinjaScript.Strategies {
 				Bars.CurrentBar = 0;
 				foreach (var strategy in strategies) {
 					strategy.Analyze();
-					Print(JsonConvert.SerializeObject(strategy.signals));
+					string signals = JsonConvert.SerializeObject(strategy.signals);
+					//Print(signals);
+					Thread thread = new Thread(() => Clipboard.SetText(signals));
+					thread.SetApartmentState(ApartmentState.STA);
+					thread.Start(); 
+					thread.Join(); //Wait for the thread to end
 				}
 			}
 			
 			foreach (var strategy in strategies) {
 				foreach (var signal in strategy.signals) {
-
-					if (signal.entryIndex == 617 && CurrentBar == 641) {
+					if (signal.entryIndex == 961 && CurrentBar == 960) {
 						Print("");
 					}
-					
 					if (signal.orderState == OrderState.Done) continue;
 					
 					// check entry
@@ -98,8 +103,8 @@ namespace NinjaTrader.NinjaScript.Strategies {
 						double stoplossCurrency = SuriCommon.PriceToCurrency(Instrument, Math.Abs(signal.currentStop - Bars.GetClose(CurrentBar)));
 						signal.notes += "Traced stoploss @" + CurrentBar + " to " + signal.currentStop + ". Reduced risk to " + stoplossCurrency + " $. ";
 					}
-					// check if stoploss will be filled
-					if (signal.orderState == OrderState.Filled && StrategyTasks.IsFilledAt(CurrentBar + 1, signal.currentStop, Bars)) {
+					// check if stoploss will be filled tomorrow
+					if (signal.orderState == OrderState.Filled && StrategyTasks.IsFilledAt(!signal.isLong, OrderType.StopMarket, CurrentBar + 1, signal.currentStop, Bars)) {
 						SubmitOrderUnmanaged(
 							0,
 							signal.isLong ? OrderAction.SellShort : OrderAction.BuyToCover,
@@ -158,7 +163,7 @@ namespace NinjaTrader.NinjaScript.Strategies {
 		
 	    public int? exitIndex;
 	    public DateTime? exitDate;
-	    public string exitReason;
+	    public string exitReason = "";
 
 	    public string Serialize() { return JsonConvert.SerializeObject(this); }
     }

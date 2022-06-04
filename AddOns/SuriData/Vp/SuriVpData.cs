@@ -20,9 +20,9 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 	}
 	
 	public sealed class SuriVpIntraData {
-		public List<SuriVpBarData> barData { get; set; }
-		[JsonIgnore] public SortedDictionary<int, SuriVpBox> boxes { get; set; }
-		[JsonIgnore] public bool isPrepared { get; set; }
+		public List<SuriVpBarData> barData;
+		[JsonIgnore] public SortedDictionary<int, SuriVpBox> boxes;
+		[JsonIgnore] public bool isPrepared;
 
 		public SuriVpIntraData() {
 			boxes = new SortedDictionary<int, SuriVpBox>();
@@ -84,27 +84,27 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 	}
 
 	public abstract class SuriSingleVp {
-		[JsonIgnore] public bool isVpBig { get; set; }
-		public SortedDictionary<int, SuriVpTickData> tickData { get; set; }
-		[JsonIgnore] public bool isPrepared { get; set; }
-		public double tickSize { get; set; }
-		[JsonIgnore] public int tickCount { get; set; }
-		public int low { get; set; }
-		public int high { get; set; }
+		[JsonIgnore] public bool isVpBig;
+		public SortedDictionary<int, SuriVpTickData> tickData;
+		[JsonIgnore] public bool isPrepared;
+		public double tickSize;
+		[JsonIgnore] public int tickCount;
+		public int low;
+		public int high;
 
-		[JsonIgnore] public int pocIndex { get; set; }
-		[JsonIgnore] public double pocVolume { get; set; }
+		[JsonIgnore] public int pocIndex;
+		[JsonIgnore] public double pocVolume;
 		
-		[JsonIgnore] public int vaHigh { get; set; }
-		[JsonIgnore] public int vaLow { get; set; }
-		[JsonIgnore] public double vaPercentage { get; set; }
+		[JsonIgnore] public int vaHigh;
+		[JsonIgnore] public int vaLow;
+		[JsonIgnore] public double vaPercentage;
 		
-		public double totalVolume { get; set; }
+		public double totalVolume;
 		/** Buy */
-		public long totalBids { get; set; }
+		public long totalBids;
 		/** Sell */
-		public long totalAsks { get; set; }
-		[JsonIgnore] public double highestDelta { get; set; }
+		public long totalAsks;
+		[JsonIgnore] public double highestDelta;
 		[JsonIgnore]
 		public long delta { get { return totalAsks - totalBids; } }
 
@@ -447,7 +447,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 	public sealed class SuriVpBigData : SuriSingleVp { public SuriVpBigData(double tickSize) : base(true, tickSize) {} }
 
 	public sealed class SuriVpBarData : SuriSingleVp {
-		public DateTime dateTime { get; set; }
+		public DateTime dateTime;
 		public SuriVpBarData(double tickSize, DateTime dateTime) : base(false, tickSize) {
 			this.dateTime = dateTime;
 		}
@@ -456,17 +456,17 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 	}
 	
 	public sealed class SuriVpTickData {
-		public int tick { get; set; }
-		public double volume { get; set; }
-		[JsonIgnore] public double distributedVolume { get; set; }
-		public long bids { get; set; }
-		public long asks { get; set; }
-		[JsonIgnore] public bool isMainPoc { get; set; }
-		[JsonIgnore] public bool isNakedPoc { get; set; }
-		[JsonIgnore] public bool isSubPoc { get; set; }
-		[JsonIgnore] public bool isInValueArea { get; set; }
-		[JsonIgnore] public bool isHigh { get; set; }
-		[JsonIgnore] public bool isLvn { get; set; }
+		public int tick;
+		public double volume;
+		[JsonIgnore] public double distributedVolume;
+		public long bids;
+		public long asks;
+		[JsonIgnore] public bool isMainPoc;
+		[JsonIgnore] public bool isNakedPoc;
+		[JsonIgnore] public bool isSubPoc;
+		[JsonIgnore] public bool isInValueArea;
+		[JsonIgnore] public bool isHigh;
+		[JsonIgnore] public bool isLvn;
 		public SuriVpTickData(int tick) {
 			this.tick = tick;
 		}

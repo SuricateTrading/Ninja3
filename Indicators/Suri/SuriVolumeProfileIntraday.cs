@@ -133,14 +133,9 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				textFormat					= font.ToDirectWriteTextFormat();
 				textFormat.TextAlignment	= SharpDX.DirectWrite.TextAlignment.Leading;
 				textFormat.WordWrapping		= SharpDX.DirectWrite.WordWrapping.NoWrap;
-			} else if (State == State.DataLoaded && !Bars.IsTickReplay &&
-			           (/*SuriAddOn.license == License.Premium || */SuriAddOn.license == License.Dev) &&
-			           Bars.BarsPeriod.BarsPeriodType == BarsPeriodType.Minute && Bars.BarsPeriod.Value == 1440
-			) {
-				SuriIntraRepo.GetVpIntra(Instrument, Bars.GetTime(0).Date, Bars.LastBarTime.Date, data => {
-					suriVpIntraData = data;
-					ForceRefresh();
-				});
+				if (!Bars.IsTickReplay && SuriAddOn.license == License.Dev /*&& Bars.BarsPeriod.BarsPeriodType == BarsPeriodType.Minute && Bars.BarsPeriod.Value == 1440*/) {
+					suriVpIntraData = SuriIntraRepo.GetVpIntra(Instrument, Bars.GetTime(0).Date, Bars.LastBarTime.Date);
+				}
 			}
 		}
 
@@ -215,9 +210,9 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 					}
 					for (; vpIndex <= suriVpIntraData.barData.Count; vpIndex++) {
 						if (vpIndex == suriVpIntraData.barData.Count) return;
-						DateTime d1 = suriVpIntraData.barData[vpIndex].dateTime.Date;
-						DateTime d2 = ChartBars.Bars.GetTime(visibleBarIndex).Date;
-						if (d1.DayOfYear == d2.DayOfYear && d1.Year == d2.Year) {
+						DateTime d1 = suriVpIntraData.barData[vpIndex].dateTime;
+						DateTime d2 = ChartBars.Bars.GetTime(visibleBarIndex);
+						if (d1 == d2/* || d1.DayOfYear == d2.DayOfYear && d1.Year == d2.Year*/) {
 							break;
 						}
 					}

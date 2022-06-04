@@ -19,6 +19,10 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		
 		#region Properties
 		[NinjaScriptProperty]
+		[Display(Name="Benutze Währung (an) oder Punkte (aus)", Order=0, GroupName="Parameter")]
+		public bool useCurrency { get; set; }
+		
+		[NinjaScriptProperty]
 		[Browsable(false)]
 		[Range(1, int.MaxValue)]
 		[Display(Name = "Tage", Description = "Periode in Bars", GroupName = "Parameter")]
@@ -90,6 +94,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				maxBrush									= Brushes.DarkCyan;
 				barBrush									= Brushes.RoyalBlue;
 				notEnoughDataBrush							= Brushes.Gray;
+				useCurrency									= false;
 			} else if (State == State.Configure) {
 				AddPlot(new Stroke(barBrush, 2), PlotStyle.Bar, "Bargröße");
 				AddPlot(new Stroke(maxBrush, 1), PlotStyle.Line, "Max");
@@ -112,6 +117,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 	        } else {
 		        Values[0][0] = Close[0] - High[0];
 	        }
+	        if (useCurrency) Values[0][0] *= Instrument.MasterInstrument.PointValue;
 			
 	        if (Values[0][0] >= max) {
 		        maxIndex = CurrentBar;

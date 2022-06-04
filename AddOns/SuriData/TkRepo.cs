@@ -17,7 +17,6 @@ namespace NinjaTrader.Custom.AddOns.Data {
             if (commodity == null) return;
             foreach (var tkData in data) {
                 foreach (var month in tkData.months) {
-	                
                     double price = month.GetPrice();
                     if (month.count > SuriStrings.data[commodity.Value].count) break;
                     if (tkData.highestVolume < month.volume) {
@@ -25,30 +24,23 @@ namespace NinjaTrader.Custom.AddOns.Data {
                         tkData.highestVolIndex = month.count;
                         tkData.mainPrice = price;
                     }
-                    if (tkData.highestPrice < price) tkData.highestPrice = price;
-                    if (tkData.lowestPrice  > price) tkData.lowestPrice  = price;
                     tkData.volume += month.volume;
                     tkData.openInterest += month.openInterest;
                 }
 
-                int i = 0;
                 foreach (var month in tkData.months) {
-
-	                if (i > SuriStrings.data[commodity.Value].count - 1) break; // todo
-	                
                     double price = month.GetPrice();
                     if (month.count < tkData.highestVolIndex && month.volume * 10 < tkData.highestVolume) {
                         month.isIgnored = true;
                     } else {
                         tkData.validMonths++;
-                        if (tkData.lowestValidPrice  > price) tkData.lowestValidPrice  = price;
-                        if (tkData.highestValidPrice < price) tkData.highestValidPrice = price;
+                        if (tkData.highestPrice < price) tkData.highestPrice = price;
+                        if (tkData.lowestPrice  > price) tkData.lowestPrice  = price;
+                        //if (commodity == Commodity.Sp500 && tkData.validMonths == 4) break;
                     }
-                    i++;
                 }
 
                 tkData.delta = tkData.highestPrice - tkData.lowestPrice;
-                //tkData.delta = tkData.highestValidPrice - tkData.lowestValidPrice;
 
                 tkData.tkState = GetTkState(tkData);
             }
@@ -125,8 +117,6 @@ public sealed class TkData {
     [JsonIgnore] public double highestPrice = double.MinValue;
     [JsonIgnore] public double lowestPrice = double.MaxValue;
     [JsonIgnore] public double delta;
-    [JsonIgnore] public double highestValidPrice = double.MinValue;
-    [JsonIgnore] public double lowestValidPrice = double.MaxValue;
     [JsonIgnore] public int validMonths;
     [JsonIgnore] public long volume;
     [JsonIgnore] public long openInterest;

@@ -16,6 +16,7 @@ using System.Windows.Forms;
 using System.Windows.Media.Imaging;
 using NinjaTrader.Core;
 using NinjaTrader.Custom.AddOns.SuriCommon;
+using NinjaTrader.Custom.AddOns.SuriCommon.Vp;
 using NinjaTrader.NinjaScript;
 using Button = System.Windows.Controls.Button;
 using HorizontalAlignment = System.Windows.HorizontalAlignment;
@@ -190,11 +191,11 @@ namespace NinjaTrader.Gui.NinjaScript {
 			Button correlation			= new Button { Content = "Korrelation"			, Padding = new Thickness(15), Margin = new Thickness(5) };
 			Button downloadTicks		= new Button { Content = "Download Ticks"		, Padding = new Thickness(15), Margin = new Thickness(5) };
 			Button suriStatistics		= new Button { Content = "Suri Statistics"		, Padding = new Thickness(15), Margin = new Thickness(5) };
-			downloadVpBig.Click		+= (sender, args) => SuriAdmin.StoreVpBigToFile();
-			downloadVpBigDev.Click	+= (sender, args) => SuriAdmin.StoreVpBigToFile(true);
-			downloadVpIntra.Click	+= (sender, args) => SuriAdmin.StoreVpIntra();
+			downloadVpBig.Click		+= (sender, args) => SuriVpBigScripts.StoreVpBigToFile();
+			downloadVpBigDev.Click	+= (sender, args) => SuriVpBigScripts.StoreVpBigToFile(true);
+			downloadVpIntra.Click	+= (sender, args) => SuriVpIntraScripts.StoreVpIntra();
 			correlation.Click		+= (sender, args) => new DevCorrelation().LoadData();
-			downloadTicks.Click		+= (sender, args) => SuriAdmin.StoreTickData();
+			downloadTicks.Click		+= (sender, args) => SuriVpIntraScripts.StoreTickData();
 			suriStatistics.Click	+= (sender, args) => new DevStatistics().Start();
 			
 			tabs.Items.Insert(0, new TabItem {
