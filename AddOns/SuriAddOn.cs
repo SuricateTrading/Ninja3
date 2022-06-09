@@ -84,6 +84,7 @@ namespace NinjaTrader.Gui.NinjaScript {
 			SuriAddOnWindow suriAddOnWindow = window as SuriAddOnWindow;
 			if (suriAddOnWindow != null) {
 				SuriAddOnWindow.current.Dispatcher.Invoke(() => SuriAddOnWindow.current = null);
+				NinjaTk.Cleanup();
 			}
 			
 			ControlCenter cc = window as ControlCenter;

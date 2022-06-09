@@ -18,8 +18,8 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
         protected double tickSize { get { return instrument.MasterInstrument.TickSize; } }
         protected abstract string name { get; }
         protected abstract int startBarIndex { get; }
-        protected abstract bool IsEntry(int index);
-        protected abstract SuriSignal PrepareSignal(int index);
+        protected abstract bool IsEntry(int signalIndex);
+        protected abstract SuriSignal PrepareSignal(int signalIndex);
         protected abstract bool SetAndCheckInitialStoploss(SuriSignal signal);
         protected abstract void SetExit(SuriSignal signal);
         

@@ -22,7 +22,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		private double max = double.MinValue;
 		private int minIndex;
 		private int maxIndex;
-		private DateTime lastReportDate;
 		
 		#region Properties
 		[TypeConverter(typeof(FriendlyEnumConverter))]
@@ -137,16 +136,19 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		}
 
 		protected override void OnBarUpdate() {
-			if (SuriAddOn.license == License.None || cotRepo == null) return;
+			if (SuriAddOn.license == License.None || cotRepo == null || cotRepo.IsEmpty()) return;
 			
+			DbCotData cotData = null;
 			try {
-				DbCotData cotData = cotRepo.Get(CurrentBar);
+				cotData = cotRepo.Get(CurrentBar);
+				if (cotData == null) return;
 				int? value = GetCotValue(reportField, cotData);
 				if (value == null) return;
 				Value[0] = value.Value;
-			} catch (IndexOutOfRangeException) {
+			} catch (Exception) {
 				if (CurrentBar > 10) Value[0] = Value[1];
 			}
+			if (cotData == null) return;
 			
 			if (drawLines) {
 				SetMinMax();
@@ -156,8 +158,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				}
 			}
 			
-			if (CurrentBar > 0 && Math.Abs(Value[0] - Value[1]) > 0.00000000001)				lastReportDate = Time[0];
-			if (lastReportDate != null && (Time[0].Date - lastReportDate.Date).TotalDays > 10)	PlotBrushes[0][0] = noNewCotBrush;
+			if ((Time[0].Date - cotData.date).TotalDays > 12) PlotBrushes[0][0] = noNewCotBrush;
 		}
 
 		private int? GetCotValue(SuriCotReportField field, DbCotData cotData) {

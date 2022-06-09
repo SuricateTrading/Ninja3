@@ -191,19 +191,21 @@ namespace NinjaTrader.Gui.NinjaScript {
 			Button correlation			= new Button { Content = "Korrelation"			, Padding = new Thickness(15), Margin = new Thickness(5) };
 			Button downloadTicks		= new Button { Content = "Download Ticks"		, Padding = new Thickness(15), Margin = new Thickness(5) };
 			Button suriStatistics		= new Button { Content = "Suri Statistics"		, Padding = new Thickness(15), Margin = new Thickness(5) };
+			Button suriTest				= new Button { Content = "Test sumthin sumthin"	, Padding = new Thickness(15), Margin = new Thickness(5) };
 			downloadVpBig.Click		+= (sender, args) => SuriVpBigScripts.StoreVpBigToFile();
 			downloadVpBigDev.Click	+= (sender, args) => SuriVpBigScripts.StoreVpBigToFile(true);
 			downloadVpIntra.Click	+= (sender, args) => SuriVpIntraScripts.StoreVpIntra();
 			correlation.Click		+= (sender, args) => new DevCorrelation().LoadData();
 			downloadTicks.Click		+= (sender, args) => SuriVpIntraScripts.StoreTickData();
 			suriStatistics.Click	+= (sender, args) => new DevStatistics().Start();
+			suriTest.Click			+= (sender, args) => NinjaTk.Start();
 			
 			tabs.Items.Insert(0, new TabItem {
 				Header = "Admin",
 				Padding = new Thickness(10.5),
 				Content = new ScrollViewer {
 					Content = new StackPanel {
-						Children = { downloadVpBig, downloadVpBigDev, downloadVpIntra, correlation, downloadTicks, suriStatistics }
+						Children = { downloadVpBig, downloadVpBigDev, downloadVpIntra, correlation, downloadTicks, suriStatistics, suriTest }
 					}
 				}
 			});
@@ -212,6 +214,8 @@ namespace NinjaTrader.Gui.NinjaScript {
 		public void Restore(XDocument document, XElement element) { }
 		public void Save(XDocument document, XElement element) { }
 		public WorkspaceOptions WorkspaceOptions { get; set; }
+		
+		
 	}
 
 	public sealed class ChartWindowData {

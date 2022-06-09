@@ -239,10 +239,10 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			loadingText.Text = "Laden...";
 
 			string shortName = Regex.Replace(marketName, "\t.*", "");
-			Instrument ins = Instrument.GetInstrument(shortName + Instrument.GetInstrument(shortName+" ##-##").MasterInstrument.GetNextExpiry(DateTime.Now).ToString(" MM-yy"));
+			Instrument nextInstrument = Instrument.GetInstrument(shortName + Instrument.GetInstrument(shortName+" ##-##").MasterInstrument.GetNextExpiry(DateTime.Now).ToString(" MM-yy"));
 				
 			Keyboard.FocusedElement.RaiseEvent(new TextCompositionEventArgs(InputManager.Current.PrimaryKeyboardDevice, new TextComposition(InputManager.Current, ChartControl.OwnerChart, "open sesame"))	{ RoutedEvent = TextCompositionManager.PreviewTextInputEvent });
-			Keyboard.FocusedElement.RaiseEvent(new TextCompositionEventArgs(InputManager.Current.PrimaryKeyboardDevice, new TextComposition(InputManager.Current, ChartControl.OwnerChart, ins.FullName))			{ RoutedEvent = TextCompositionManager.TextInputEvent });
+			Keyboard.FocusedElement.RaiseEvent(new TextCompositionEventArgs(InputManager.Current.PrimaryKeyboardDevice, new TextComposition(InputManager.Current, ChartControl.OwnerChart, nextInstrument.FullName))			{ RoutedEvent = TextCompositionManager.TextInputEvent });
 			Keyboard.FocusedElement.RaiseEvent(new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(ChartControl.OwnerChart), 0                                , Key.Enter)				{ RoutedEvent = Keyboard.PreviewKeyDownEvent } );
 		}
 		

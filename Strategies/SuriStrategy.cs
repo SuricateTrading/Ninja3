@@ -9,10 +9,10 @@ namespace NinjaTrader.NinjaScript.Strategies {
 		protected override void OnStateChange() {
 			base.OnStateChange();
 			if (State == State.SetDefaults) Name = "SuriTest";
-			else if (State == State.DataLoaded) PrepareMyVp();
+			else if (State == State.DataLoaded) PrepareMyTk();
 		}
 
-		private void PrepareAll() {
+		private void PrepareCot1() {
 			SuriCot1 cot1 = SuriCot1(true);
 			SuriCot2 cot2 = SuriCot2(true);
 			SuriBarRange barRange = SuriBarRange(125);
@@ -23,29 +23,37 @@ namespace NinjaTrader.NinjaScript.Strategies {
 			AddChartIndicator(terminkurve);
 			AddChartIndicator(barRange);
 			AddChartIndicator(volume);
-			strategies.Add(new Cot1Strategy(Bars, Instrument, cot1, cot2, terminkurve));
-			strategies.Add(new Cot2Strategy(Bars, Instrument, cot2, barRange, volume, terminkurve));
-			strategies.Add(new TkStrategy(Bars, Instrument, terminkurve, cot2, barRange));
+			strategy = new Cot1Strategy(Bars, Instrument, cot1, cot2, terminkurve);
 		}
 
-		private void PrepareTkOnly() {
+		private void PrepareCot2() {
+			SuriCot2 cot2 = SuriCot2(true);
+			SuriBarRange barRange = SuriBarRange(125);
+			SuriVolume volume = SuriVolume(125);
+			DevTerminkurve terminkurve = DevTerminkurve(150);
+			AddChartIndicator(cot2);
+			AddChartIndicator(terminkurve);
+			AddChartIndicator(barRange);
+			AddChartIndicator(volume);
+			strategy = new Cot2Strategy(Bars, Instrument, cot2, barRange, volume, terminkurve);
+		}
+
+		private void PrepareTk() {
 			SuriCot2 cot2 = SuriCot2(true);
 			SuriBarRange barRange = SuriBarRange(125);
 			DevTerminkurve terminkurve = DevTerminkurve(125);
 			AddChartIndicator(cot2);
 			AddChartIndicator(terminkurve);
 			AddChartIndicator(barRange);
-			strategies.Add(new TkStrategy(Bars, Instrument, terminkurve, cot2, barRange));
+			strategy = new TkStrategy(Bars, Instrument, terminkurve, cot2, barRange);
 		}
 
 		private void PrepareMyTk() {
-			SuriCot2 cot2 = SuriCot2(true);
 			SuriBarRange barRange = SuriBarRange(125);
 			DevTerminkurve terminkurve = DevTerminkurve(150);
-			//AddChartIndicator(cot2);
 			AddChartIndicator(terminkurve);
 			AddChartIndicator(barRange);
-			strategies.Add(new MyTkStrategy(Bars, Instrument, terminkurve, cot2, barRange));
+			strategy = new MyTkStrategy(Bars, Instrument, terminkurve, barRange);
 		}
 		
 		private void PrepareMyVp() {
@@ -53,7 +61,7 @@ namespace NinjaTrader.NinjaScript.Strategies {
 			//SuriVolumeProfileIntraday vpIntra = SuriVolumeProfileIntraday();
 			AddChartIndicator(barRange);
 			//AddChartIndicator(vpIntra);
-			strategies.Add(new VpIntraStrategy(Bars, Instrument, barRange));
+			strategy = new VpIntraStrategy(Bars, Instrument, barRange);
 		}
 
 	}

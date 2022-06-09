@@ -39,6 +39,13 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 		public static Commodity? GetComm(Instrument instrument) {
 			return GetComm(instrument.MasterInstrument.Name);
 		}
+		public static Commodity? GetComm(int commId) {
+			try {
+				return data.First(pair => pair.Value.id == commId).Key;
+			} catch (InvalidOperationException) {
+				return null;
+			}
+		}
 		
 		public static string LongNameToShortName(string longName) {
 			try {

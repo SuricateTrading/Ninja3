@@ -27,8 +27,8 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon.strategies {
 	    protected override int startBarIndex { get { return 1; } }
 	    
 	    
-	    protected override bool IsEntry(int index) {
-		    TkState tkState = terminkurve.GetTkState(index);
+	    protected override bool IsEntry(int signalIndex) {
+		    TkState tkState = terminkurve.GetTkState(signalIndex);
 		    if (!comesFromContango && !comesFromBackwardation) {
 			    if (tkState == TkState.Backwardation) { comesFromContango = false; comesFromBackwardation = true ; }
 			    if (tkState == TkState.Contango)      { comesFromContango = true ; comesFromBackwardation = false; }
@@ -42,26 +42,26 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon.strategies {
 		    comesFromContango = false;
 		    comesFromBackwardation = false;
 
-		    if (!isLong && cot2.IsInLongHalf(index)) {
-			    Print("Skip TK " + bars.GetTime(index).ToShortDateString() + " @" + index + ". TK Short signal, but COT2 was long.");
+		    if (!isLong && cot2.IsInLongHalf(signalIndex)) {
+			    Print("Skip TK " + bars.GetTime(signalIndex).ToShortDateString() + " @" + signalIndex + ". TK Short signal, but COT2 was long.");
 			    return false;
 		    }
 		    return true;
 	    }
 
-	    protected override SuriSignal PrepareSignal(int index) {
-		    TkState tkState = terminkurve.GetTkState(index);
+	    protected override SuriSignal PrepareSignal(int signalIndex) {
+		    TkState tkState = terminkurve.GetTkState(signalIndex);
 		    SuriSignal signal = new SuriSignal();
 		    if      (tkState.IsAnyBackwardation() == true) signal.isLong = true;
 		    else if (tkState.IsAnyContango()      == true) signal.isLong = false;
 		    else throw new Exception("Unexpected TK State.");
 
 		    signal.suriRule = SuriRule.Tk;
-		    signal.signalIndex = index;
-		    signal.signalDate = bars.GetTime(index);
+		    signal.signalIndex = signalIndex;
+		    signal.signalDate = bars.GetTime(signalIndex);
 		    signal.orderType = OrderType.Market;
-		    signal.entryIndex = index+1;
-		    signal.entryDate = bars.GetTime(index+1);
+		    signal.entryIndex = signalIndex+1;
+		    signal.entryDate = bars.GetTime(signalIndex+1);
 		    return signal;
 	    }
 

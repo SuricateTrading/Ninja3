@@ -22,21 +22,21 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon.strategies {
 	    protected override string name { get { return "MyVp"; } }
 	    protected override int startBarIndex { get { return 0; } }
 
-	    protected override bool IsEntry(int index) {
-		    if (index >= suriVpIntraData.barData.Count) return false;
-		    double deltaPercent = 100 * suriVpIntraData.barData[index].delta / suriVpIntraData.barData[index].totalVolume;
+	    protected override bool IsEntry(int signalIndex) {
+		    if (signalIndex >= suriVpIntraData.barData.Count) return false;
+		    double deltaPercent = 100 * suriVpIntraData.barData[signalIndex].delta / suriVpIntraData.barData[signalIndex].totalVolume;
 		    return deltaPercent > 10;
 	    }
 
-	    protected override SuriSignal PrepareSignal(int index) {
+	    protected override SuriSignal PrepareSignal(int signalIndex) {
 		    return new SuriSignal {
 			    isLong = false,
 			    suriRule = SuriRule.Tk,
-			    signalIndex = index,
-			    signalDate = bars.GetTime(index),
+			    signalIndex = signalIndex,
+			    signalDate = bars.GetTime(signalIndex),
 			    orderType = OrderType.Market,
-			    entryIndex = index+1,
-			    entryDate = bars.GetTime(index+1),
+			    entryIndex = signalIndex+1,
+			    entryDate = bars.GetTime(signalIndex+1),
 		    };
 	    }
 

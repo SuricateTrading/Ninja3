@@ -62,13 +62,13 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon.strategies {
 	        }
         }
         
-        protected override bool IsEntry(int index) {
-	        bool isCot1Long = cot1.Value.GetValueAt(index) > 89.9;
-	        bool isCot2Long = cot2.IsInLongHalf(index);
-	        TkState tkState = terminkurve.GetTkState(index);
+        protected override bool IsEntry(int signalIndex) {
+	        bool isCot1Long = cot1.Value.GetValueAt(signalIndex) > 89.9;
+	        bool isCot2Long = cot2.IsInLongHalf(signalIndex);
+	        TkState tkState = terminkurve.GetTkState(signalIndex);
 	        if (isCot1Long && !isCot2Long && tkState.IsAnyBackwardation() != true) {
 		        // long: wenn cot2 unter 50, dann tk egal. wenn cot2 über 50, dann tk muss in backwardation
-		        Print("Skip COT1 " + bars.GetTime(index).ToShortDateString() + " @" + index + ". COT2 and TK contradict COT1 long trade at signal.");
+		        Print("Skip COT1 " + bars.GetTime(signalIndex).ToShortDateString() + " @" + signalIndex + ". COT2 and TK contradict COT1 long trade at signal.");
 		        return false;
 	        }
 	        if (!isCot1Long && (isCot2Long || tkState.IsAnyBackwardation() == true)) {
@@ -77,23 +77,23 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon.strategies {
 		        if (isCot2Long && tkState.IsAnyBackwardation() == true) reason = "COT2 and TK";
 		        else if (isCot2Long) reason = "COT2";
 		        else if (tkState.IsAnyBackwardation() == true) reason = "TK";
-		        Print("Skip COT1 " + bars.GetTime(index).ToShortDateString() + " @" + index + ". " + reason + " contradict COT1 short trade at signal.");
+		        Print("Skip COT1 " + bars.GetTime(signalIndex).ToShortDateString() + " @" + signalIndex + ". " + reason + " contradict COT1 short trade at signal.");
 		        return false;
 	        }
 	        return true;
         }
 
-        protected override SuriSignal PrepareSignal(int index) {
-	        bool isCot1Long = cot1.Value.GetValueAt(index) > 89.9;
+        protected override SuriSignal PrepareSignal(int signalIndex) {
+	        bool isCot1Long = cot1.Value.GetValueAt(signalIndex) > 89.9;
 	        SuriSignal signal = new SuriSignal {
 		        suriRule = SuriRule.Cot1,
 		        isLong = isCot1Long,
-		        signalIndex = index,
-		        signalDate = bars.GetTime(index),
+		        signalIndex = signalIndex,
+		        signalDate = bars.GetTime(signalIndex),
 		        orderType = OrderType.StopMarket,
 		        entry = isCot1Long
-			        ? StrategyTasks.GetWeekHigh(index - 2, bars) + instrument.MasterInstrument.TickSize
-			        : StrategyTasks.GetWeekLow (index - 2, bars) - instrument.MasterInstrument.TickSize
+			        ? StrategyTasks.GetWeekHigh(signalIndex - 2, bars) + instrument.MasterInstrument.TickSize
+			        : StrategyTasks.GetWeekLow (signalIndex - 2, bars) - instrument.MasterInstrument.TickSize
 			        // note: I reduced the index by 2 because it may happen that friday is a holiday, thus the cot report is released on monday. The strategy would then calculate the wrong week.
 	        };
 	        signal.stopPrice = signal.entry.Value;

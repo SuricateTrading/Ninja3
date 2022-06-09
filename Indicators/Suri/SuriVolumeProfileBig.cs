@@ -136,6 +136,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				}
 			}
 		}
+		public override string DisplayName { get { return Name; } }
 
 		public override void OnRenderTargetChanged() {
 			// if dxBrush exists on first render target change, dispose of it

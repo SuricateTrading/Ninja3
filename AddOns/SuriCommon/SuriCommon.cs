@@ -19,6 +19,8 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
     public abstract class SuriCommon {
         public static string version = "1.3.2";
         public static string mostRecentVersion = "";
+        
+        public static void Print(string s) { Code.Output.Process(s, PrintTo.OutputTab1); }
 
         private static Random _random = new Random();
         public static int random { get { return _random.Next(1, 1000000); } }
@@ -40,11 +42,6 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
                     return currentWeek != Week(date);
                 }
             } while (true);
-        }
-        
-        
-        public static void DrawText(NinjaScriptBase ninjaScriptBase, string tag, string text, int barsAgo, double y, int offset) {
-            Draw.Text(ninjaScriptBase, tag + " " + random, false, text, barsAgo, y, offset, Brushes.LightGray, new SimpleFont(), TextAlignment.Center, null, null, 0);
         }
 		
         public static double PriceToCurrency(Instrument instrument, double price) {
@@ -80,6 +77,12 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
             try {
                 return GetInstrument(SuriStrings.data.ElementAt(index).Value);
             } catch (Exception) { return null; }
+        }
+
+        /** Returns the next instrument. For example iff given instrument is GC 06-22, then return an instrument of GC 07-22. */
+        public static Instrument GetNextInstrument(Instrument instrument) {
+            // todo...
+            return instrument;
         }
         
         

@@ -98,6 +98,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AddOns\NinjaTk\NinjaTk.cs" />
+    <Compile Include="AddOns\NinjaTk\SuriChartData.cs" />
+    <Compile Include="AddOns\SuriCommon\RenderCommons.cs" />
     <Compile Include="AddOns\SuriData\CotRepo.cs" />
     <Compile Include="AddOns\SuriData\GenericDbRepo.cs" />
     <Compile Include="AddOns\SuriData\TkRepo.cs" />
@@ -115,6 +118,7 @@
     <Compile Include="AddOns\SuriScripts\Vp\SuriVpIntraScripts.cs" />
     <Compile Include="AddOns\SuriStrategy\strategies\Cot1Strategy.cs" />
     <Compile Include="AddOns\SuriStrategy\strategies\Cot2Strategy.cs" />
+    <Compile Include="AddOns\SuriStrategy\strategies\JsonStrategy.cs" />
     <Compile Include="AddOns\SuriStrategy\strategies\MyTkStrategy.cs" />
     <Compile Include="AddOns\SuriStrategy\strategies\TkStrategy.cs" />
     <Compile Include="AddOns\SuriStrategy\strategies\VpIntraStrategy.cs" />
@@ -217,6 +221,7 @@
     <Compile Include="Indicators\Suri\SuriMega.cs" />
     <Compile Include="Indicators\Suri\SuriDrawingToolTile.cs" />
     <Compile Include="Indicators\Suri\SuriProductionCost.cs" />
+    <Compile Include="Indicators\Suri\SuriVolatility.cs" />
     <Compile Include="Indicators\Suri\SuriVolumeProfileBig.cs" />
     <Compile Include="Indicators\Suri\SuriVolumeProfileIntraday.cs" />
     <Compile Include="MarketAnalyzerColumns\%40ChartMini.cs" />
@@ -427,6 +432,7 @@
     <Compile Include="Strategies\%40SampleMultiTimeFrame.cs" />
     <Compile Include="Strategies\%40Strategy.cs" />
     <Compile Include="Strategies\GenericStrategyFramework.cs" />
+    <Compile Include="Strategies\SuriJsonStrategy.cs" />
     <Compile Include="SuperDomColumns\%40APQ.cs" />
     <Compile Include="SuperDomColumns\%40Notes.cs" />
     <Compile Include="SuperDomColumns\%40ProfitLoss.cs" />

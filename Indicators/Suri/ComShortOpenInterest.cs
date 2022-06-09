@@ -19,7 +19,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		private double max = double.MinValue;
 		private int minIndex;
 		private int maxIndex;
-		private DateTime lastReportDate;
 		
 		#region Properties
 		[NinjaScriptProperty]
@@ -111,6 +110,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				if (Bars.Count > 0) cotRepo = new CotRepo(Instrument, Bars);
 			}
 		}
+		public override string DisplayName { get { return Name; } }
 		
 		protected override void OnRender(ChartControl chartControl, ChartScale chartScale) {
 			base.OnRender(chartControl, chartScale);
@@ -118,16 +118,17 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		}
 
 		protected override void OnBarUpdate() {
-			if (SuriAddOn.license == License.None || cotRepo == null) return;
+			if (SuriAddOn.license == License.None || cotRepo == null || cotRepo.IsEmpty()) return;
 			
-			
+			DbCotData cotData = null;
 			try {
-				DbCotData cotData = cotRepo.Get(CurrentBar);
-				lastReportDate = Time[0];
+				cotData = cotRepo.Get(CurrentBar);
+				if (cotData == null) return;
 				Values[0][0] = 100 * cotData.commercialsShort / (double) cotData.openInterest;
-			} catch (IndexOutOfRangeException) {
+			} catch (Exception) {
 				if (CurrentBar > 10) Value[0] = Value[1];
 			}
+			if (cotData == null) return;
 			
 			if (drawLines) {
 				SetMinMax();
@@ -137,7 +138,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				}
 			}
 			
-			if (lastReportDate != null && (Time[0].Date - lastReportDate.Date).TotalDays > 10) {
+			if ((Time[0].Date - cotData.date).TotalDays > 12) {
 				PlotBrushes[0][0] = noNewCotBrush;
 			}
 		}

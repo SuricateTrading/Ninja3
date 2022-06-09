@@ -62,7 +62,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				ChartControl.Dispatcher.InvokeAsync(() => { UserControlCollection.Add(CreateControl()); });
 			}
 		}
-		
+		public override string DisplayName { get { return Name; } }
 		protected override void OnRender(ChartControl chartControl, ChartScale chartScale) { }
 		
 		public override void CopyTo(NinjaScript ninjaScript) {

@@ -27,38 +27,38 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon.strategies {
         protected override string name { get { return "COT2"; } }
         protected override int startBarIndex { get { return 125; } }
 
-        protected override bool IsEntry(int index) {
-	        bool isMegaBar = barRange.IsMegaBar(index);
-	        bool isMegaVolume = volume.IsMegaVolume(index);
+        protected override bool IsEntry(int signalIndex) {
+	        bool isMegaBar = barRange.IsMegaBar(signalIndex);
+	        bool isMegaVolume = volume.IsMegaVolume(signalIndex);
 	        if (!isMegaBar && !isMegaVolume) return false;
 					
 	        SuriPosition cot2Position = SuriPosition.None;
-	        if (cot2.seriesMain.GetValueAt(index) <= cot2.series25.GetValueAt(index)) cot2Position = SuriPosition.Long;
-	        if (cot2.seriesMain.GetValueAt(index) >= cot2.series75.GetValueAt(index)) cot2Position = SuriPosition.Short;
+	        if (cot2.seriesMain.GetValueAt(signalIndex) <= cot2.series25.GetValueAt(signalIndex)) cot2Position = SuriPosition.Long;
+	        if (cot2.seriesMain.GetValueAt(signalIndex) >= cot2.series75.GetValueAt(signalIndex)) cot2Position = SuriPosition.Short;
 	        if (cot2Position == SuriPosition.None) return false;
 			
 	        // tk
-	        TkState tkState = terminkurve.GetTkState(index);
+	        TkState tkState = terminkurve.GetTkState(signalIndex);
 	        if (cot2Position == SuriPosition.Short && tkState.IsAnyBackwardation() == true) {
-		        Print("Skip COT2 " + bars.GetTime(index).ToShortDateString() + " @" + index + ". COT2 short but TK was in backwardation.");
+		        Print("Skip COT2 " + bars.GetTime(signalIndex).ToShortDateString() + " @" + signalIndex + ". COT2 short but TK was in backwardation.");
 		        return false;
 	        }
 
 	        return true;
         }
 
-        protected override SuriSignal PrepareSignal(int index) {
+        protected override SuriSignal PrepareSignal(int signalIndex) {
 	        SuriSignal signal = new SuriSignal {
 		        suriRule = SuriRule.Cot2,
-		        isLong = cot2.GetSuriPosition(index) == SuriPosition.Long,
-		        signalIndex = index,
-		        signalDate = bars.GetTime(index),
+		        isLong = cot2.GetSuriPosition(signalIndex) == SuriPosition.Long,
+		        signalIndex = signalIndex,
+		        signalDate = bars.GetTime(signalIndex),
 		        orderType = OrderType.Market,
-		        entryIndex = index+1
+		        entryIndex = signalIndex+1
 	        };
-	        if (index + 1 < bars.Count) {
-		        signal.entry     = bars.GetOpen(index + 1);
-		        signal.entryDate = bars.GetTime(index + 1);
+	        if (signalIndex + 1 < bars.Count) {
+		        signal.entry     = bars.GetOpen(signalIndex + 1);
+		        signal.entryDate = bars.GetTime(signalIndex + 1);
 	        }
 	        return signal;
         }

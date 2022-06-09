@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using Newtonsoft.Json;
 using NinjaTrader.Cbi;
 using NinjaTrader.Core;
 using NinjaTrader.Custom.AddOns.SuriCommon;
 using NinjaTrader.Data;
+using NinjaTrader.Gui.Tools;
 using NinjaTrader.NinjaScript;
 
 namespace NinjaTrader.Custom.AddOns.Data {
@@ -27,19 +27,14 @@ namespace NinjaTrader.Custom.AddOns.Data {
         protected virtual bool reverseList { get { return false; } }
 
         protected List<T> data = new List<T>();
-        //public int nextIndex;
-        //public bool hasStarted;
+        public bool IsEmpty() { return data.IsNullOrEmpty(); }
         protected Commodity? commodity;
 
         /** Used to map each Bars-index to an index of the data-list. */
         protected readonly List<int> dataIndices = new List<int>();
         protected readonly Bars bars;
 
-        static GenericDbRepo() {
-            foreach (var commodity in Enum.GetValues(typeof(Commodity)).Cast<Commodity>()) {
-                state.Add(commodity, new Mutex());
-            }
-        }
+        static GenericDbRepo() { foreach (var commodity in Enum.GetValues(typeof(Commodity)).Cast<Commodity>()) state.Add(commodity, new Mutex()); }
         
         protected GenericDbRepo(Instrument instrument, Bars bars) {
             this.bars = bars;
@@ -51,6 +46,9 @@ namespace NinjaTrader.Custom.AddOns.Data {
                 InitData(start, end);
             }
         }
+        
+        /** May throw IndexOutOfRangeException */
+        public T Get(int barIndex) { return data[dataIndices[barIndex]]; }
         
         /** Gets data from local disk. If local data is outdated, then download from database and store to local disk. */
         private void InitData(DateTime start, DateTime end) {
@@ -78,23 +76,6 @@ namespace NinjaTrader.Custom.AddOns.Data {
             }
         }
 
-        private void SetIndices2() {
-            int dataIndex = 0;
-            bool hasStarted = false;
-            for (int i = 0; i < bars.Count; i++) {
-                for (int j = dataIndex; j < data.Count; j++) {
-                    if (GetDate(j).Date.Equals(bars.GetTime(i).Date)) {
-                        hasStarted = true;
-                        dataIndex = j;
-                        break;
-                    }
-                    if (hasStarted && GetDate(j).Date > bars.GetTime(i).Date) {
-                        break;
-                    }
-                }
-                dataIndices.Add(dataIndex);
-            }
-        }
         private void SetIndices() {
             // get first index
             int dataIndex = 0;
@@ -104,15 +85,12 @@ namespace NinjaTrader.Custom.AddOns.Data {
 
             // map all indices
             for (int i = 0; i < bars.Count; i++) {
-                while (dataIndex < data.Count - 2 && bars.GetTime(i).Date >= GetDate(dataIndex + 1).Date) {
+                while (dataIndex < data.Count - 1 && bars.GetTime(i).Date >= GetDate(dataIndex + 1).Date) {
                     dataIndex++;
                 }
                 dataIndices.Add(dataIndex);
             }
         }
-        
-        /** May throw IndexOutOfRangeException */
-        public T Get(int barIndex) { return data[dataIndices[barIndex]]; }
 
     }
 }

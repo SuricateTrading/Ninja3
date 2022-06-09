@@ -8,9 +8,13 @@ using NinjaTrader.Cbi;
 using NinjaTrader.Custom.AddOns.SuriCommon;
 #endregion
 
+/*
+ * Limitationen:
+ * - Nachkaufen, bzw. 2 gleichzeitig aktive short oder long orders funktionieren schlecht, weil es sein kann, dass eine Order beendet wird aufgrund des exits der anderen Order.
+ */
 namespace NinjaTrader.NinjaScript.Strategies {
     public abstract class GenericStrategyFramework : Strategy {
-	    protected readonly List<StrategyInterface> strategies = new List<StrategyInterface>();
+	    protected StrategyInterface strategy;
 	    private bool prepared;
         
 		protected override void OnStateChange() {
@@ -47,77 +51,73 @@ namespace NinjaTrader.NinjaScript.Strategies {
 			if (!prepared) {
 				prepared = true;
 				Bars.CurrentBar = Bars.Count - 1;
-				foreach (var strategy in strategies) strategy.UpdateIndicators();
+				strategy.UpdateIndicators();
 				Bars.CurrentBar = 0;
-				foreach (var strategy in strategies) {
-					strategy.Analyze();
-					string signals = JsonConvert.SerializeObject(strategy.signals);
-					//Print(signals);
-					Thread thread = new Thread(() => Clipboard.SetText(signals));
-					thread.SetApartmentState(ApartmentState.STA);
-					thread.Start(); 
-					thread.Join(); //Wait for the thread to end
-				}
+				strategy.Analyze();
+				string signals = JsonConvert.SerializeObject(strategy.signals);
+				//Print(signals);
+				Thread thread = new Thread(() => Clipboard.SetText(signals));
+				thread.SetApartmentState(ApartmentState.STA);
+				thread.Start(); 
+				thread.Join(); //Wait for the thread to end
 			}
 			
-			foreach (var strategy in strategies) {
-				foreach (var signal in strategy.signals) {
-					if (signal.entryIndex == 961 && CurrentBar == 960) {
-						Print("");
-					}
-					if (signal.orderState == OrderState.Done) continue;
-					
-					// check entry
-					if (signal.orderState == OrderState.New && CurrentBar+1 == signal.entryIndex) {
-						SubmitOrderUnmanaged(
-							0,
-							signal.isLong ? OrderAction.Buy : OrderAction.Sell,
-							signal.orderType,
-							1,
-							signal.limitPrice,
-							signal.stopPrice,
-							null,
-							signal.suriRule + " " + (signal.isLong ? "Long" : "Short") + " @" + signal.entryIndex + ". ID" + SuriCommon.random
-						);
-						signal.orderState = OrderState.Filled;
-					}
-					
-					// check exit
-					if (signal.orderState == OrderState.Filled && CurrentBar + 1 == signal.exitIndex) {
-						SubmitOrderUnmanaged(
-							0,
-							signal.isLong ? OrderAction.SellShort : OrderAction.BuyToCover,
-							OrderType.Market,
-							1,
-							0,
-							0,
-							null,
-							signal.suriRule + " " + (signal.isLong ? "Long" : "Short") + " exit " + signal.exitReason + " @" + signal.exitIndex// + ". ID" + SuriCommon.random
-						);
-						signal.orderState = OrderState.Done;
-						continue;
-					}
-					
-					// check if stoploss has to be traced
-					if (signal.TryTraceStopAt(CurrentBar)) {
-						double stoplossCurrency = SuriCommon.PriceToCurrency(Instrument, Math.Abs(signal.currentStop - Bars.GetClose(CurrentBar)));
-						signal.notes += "Traced stoploss @" + CurrentBar + " to " + signal.currentStop + ". Reduced risk to " + stoplossCurrency + " $. ";
-					}
-					// check if stoploss will be filled tomorrow
-					if (signal.orderState == OrderState.Filled && StrategyTasks.IsFilledAt(!signal.isLong, OrderType.StopMarket, CurrentBar + 1, signal.currentStop, Bars)) {
-						SubmitOrderUnmanaged(
-							0,
-							signal.isLong ? OrderAction.SellShort : OrderAction.BuyToCover,
-							OrderType.StopMarket,
-							1,
-							0,
-							signal.currentStop,
-							null,
-							signal.suriRule + " " + (signal.isLong ? "Long" : "Short") + " stoploss @" + (CurrentBar + 1) + ". ID" + SuriCommon.random
-						);
-						signal.exitReason = "Stoploss";
-						signal.orderState = OrderState.Done;
-					}
+			foreach (var signal in strategy.signals) {
+				if (signal.entryIndex == 961 && CurrentBar == 960) {
+					Print("");
+				}
+				if (signal.orderState == OrderState.Done) continue;
+				
+				// check entry
+				if (signal.orderState == OrderState.New && CurrentBar+1 == signal.entryIndex) {
+					SubmitOrderUnmanaged(
+						0,
+						signal.isLong ? OrderAction.Buy : OrderAction.Sell,
+						signal.orderType,
+						1,
+						signal.limitPrice,
+						signal.stopPrice,
+						null,
+						signal.suriRule + " " + (signal.isLong ? "Long" : "Short")
+					);
+					signal.orderState = OrderState.Filled;
+				}
+				
+				// check exit
+				if (signal.orderState == OrderState.Filled && CurrentBar + 1 == signal.exitIndex) {
+					SubmitOrderUnmanaged(
+						0,
+						signal.isLong ? OrderAction.SellShort : OrderAction.BuyToCover,
+						OrderType.Market,
+						1,
+						0,
+						0,
+						null,
+						signal.suriRule + " " + (signal.isLong ? "Long" : "Short") + " exit " + signal.exitReason
+					);
+					signal.orderState = OrderState.Done;
+					continue;
+				}
+				
+				// check if stoploss has to be traced
+				if (signal.TryTraceStopAt(CurrentBar)) {
+					double stoplossCurrency = SuriCommon.PriceToCurrency(Instrument, Math.Abs(signal.currentStop - Bars.GetClose(CurrentBar)));
+					signal.notes += "Traced stoploss @" + CurrentBar + " to " + signal.currentStop + ". Reduced risk to " + stoplossCurrency + " $. ";
+				}
+				// check if stoploss will be filled tomorrow
+				if (signal.orderState == OrderState.Filled && StrategyTasks.IsFilledAt(!signal.isLong, OrderType.StopMarket, CurrentBar + 1, signal.currentStop, Bars)) {
+					SubmitOrderUnmanaged(
+						0,
+						signal.isLong ? OrderAction.SellShort : OrderAction.BuyToCover,
+						OrderType.StopMarket,
+						1,
+						0,
+						signal.currentStop,
+						null,
+						signal.suriRule + " " + (signal.isLong ? "Long" : "Short") + " stoploss"
+					);
+					signal.exitReason = "Stoploss";
+					signal.orderState = OrderState.Done;
 				}
 			}
 			
@@ -133,19 +133,25 @@ namespace NinjaTrader.NinjaScript.Strategies {
 	    public string notes = "";
 		
 	    public OrderType orderType;
+	    /** Optional. Used for entry only. */
 	    public double limitPrice;
+	    /** Optional. Used for entry only. */
 	    public double stopPrice;
 		
 	    /** The bar at which the signal was detected. */
 	    public int signalIndex;
 	    public DateTime signalDate;
 		
+	    /** The bar index where the entry occurs. */
 	    public int entryIndex;
 	    public DateTime entryDate;
+	    /** The price at which we entered the market. May be null if we never enter, e.g. the limit order is not filled. This is just an information and not used by the strategy. */
 	    public double? entry;
 		
 	    /** Stops may be traced, which is why we need multiple stops -> a dictionary with a bar index (int-key) and a stop (double-value).
-		 * Change current stop by updating the field currentStopBarIndex.
+	     * The index is the bar index where we adjust the stop. The new stop starts working from the next bar.
+		 * You can change the current stop by updating currentStopBarIndex.
+	     * The first (initial) stop has index -1. All other stop indices should be higher-equal than the entry index or else it is ignored.
 		 */
 	    public readonly SortedList<int, double> stops = new SortedList<int, double>();
 	    private int currentStopBarIndex = -1;
@@ -161,6 +167,7 @@ namespace NinjaTrader.NinjaScript.Strategies {
 		    return true;
 	    }
 		
+	    /** The bar index where we exit market. The order is actually sent one bar before so the exit can happen at this index. */
 	    public int? exitIndex;
 	    public DateTime? exitDate;
 	    public string exitReason = "";

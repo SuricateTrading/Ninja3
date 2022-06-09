@@ -21,7 +21,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		private CotRepo cotRepo;
 		private SuriSma suriSma;
 		private SessionIterator sessionIterator;
-		private DateTime lastReportDate;
 		
 		private bool isCurrentlyASignal;
 		public readonly List<int> signalIndices = new List<int>();
@@ -149,26 +148,27 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
         }
 
 		protected override void OnBarUpdate() {
-			if (SuriAddOn.license == License.None || cotRepo == null) return;
+			if (SuriAddOn.license == License.None || cotRepo == null || cotRepo.IsEmpty()) return;
 			if (!(Bars.BarsPeriod.BarsPeriodType == BarsPeriodType.Day && Bars.BarsPeriod.Value == 1 || Bars.BarsPeriod.BarsPeriodType == BarsPeriodType.Minute && Bars.BarsPeriod.Value == 1440)) {
 				Draw.TextFixed(this, "Warning", "CoT 1 ist nur für ein 1-Tages Chart oder 1440-Minuten Chart verfügbar.", TextPosition.Center);
 				return;
 			}
 
+			DbCotData cotData = null;
 			try {
-				DbCotData cotData = cotRepo.Get(CurrentBar);
-				lastReportDate = Time[0];
-				if (cotData.Cot1 == null) return;
+				cotData = cotRepo.Get(CurrentBar);
+				if (cotData == null || cotData.Cot1 == null) return;
 				Values[0][0] = cotData.Cot1.Value;
-			} catch (IndexOutOfRangeException) {
+			} catch (Exception) {
 				if (CurrentBar > 10) Value[0] = Value[1];
 			}
+			if (cotData == null) return;
 
 			Values[1][0] = 10;
 			Values[2][0] = 50;
 			Values[3][0] = 90;
 
-			if (lastReportDate != null && (Time[0].Date - lastReportDate.Date).TotalDays > 10) {
+			if ((Time[0].Date - cotData.date).TotalDays > 12) {
 				PlotBrushes[0][0] = noNewCotBrush;
 			} else if (SuriAddOn.license != License.Basic) {
 				if (!isCurrentlyASignal || Value[0] < 90 && Value[0] > 10 ) {
