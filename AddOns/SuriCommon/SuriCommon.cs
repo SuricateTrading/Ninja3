@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text.RegularExpressions;
 using NinjaTrader.Data;
 using System.Windows.Media;
 using NinjaTrader.Cbi;
@@ -81,10 +83,36 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 
         /** Returns the next instrument. For example iff given instrument is GC 06-22, then return an instrument of GC 07-22. */
         public static Instrument GetNextInstrument(Instrument instrument) {
-            // todo...
-            return instrument;
+            if (instrument == null) {
+                return null;
+            }
+            Commodity? commodity = SuriStrings.GetComm(instrument);
+            if (commodity == null) {
+                return null;
+            }
+            List<int> months = SuriStrings.data[commodity.Value].months;
+
+            Tuple<int, int> tuple = GetMonthAndYearFromInstrument(instrument);
+            int month = tuple.Item1;
+            int year  = tuple.Item2;
+
+            int nextMonthIndex = months.IndexOf(month) + 1;
+            if (nextMonthIndex >= months.Count) {
+                nextMonthIndex -= months.Count;
+                year++;
+            }
+            
+            return Instrument.GetInstrument(instrument.MasterInstrument.Name + " " + months[nextMonthIndex].ToString().PadLeft(2, '0') + "-" + year);
         }
-        
-        
+
+        /** Returns a Tuple containing the month and the year from given instrument. */
+        public static Tuple<int, int> GetMonthAndYearFromInstrument(Instrument instrument) {
+            int month = int.Parse(Regex.Replace(instrument.FullName, @".+([0-9][0-9])-.+", @"$1"));
+            int year  = int.Parse(Regex.Replace(instrument.FullName, @".+-([0-9][0-9])", @"$1"));
+            return new Tuple<int, int>(month, year);
+        }
+
+
+
     }
 }

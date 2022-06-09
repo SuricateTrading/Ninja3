@@ -35,7 +35,9 @@ namespace NinjaTrader.Gui.NinjaScript {
             }
         }
 
-        private static void Listen(Commodity commodity) {
+        private static bool ListenTo(Commodity commodity) {
+            if (currentlyListening == commodity) return true;
+            currentlyListening = commodity;
             Unsubscrbe();
             CommodityData commodityData = SuriStrings.data[commodity];
             
@@ -46,25 +48,56 @@ namespace NinjaTrader.Gui.NinjaScript {
             };
             
             Instrument instrument = SuriCommon.GetInstrument(commodityData);
-            for (int i = 0; i < commodityData.count; i++) {
-                var barsRequest = new BarsRequest(instrument, 1) {
+            for (int i = 0; i < commodityData.count - 3; i++) {
+                var barsRequest = new BarsRequest(instrument, 2) {
                     MergePolicy = MergePolicy.DoNotMerge,
                     BarsPeriod = new BarsPeriod {BarsPeriodType = BarsPeriodType.Minute, Value = 1},
                     TradingHours = instrument.MasterInstrument.TradingHours,
                 };
-                /*barsRequest.Request((request, code, arg3) => {
-                    
-                });*/
-                barsRequest.Update += OnBarUpdate;
+                barsRequest.Request((request, error, arg3) => {
+                    try {
+                        var tuple = SuriCommon.GetMonthAndYearFromInstrument(request.Instrument);
+                        int month = tuple.Item1;
+                        int year = tuple.Item2;
+
+                        SuriChartMonth suriChartMonth = null;
+                        foreach (var chartMonth in _currentChartData.months) {
+                            if (chartMonth.monthValue == month && chartMonth.year == year) {
+                                suriChartMonth = chartMonth;
+                                break;
+                            }
+                        }
+                        if (suriChartMonth == null) {
+                            suriChartMonth = new SuriChartMonth();
+                            _currentChartData.months.Add(suriChartMonth);
+                        }
+
+                        suriChartMonth.last = request.Bars.GetClose(0);
+                        suriChartMonth.settle = request.Bars.GetClose(0);
+                        suriChartMonth.volume = request.Bars.GetVolume(0);
+                        suriChartMonth.year = year;
+                        suriChartMonth.monthValue = month;
+                        suriChartMonth.openInterest = 0;
+                    } catch (Exception e) {
+                        SuriCommon.Print(e.ToString());
+                    }
+                });
+                // barsRequest.Update += OnBarUpdate;
                 _barsRequests.Add(barsRequest);
                 instrument = SuriCommon.GetNextInstrument(instrument);
+                if (instrument == null) {
+                    SuriCommon.Print("instrument was null");
+                    return false;
+                }
             }
+            return true;
         }
 
         private static void OnBarUpdate(object sender, BarsUpdateEventArgs e) {
             Commodity? commodity = SuriStrings.GetComm(e.BarsSeries.Instrument);
             if (commodity == null) return;
             //_currentChartData[commodity].months
+            //e.BarsSeries.GetTime()
         }
         
         private static void ResponseThread() {
@@ -96,12 +129,9 @@ namespace NinjaTrader.Gui.NinjaScript {
                         }
                     }
                     byte[] response;
-                    if (commodity == null) {
+                    if (commodity == null || !ListenTo(commodity.Value)) {
                         response = Encoding.UTF8.GetBytes("");
                     } else {
-                        if (currentlyListening != commodity) {
-                            Listen(commodity.Value);
-                        }
                         response = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(_currentChartData));
                     }
                     
@@ -116,7 +146,7 @@ namespace NinjaTrader.Gui.NinjaScript {
 
         private static void Unsubscrbe() {
             foreach (var barsRequest in _barsRequests) {
-                barsRequest.Update -= OnBarUpdate;
+                //barsRequest.Update -= OnBarUpdate;
                 barsRequest.Dispose();
             }
             _barsRequests = new List<BarsRequest>();
@@ -125,7 +155,7 @@ namespace NinjaTrader.Gui.NinjaScript {
         
         public static void Cleanup() {
             Unsubscrbe();
-            _httpListener.Close();
+            if (_httpListener != null) _httpListener.Close();
             _httpListener = null;
         }
         
