@@ -170,14 +170,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 
 
 
-
-
-
-
-
-
-
-
 //
 
 #region NinjaScript generated code. Neither change nor remove.
@@ -187,18 +179,18 @@ namespace NinjaTrader.NinjaScript.Indicators
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
 		private Suri.SuriBarRange[] cacheSuriBarRange;
-		public Suri.SuriBarRange SuriBarRange(int days)
+		public Suri.SuriBarRange SuriBarRange(bool useCurrency, int days)
 		{
-			return SuriBarRange(Input, days);
+			return SuriBarRange(Input, useCurrency, days);
 		}
 
-		public Suri.SuriBarRange SuriBarRange(ISeries<double> input, int days)
+		public Suri.SuriBarRange SuriBarRange(ISeries<double> input, bool useCurrency, int days)
 		{
 			if (cacheSuriBarRange != null)
 				for (int idx = 0; idx < cacheSuriBarRange.Length; idx++)
-					if (cacheSuriBarRange[idx] != null && cacheSuriBarRange[idx].days == days && cacheSuriBarRange[idx].EqualsInput(input))
+					if (cacheSuriBarRange[idx] != null && cacheSuriBarRange[idx].useCurrency == useCurrency && cacheSuriBarRange[idx].days == days && cacheSuriBarRange[idx].EqualsInput(input))
 						return cacheSuriBarRange[idx];
-			return CacheIndicator<Suri.SuriBarRange>(new Suri.SuriBarRange(){ days = days }, input, ref cacheSuriBarRange);
+			return CacheIndicator<Suri.SuriBarRange>(new Suri.SuriBarRange(){ useCurrency = useCurrency, days = days }, input, ref cacheSuriBarRange);
 		}
 	}
 }
@@ -207,14 +199,14 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.SuriBarRange SuriBarRange(int days)
+		public Indicators.Suri.SuriBarRange SuriBarRange(bool useCurrency, int days)
 		{
-			return indicator.SuriBarRange(Input, days);
+			return indicator.SuriBarRange(Input, useCurrency, days);
 		}
 
-		public Indicators.Suri.SuriBarRange SuriBarRange(ISeries<double> input , int days)
+		public Indicators.Suri.SuriBarRange SuriBarRange(ISeries<double> input , bool useCurrency, int days)
 		{
-			return indicator.SuriBarRange(input, days);
+			return indicator.SuriBarRange(input, useCurrency, days);
 		}
 	}
 }
@@ -223,14 +215,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.SuriBarRange SuriBarRange(int days)
+		public Indicators.Suri.SuriBarRange SuriBarRange(bool useCurrency, int days)
 		{
-			return indicator.SuriBarRange(Input, days);
+			return indicator.SuriBarRange(Input, useCurrency, days);
 		}
 
-		public Indicators.Suri.SuriBarRange SuriBarRange(ISeries<double> input , int days)
+		public Indicators.Suri.SuriBarRange SuriBarRange(ISeries<double> input , bool useCurrency, int days)
 		{
-			return indicator.SuriBarRange(input, days);
+			return indicator.SuriBarRange(input, useCurrency, days);
 		}
 	}
 }

@@ -79,7 +79,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				days										= 125;
 			} else if (State == State.Configure) {
 				volume = SuriVolume(days);
-				range = SuriBarRange(days);
+				range = SuriBarRange(true, days);
 				AddPlot(new Stroke(barBrush, 2), PlotStyle.Bar, "Mega");
 				AddPlot(new Stroke(barBrush, 0), PlotStyle.Bar, "Range");
 				AddPlot(new Stroke(barBrush, 0), PlotStyle.Bar, "Volumen");

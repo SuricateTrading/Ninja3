@@ -150,8 +150,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			if (tick >= _ask) {
 				tickData[tick].asks += volume;
 				totalAsks += volume;
-			}
-			if (tick <= _bid) {
+			} else if (tick <= _bid) {
 				tickData[tick].bids += volume;
 				totalBids += volume;
 			}

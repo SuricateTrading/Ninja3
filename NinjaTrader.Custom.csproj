@@ -102,6 +102,7 @@
     <Compile Include="AddOns\NinjaTk\SuriChartData.cs" />
     <Compile Include="AddOns\SuriCommon\RenderCommons.cs" />
     <Compile Include="AddOns\SuriData\CotRepo.cs" />
+    <Compile Include="AddOns\SuriData\CottonRepo.cs" />
     <Compile Include="AddOns\SuriData\GenericDbRepo.cs" />
     <Compile Include="AddOns\SuriData\TkRepo.cs" />
     <Compile Include="AddOns\SuriData\Vp\SuriBigRepo.cs" />
@@ -203,7 +204,7 @@
     <Compile Include="Indicators\%40VolumeZones.cs" />
     <Compile Include="Indicators\%40Vortex.cs" />
     <Compile Include="Indicators\Suri\dev\DevDailyOpenInterestQuandl.cs" />
-    <Compile Include="Indicators\Suri\DevBidAskDelta.cs" />
+    <Compile Include="Indicators\Suri\SuriBidAskDelta.cs" />
     <Compile Include="Indicators\Suri\dev\DevAverageBarSize.cs" />
     <Compile Include="Indicators\Suri\dev\DevAverageMovement.cs" />
     <Compile Include="Indicators\Suri\dev\DevCot2.cs" />
@@ -218,8 +219,11 @@
     <Compile Include="Indicators\Suri\dev\DevCot1.cs" />
     <Compile Include="Indicators\Suri\dev\DevSwing.cs" />
     <Compile Include="Indicators\Suri\dev\DevSwing2.cs" />
+    <Compile Include="Indicators\Suri\SuriCotton.cs" />
+    <Compile Include="Indicators\Suri\SuriFight.cs" />
     <Compile Include="Indicators\Suri\SuriMega.cs" />
     <Compile Include="Indicators\Suri\SuriDrawingToolTile.cs" />
+    <Compile Include="Indicators\Suri\SuriOscillator.cs" />
     <Compile Include="Indicators\Suri\SuriProductionCost.cs" />
     <Compile Include="Indicators\Suri\SuriVolatility.cs" />
     <Compile Include="Indicators\Suri\SuriVolumeProfileBig.cs" />
@@ -439,7 +443,6 @@
     <Compile Include="SuperDomColumns\%40Volume.cs" />
     <Compile Include="obj\Debug\.NETFramework,Version=v4.8.AssemblyAttributes.cs" />
     <Compile Include="AddOns\SuriAddOn.cs" />
-    <Compile Include="Indicators\Suri\SuriOscillator.cs" />
     <Compile Include="Indicators\Suri\SuriChartToolbar.cs" />
     <Compile Include="Indicators\Suri\SuriCot1.cs" />
     <Compile Include="Indicators\Suri\SuriCot2.cs" />

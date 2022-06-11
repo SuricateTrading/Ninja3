@@ -42,14 +42,6 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
             return serializer.Deserialize<List<WasdeData>>(response);
         }
 		
-        public static List<DbCotData> GetCotData(int commId, DateTime oldDate, DateTime newDate, int? cotId = null) {
-            string url = "https://cloud2.suricate-trading.de:8443/cot/get?commId=" + commId + "&oldDate=" + oldDate.Date.ToString("yyyy-MM-dd") + "&newDate=" + newDate.Date.ToString("yyyy-MM-dd");
-            if (cotId != null) url += "&cotId=" + cotId;
-            string response = Post(url, true);
-            var serializer = new JavaScriptSerializer();
-            return serializer.Deserialize<List<DbCotData>>(response);
-        }
-		
         /** urlT must be 'cot/get' for example */
         public static List<T> GetGenericData<T>(int commId, DateTime oldDate, DateTime newDate, string urlT, string urlSuffix = null) {
             string url = "https://cloud2.suricate-trading.de:8443/" + urlT + "?commId=" + commId + "&oldDate=" + oldDate.Date.ToString("yyyy-MM-dd") + "&newDate=" + newDate.Date.ToString("yyyy-MM-dd");

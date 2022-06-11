@@ -44,23 +44,22 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 		
 		public static readonly Dictionary<Commodity, CommodityData> data = new Dictionary<Commodity, CommodityData> {
 			{Commodity.Gold,		new CommodityData(0,  "GC", new List<string> {"MGC"}, "Gold", 10, new List<int> {2, 4, 6, 8, 12})},
-			{Commodity.Silver,		new CommodityData(1,  "SI", new List<string> {}, "Silber", 10, new List<int> {})},
-			{Commodity.Palladium,	new CommodityData(2,  "PA", new List<string> {}, "Palladium", 7, new List<int> {})},
-			{Commodity.Platinum,	new CommodityData(3,  "PL", new List<string> {}, "Platin", 7, new List<int> {})},
-			{Commodity.Copper,		new CommodityData(4,  "HG", new List<string> {}, "Kupfer", 20, new List<int> {})},
+			{Commodity.Silver,		new CommodityData(1,  "SI", new List<string> {"QI"}, "Silber", 10, new List<int> {})},
+			{Commodity.Palladium,	new CommodityData(2,  "PA", new List<string>(), "Palladium", 7, new List<int> {})},
+			{Commodity.Platinum,	new CommodityData(3,  "PL", new List<string>(), "Platin", 7, new List<int> {})},
+			{Commodity.Copper,		new CommodityData(4,  "HG", new List<string> {"MHG", "QC"}, "Kupfer", 20, new List<int> {})},
 
-			{Commodity.CrudeOil,	new CommodityData(7,  "CL", new List<string> {}, "Rohöl", 40, new List<int> {})},
-			//{Commodity.Ethanol,		new CommodityData(8,  "EH", new List<string> {}, "Ethanol", 0, new List<int> {})},
-			{Commodity.NaturalGas,	new CommodityData(9,  "NG", new List<string> {}, "Erdgas", 40, new List<int> {})},
+			{Commodity.CrudeOil,	new CommodityData(7,  "CL", new List<string> {"MCL", "QM"}, "Rohöl", 40, new List<int> {})},
+			{Commodity.NaturalGas,	new CommodityData(9,  "NG", new List<string> {"QG"}, "Erdgas", 40, new List<int> {})},
 			{Commodity.BrentCrude,	new CommodityData(10, "B" , new List<string> {}, "Brent Öl", 36, new List<int> {})},
 			{Commodity.HeatingOil,	new CommodityData(11, "HO", new List<string> {}, "Heizöl", 30, new List<int> {})},
 			{Commodity.Gasoline,	new CommodityData(12, "RB", new List<string> {}, "Benzin", 50, new List<int> {})},
 
-			{Commodity.Corn,		new CommodityData(13, "ZC", new List<string> {}, "Mais", 13, new List<int> {})},
-			{Commodity.WheatZw,		new CommodityData(14, "ZW", new List<string> {}, "Weizen", 14, new List<int> {})},
+			{Commodity.Corn,		new CommodityData(13, "ZC", new List<string> {"XC"}, "Mais", 13, new List<int> {})},
+			{Commodity.WheatZw,		new CommodityData(14, "ZW", new List<string> {"XW"}, "Weizen", 14, new List<int> {})},
 			{Commodity.Rice,		new CommodityData(16, "ZR", new List<string> {}, "Reis", 7, new List<int> {})},
 			{Commodity.Oats,		new CommodityData(17, "ZO", new List<string> {}, "Hafer", 7, new List<int> {})},
-			{Commodity.Soybeans,	new CommodityData(18, "ZS", new List<string> {}, "Sojabohnen", 16, new List<int> {})},
+			{Commodity.Soybeans,	new CommodityData(18, "ZS", new List<string> {"XK"}, "Sojabohnen", 16, new List<int> {})},
 			{Commodity.SoybeanMeal,	new CommodityData(19, "ZM", new List<string> {}, "Sojamehl", 14, new List<int> {})},
 			{Commodity.SoybeanOil,	new CommodityData(20, "ZL", new List<string> {}, "Sojaöl", 17, new List<int> {})},
 			{Commodity.Milk,		new CommodityData(21, "DC", new List<string> {}, "Milch", 17, new List<int> {})},
@@ -77,11 +76,11 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			{Commodity.FeederCattle,new CommodityData(29, "GF", new List<string> {}, "Mastrind", 8, new List<int> {})},
 			{Commodity.LiveHogs,	new CommodityData(30, "HE", new List<string> {}, "Schwein", 12, new List<int> {})},
 
-			{Commodity.Sp500,		new CommodityData(31, "ES", new List<string> {}, "S&P 500 Mini", 10, new List<int> {})},
+			{Commodity.Sp500,		new CommodityData(31, "ES", new List<string> {"MES"}, "S&P 500 Mini", 10, new List<int> {})},
 			{Commodity.Nikkei,		new CommodityData(32, "NKD", new List<string> {}, "Nikkei / USD", 10, new List<int> {})},
-			{Commodity.Nasdaq,		new CommodityData(33, "NQ", new List<string> {}, "Nasdaq Mini", 5, new List<int> {})},
-			{Commodity.Dow,			new CommodityData(34, "YM", new List<string> {}, "Dow Jones Mini", 4, new List<int> {})},
-			{Commodity.Vix,			new CommodityData(56, "VX", new List<string> {}, "CBOE Volatility Index", 4, new List<int> {})},
+			{Commodity.Nasdaq,		new CommodityData(33, "NQ", new List<string> {"VLQ", "MNQ"}, "Nasdaq Mini", 5, new List<int> {})},
+			{Commodity.Dow,			new CommodityData(34, "YM", new List<string> {"MYM"}, "Dow Jones Mini", 4, new List<int> {})},
+			{Commodity.Vix,			new CommodityData(56, "VX", new List<string> {"VXM"}, "CBOE Volatility Index", 4, new List<int> {})},
 /*
 			{Commodity.U10Yn,		new CommodityData(35, "", "", "", 0, new List<int> {})},
 			{Commodity.UltraBond,	new CommodityData(36, "", "", "", 0, new List<int> {})},
@@ -94,8 +93,8 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			{Commodity.AustralianDollar,	new CommodityData(42, "6A", new List<string> {}, "Australischer Dollar", 10, new List<int> {})},
 			{Commodity.BritishPound,		new CommodityData(43, "6B", new List<string> {}, "Britisches Pfund", 10, new List<int> {})},
 			{Commodity.CanadianDollar,		new CommodityData(44, "6C", new List<string> {}, "Kanadischer Dollar", 8, new List<int> {})},
-			{Commodity.Euro,				new CommodityData(45, "6E", new List<string> {}, "Euro", 10, new List<int> {})},
-			{Commodity.Yen,					new CommodityData(46, "6J", new List<string> {}, "Japanischer Yen", 10, new List<int> {})},
+			{Commodity.Euro,				new CommodityData(45, "6E", new List<string> {"E7"}, "Euro", 10, new List<int> {})},
+			{Commodity.Yen,					new CommodityData(46, "6J", new List<string> {"J7"}, "Japanischer Yen", 10, new List<int> {})},
 			{Commodity.BrazilianReal,		new CommodityData(47, "6L", new List<string> {}, "Brasilianisches Real", 10, new List<int> {})},
 			{Commodity.MexicanPeso,			new CommodityData(48, "6M", new List<string> {}, "Mexikanischer Peso", 10, new List<int> {})},
 			{Commodity.NewZealandDollar,	new CommodityData(49, "6N", new List<string> {}, "Neuseeland Dollar", 6, new List<int> {})},
@@ -104,7 +103,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			{Commodity.SouthAfricanRand,	new CommodityData(57, "6Z", new List<string> {}, "Südafrikanischer Rand", 6, new List<int> {})},
 			{Commodity.UsDollar,			new CommodityData(52, "DX", new List<string> {}, "US Dollar", 3, new List<int> {})},
 			{Commodity.Eurodollar,			new CommodityData(53, "GE", new List<string> {}, "Euro-Dollar", 10, new List<int> {})},
-			{Commodity.BitcoinMicro,		new CommodityData(54, "BTC", new List<string> {}, "Bitcoin", 5, new List<int> {})},
+			{Commodity.BitcoinMicro,		new CommodityData(54, "BTC", new List<string> {"MBT"}, "Bitcoin", 5, new List<int> {})},
 		};
 		
 	}

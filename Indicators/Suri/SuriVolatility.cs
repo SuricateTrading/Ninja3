@@ -55,7 +55,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				AddPlot(new Stroke(lineBrush, 1), PlotStyle.Line, "Volatilität");
 			}
 		}
-		public override string DisplayName { get { return Name; } }
+		public override string DisplayName { get { return Name + (showInDollar ? " in Dollar" : " in Ticks"); } }
 
         protected override void OnRender(ChartControl chartControl, ChartScale chartScale) {
 	        base.OnRender(chartControl, chartScale);

@@ -15,7 +15,7 @@ namespace NinjaTrader.NinjaScript.Strategies {
 		private void PrepareCot1() {
 			SuriCot1 cot1 = SuriCot1(true);
 			SuriCot2 cot2 = SuriCot2(true);
-			SuriBarRange barRange = SuriBarRange(125);
+			SuriBarRange barRange = SuriBarRange(true, 125);
 			SuriVolume volume = SuriVolume(125);
 			DevTerminkurve terminkurve = DevTerminkurve(150);
 			AddChartIndicator(cot1);
@@ -28,7 +28,7 @@ namespace NinjaTrader.NinjaScript.Strategies {
 
 		private void PrepareCot2() {
 			SuriCot2 cot2 = SuriCot2(true);
-			SuriBarRange barRange = SuriBarRange(125);
+			SuriBarRange barRange = SuriBarRange(true, 125);
 			SuriVolume volume = SuriVolume(125);
 			DevTerminkurve terminkurve = DevTerminkurve(150);
 			AddChartIndicator(cot2);
@@ -40,7 +40,7 @@ namespace NinjaTrader.NinjaScript.Strategies {
 
 		private void PrepareTk() {
 			SuriCot2 cot2 = SuriCot2(true);
-			SuriBarRange barRange = SuriBarRange(125);
+			SuriBarRange barRange = SuriBarRange(true, 125);
 			DevTerminkurve terminkurve = DevTerminkurve(125);
 			AddChartIndicator(cot2);
 			AddChartIndicator(terminkurve);
@@ -49,7 +49,7 @@ namespace NinjaTrader.NinjaScript.Strategies {
 		}
 
 		private void PrepareMyTk() {
-			SuriBarRange barRange = SuriBarRange(125);
+			SuriBarRange barRange = SuriBarRange(true, 125);
 			DevTerminkurve terminkurve = DevTerminkurve(150);
 			AddChartIndicator(terminkurve);
 			AddChartIndicator(barRange);
@@ -57,7 +57,7 @@ namespace NinjaTrader.NinjaScript.Strategies {
 		}
 		
 		private void PrepareMyVp() {
-			SuriBarRange barRange = SuriBarRange(125);
+			SuriBarRange barRange = SuriBarRange(true, 125);
 			//SuriVolumeProfileIntraday vpIntra = SuriVolumeProfileIntraday();
 			AddChartIndicator(barRange);
 			//AddChartIndicator(vpIntra);
