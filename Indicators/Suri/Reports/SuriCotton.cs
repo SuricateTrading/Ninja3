@@ -15,7 +15,7 @@ using Brush = System.Windows.Media.Brush;
 using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
 #endregion
 
-namespace NinjaTrader.NinjaScript.Indicators.Suri {
+namespace NinjaTrader.NinjaScript.Indicators.Suri.Reports {
 	public sealed class SuriCotton : Indicator {
 		private CottonRepo cottonRepo;
 		
@@ -136,60 +136,3 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 
 
 //
-
-#region NinjaScript generated code. Neither change nor remove.
-
-namespace NinjaTrader.NinjaScript.Indicators
-{
-	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
-	{
-		private Suri.SuriCotton[] cacheSuriCotton;
-		public Suri.SuriCotton SuriCotton()
-		{
-			return SuriCotton(Input);
-		}
-
-		public Suri.SuriCotton SuriCotton(ISeries<double> input)
-		{
-			if (cacheSuriCotton != null)
-				for (int idx = 0; idx < cacheSuriCotton.Length; idx++)
-					if (cacheSuriCotton[idx] != null &&  cacheSuriCotton[idx].EqualsInput(input))
-						return cacheSuriCotton[idx];
-			return CacheIndicator<Suri.SuriCotton>(new Suri.SuriCotton(), input, ref cacheSuriCotton);
-		}
-	}
-}
-
-namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
-{
-	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
-	{
-		public Indicators.Suri.SuriCotton SuriCotton()
-		{
-			return indicator.SuriCotton(Input);
-		}
-
-		public Indicators.Suri.SuriCotton SuriCotton(ISeries<double> input )
-		{
-			return indicator.SuriCotton(input);
-		}
-	}
-}
-
-namespace NinjaTrader.NinjaScript.Strategies
-{
-	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
-	{
-		public Indicators.Suri.SuriCotton SuriCotton()
-		{
-			return indicator.SuriCotton(Input);
-		}
-
-		public Indicators.Suri.SuriCotton SuriCotton(ISeries<double> input )
-		{
-			return indicator.SuriCotton(input);
-		}
-	}
-}
-
-#endregion
