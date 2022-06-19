@@ -4,18 +4,15 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using NinjaTrader.Data;
-using System.Windows.Media;
 using NinjaTrader.Cbi;
 using NinjaTrader.Core;
 using NinjaTrader.Gui;
 using NinjaTrader.Gui.Chart;
 using NinjaTrader.Gui.Tools;
 using NinjaTrader.NinjaScript;
-using NinjaTrader.NinjaScript.DrawingTools;
 using SharpDX;
 using SharpDX.Direct2D1;
 using SharpDX.DirectWrite;
-using TextAlignment = System.Windows.TextAlignment;
 
 namespace NinjaTrader.Custom.AddOns.SuriCommon {
     public abstract class SuriCommon {

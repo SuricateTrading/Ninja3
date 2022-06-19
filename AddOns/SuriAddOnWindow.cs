@@ -17,11 +17,12 @@ using System.Windows.Media.Imaging;
 using NinjaTrader.Core;
 using NinjaTrader.Custom.AddOns.SuriCommon;
 using NinjaTrader.Custom.AddOns.SuriCommon.Vp;
-using NinjaTrader.NinjaScript;
 using Button = System.Windows.Controls.Button;
 using HorizontalAlignment = System.Windows.HorizontalAlignment;
 using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
 using TabControl = System.Windows.Controls.TabControl;
+using TextBox = System.Windows.Controls.TextBox;
+
 #endregion
 
 namespace NinjaTrader.Gui.NinjaScript {
@@ -176,8 +177,24 @@ namespace NinjaTrader.Gui.NinjaScript {
 				};
 			}
 			
-			if (SuriAddOn.suri.license == License.Dev) InitAdminMode(page);
+			Button changeMachineId = LogicalTreeHelper.FindLogicalNode(page, "ChangeMachineId") as Button;
+			TextBox oldMachineId = LogicalTreeHelper.FindLogicalNode(page, "OldMachineId") as TextBox;
+			if (changeMachineId != null && oldMachineId != null) {
+				changeMachineId.Click += (sender, args) => {
+					Window parent = GetWindow(args.Source as DependencyObject);
+					if (oldMachineId.Text.IsNullOrEmpty() || oldMachineId.Text.Length != 32) {
+						NTMessageBoxSimple.Show(parent, "Die eingegebene Maschinen ID scheint falsch zu sein.", "Aktualisiere Maschinen ID", MessageBoxButton.OK, MessageBoxImage.None);
+					}
 
+					if (SuriServer.ChangeMachineId(oldMachineId.Text)) {
+						NTMessageBoxSimple.Show(parent, "Die Maschinen ID wurde erfolgreich aktualisiert!", "Aktualisiere Maschinen ID", MessageBoxButton.OK, MessageBoxImage.None);
+					} else {
+						NTMessageBoxSimple.Show(parent, "Die Maschinen ID konnte nicht geändert werden. Bitte prüfe, ob Du sie richtig eingegeben hast.", "Aktualisiere Maschinen ID", MessageBoxButton.OK, MessageBoxImage.None);
+					}
+				};
+			}
+			
+			if (SuriAddOn.suri.license == License.Dev) InitAdminMode(page);
 			Redraw();
 		}
 
@@ -228,5 +245,9 @@ namespace NinjaTrader.Gui.NinjaScript {
 			}
 			this.tabs = tabs;
 		}
+	}
+
+	public class Form2 : Form {
+		public TextBox TextBox1;
 	}
 }

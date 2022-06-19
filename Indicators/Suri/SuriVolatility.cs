@@ -16,13 +16,16 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 	public sealed class SuriVolatility : Indicator {
 		#region Properties
 		[NinjaScriptProperty]
-		[Range(1, int.MaxValue)]
-		[Display(Name = "Tage", Order = 0, Description = "Periode in Bars", GroupName = "Parameter")]
-		public int days { get; set; }
+		[Display(Name = "Tage", Order = 0, Description = "Tage", GroupName = "Parameter")]
+		public int? days { get; set; }
 		
 		[NinjaScriptProperty]
 		[Display(Name = "Wert in Dollar (an) oder Ticks (aus)", Order = 1, Description = "", GroupName = "Parameter")]
 		public bool showInDollar { get; set; }
+		
+		[NinjaScriptProperty]
+		[Display(Name = "Klassische Vola (an) oder Suri-Vola (aus)", Order = 2, Description = "", GroupName = "Parameter")]
+		public bool classicVolatility { get; set; }
 		
 		[XmlIgnore]
 		[Display(Name = "Farbe", Order = 2, GroupName = "Parameter")]
@@ -36,7 +39,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 
 		protected override void OnStateChange() {
 			if (State == State.SetDefaults) {
-				Description									= @"Berechnet die durchschnittliche Bargröße inklusive Gaps der letzten x Tage.";
+				Description									= @"Volatilität.";
 				Name										= "Volatilität";
 				Calculate									= Calculate.OnPriceChange;
 				IsOverlay									= false;
@@ -48,9 +51,10 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				ScaleJustification							= ScaleJustification.Right;
 				IsSuspendedWhileInactive					= true;
 				BarsRequiredToPlot							= 0;
-				days										= 50;
 				lineBrush									= Brushes.DarkGray;
 				showInDollar								= true;
+				days										= 50;
+				classicVolatility							= false;
 			} else if (State == State.Configure) {
 				AddPlot(new Stroke(lineBrush, 1), PlotStyle.Line, "Volatilität");
 			}
@@ -63,15 +67,33 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
         }
 
         protected override void OnBarUpdate() {
-	        if (SuriAddOn.license == License.None || CurrentBar <= days) return;
+	        if (SuriAddOn.license == License.None) return;
 
-	        double value = 0;
-	        for (int i = 0; i <= days; i++) {
-		        value += Math.Max(Close[i + 1], High[i]) - Math.Min(Close[i + 1], Low[i]);
+	        int bars = days ?? CurrentBar;
+	        if (classicVolatility) {
+		        if (CurrentBar == 0 || days != null && CurrentBar < days) return;
+
+		        double mean = 0.0;
+		        for (int i = 0; i < bars; i++) mean += Close[i];
+		        mean /= bars;
+
+		        double deviation = 0.0;
+		        for (int i = 0; i < bars; i++) deviation += Math.Pow(Close[i] - mean, 2.0);
+		        deviation /= bars;
+
+		        Value[0] = deviation;
+	        } else {
+		        if (bars < 1 || days != null && CurrentBar <= days) return;
+
+		        double value = 0;
+		        for (int i = 0; i < bars; i++) {
+			        value += Math.Max(Close[i + 1], High[i]) - Math.Min(Close[i + 1], Low[i]);
+		        }
+		        Value[0] = value / bars;
 	        }
-	        Values[0][0] = value / days;
-	        if (showInDollar) Values[0][0] *= Instrument.MasterInstrument.PointValue;
-	        else Values[0][0] /= Instrument.MasterInstrument.TickSize;
+	        
+	        if (showInDollar) Value[0] *= Instrument.MasterInstrument.PointValue;
+	        else Value[0] /= Instrument.MasterInstrument.TickSize;
         }
 		
 	}
@@ -117,18 +139,18 @@ namespace NinjaTrader.NinjaScript.Indicators
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
 		private Suri.SuriVolatility[] cacheSuriVolatility;
-		public Suri.SuriVolatility SuriVolatility(int days, bool showInDollar)
+		public Suri.SuriVolatility SuriVolatility(int? days, bool showInDollar, bool classicVolatility)
 		{
-			return SuriVolatility(Input, days, showInDollar);
+			return SuriVolatility(Input, days, showInDollar, classicVolatility);
 		}
 
-		public Suri.SuriVolatility SuriVolatility(ISeries<double> input, int days, bool showInDollar)
+		public Suri.SuriVolatility SuriVolatility(ISeries<double> input, int? days, bool showInDollar, bool classicVolatility)
 		{
 			if (cacheSuriVolatility != null)
 				for (int idx = 0; idx < cacheSuriVolatility.Length; idx++)
-					if (cacheSuriVolatility[idx] != null && cacheSuriVolatility[idx].days == days && cacheSuriVolatility[idx].showInDollar == showInDollar && cacheSuriVolatility[idx].EqualsInput(input))
+					if (cacheSuriVolatility[idx] != null && cacheSuriVolatility[idx].days == days && cacheSuriVolatility[idx].showInDollar == showInDollar && cacheSuriVolatility[idx].classicVolatility == classicVolatility && cacheSuriVolatility[idx].EqualsInput(input))
 						return cacheSuriVolatility[idx];
-			return CacheIndicator<Suri.SuriVolatility>(new Suri.SuriVolatility(){ days = days, showInDollar = showInDollar }, input, ref cacheSuriVolatility);
+			return CacheIndicator<Suri.SuriVolatility>(new Suri.SuriVolatility(){ days = days, showInDollar = showInDollar, classicVolatility = classicVolatility }, input, ref cacheSuriVolatility);
 		}
 	}
 }
@@ -137,14 +159,14 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.SuriVolatility SuriVolatility(int days, bool showInDollar)
+		public Indicators.Suri.SuriVolatility SuriVolatility(int? days, bool showInDollar, bool classicVolatility)
 		{
-			return indicator.SuriVolatility(Input, days, showInDollar);
+			return indicator.SuriVolatility(Input, days, showInDollar, classicVolatility);
 		}
 
-		public Indicators.Suri.SuriVolatility SuriVolatility(ISeries<double> input , int days, bool showInDollar)
+		public Indicators.Suri.SuriVolatility SuriVolatility(ISeries<double> input , int? days, bool showInDollar, bool classicVolatility)
 		{
-			return indicator.SuriVolatility(input, days, showInDollar);
+			return indicator.SuriVolatility(input, days, showInDollar, classicVolatility);
 		}
 	}
 }
@@ -153,14 +175,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.SuriVolatility SuriVolatility(int days, bool showInDollar)
+		public Indicators.Suri.SuriVolatility SuriVolatility(int? days, bool showInDollar, bool classicVolatility)
 		{
-			return indicator.SuriVolatility(Input, days, showInDollar);
+			return indicator.SuriVolatility(Input, days, showInDollar, classicVolatility);
 		}
 
-		public Indicators.Suri.SuriVolatility SuriVolatility(ISeries<double> input , int days, bool showInDollar)
+		public Indicators.Suri.SuriVolatility SuriVolatility(ISeries<double> input , int? days, bool showInDollar, bool classicVolatility)
 		{
-			return indicator.SuriVolatility(input, days, showInDollar);
+			return indicator.SuriVolatility(input, days, showInDollar, classicVolatility);
 		}
 	}
 }

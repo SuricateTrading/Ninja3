@@ -230,6 +230,8 @@
     <Compile Include="Indicators\Suri\SuriVolatility.cs" />
     <Compile Include="Indicators\Suri\SuriVolumeProfileBig.cs" />
     <Compile Include="Indicators\Suri\SuriVolumeProfileIntraday.cs" />
+    <Compile Include="Indicators\Suri\Weiteres\SuriNonAdjusted.cs" />
+    <Compile Include="Indicators\Suri\Weiteres\SuriSpread.cs" />
     <Compile Include="MarketAnalyzerColumns\%40ChartMini.cs" />
     <Compile Include="MarketAnalyzerColumns\%40ChartNetChange.cs" />
     <Compile Include="MarketAnalyzerColumns\%40DaysUntilRollover.cs" />

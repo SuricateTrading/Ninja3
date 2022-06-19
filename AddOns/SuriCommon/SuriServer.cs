@@ -51,6 +51,14 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
             var serializer = new JavaScriptSerializer();
             return serializer.Deserialize<List<T>>(response);
         }
+        
+        /** urlT must be 'cot/get' for example */
+        public static bool ChangeMachineId(string oldMachineId) {
+            string url = "https://cloud2.suricate-trading.de:8443/suriguard/change?" + "oldLicense=" + oldMachineId + "&newLicense=" + Cbi.License.MachineId;
+            string response = Post(url, true);
+            var serializer = new JavaScriptSerializer();
+            return serializer.Deserialize<bool>(response);
+        }
 		
         public static Suri GetSuri(string license) {
             try {
@@ -67,8 +75,8 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
                     return suri;
                 }
                 switch (suri.LicenseType) {
-                    case 0: suri.license = License.Basic; break;
-                    case 2: suri.license = License.Premium; break;
+                    case 0:  suri.license = License.Basic; break;
+                    case 2:  suri.license = License.Premium; break;
                     case 99: suri.license = License.Dev; break;
                     default: suri.license = License.None; break;
                 }
