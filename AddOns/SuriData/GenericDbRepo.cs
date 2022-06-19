@@ -26,7 +26,7 @@ namespace NinjaTrader.Custom.AddOns.Data {
         protected virtual void OnPartialDataLoaded(List<T> partialData) {}
         protected virtual bool reverseList { get { return false; } }
 
-        protected List<T> data = new List<T>();
+        public List<T> data = new List<T>();
         public bool IsEmpty() { return data.IsNullOrEmpty(); }
         protected Commodity? commodity;
 
@@ -36,19 +36,21 @@ namespace NinjaTrader.Custom.AddOns.Data {
 
         static GenericDbRepo() { foreach (var commodity in Enum.GetValues(typeof(Commodity)).Cast<Commodity>()) state.Add(commodity, new Mutex()); }
         
-        protected GenericDbRepo(Instrument instrument, Bars bars) {
+        protected GenericDbRepo(Instrument instrument, Bars bars, DateTime? start = null) {
             this.bars = bars;
-            DateTime start = bars.GetTime(0).AddDays(-14);
+            if (start == null) start = bars.GetTime(0).AddDays(-14);
             DateTime end = bars.LastBarTime.Date;
             Directory.CreateDirectory(dbPath);
             commodity = SuriStrings.GetComm(instrument);
-            if (commodity != null && start.Year > 1900 && end.Year > 1900) {
-                InitData(start, end);
+            if (commodity != null && start.Value.Year > 1900 && end.Year > 1900) {
+                InitData(start.Value, end);
             }
         }
         
         /** May throw IndexOutOfRangeException */
         public T Get(int barIndex) { return data[dataIndices[barIndex]]; }
+
+        public int CotIndexOf(int barIndex) { return dataIndices[barIndex]; }
         
         /** Gets data from local disk. If local data is outdated, then download from database and store to local disk. */
         private void InitData(DateTime start, DateTime end) {

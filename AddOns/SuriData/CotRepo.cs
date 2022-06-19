@@ -8,7 +8,7 @@ using NinjaTrader.Data;
 
 namespace NinjaTrader.Custom.AddOns.SuriData {
     public class CotRepo : GenericDbRepo<DbCotData> {
-        public CotRepo(Instrument instrument, Bars bars, bool isDelayed = false) : base(instrument, bars) {
+        public CotRepo(Instrument instrument, Bars bars, bool isDelayed = false, DateTime? start = null) : base(instrument, bars, start) {
             if (!isDelayed) return;
             // delay cot data to end of week (release date)
             for (int i = 0; i < bars.Count; i++) {

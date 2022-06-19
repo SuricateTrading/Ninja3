@@ -20,22 +20,20 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 	public sealed class SuriCot1 : Indicator {
 		private CotRepo cotRepo;
 		private SuriSma suriSma;
-		private SessionIterator sessionIterator;
 		
 		private bool isCurrentlyASignal;
 		public readonly List<int> signalIndices = new List<int>();
 
 		#region Indicator
+		[NinjaScriptProperty]
+		[Range(1, int.MaxValue)]
+		[Display(Name="Wochen", Order=1, GroupName="Parameter")]
+		public int weeks
+		{ get; set; }
 		
 		[NinjaScriptProperty]
 		[Browsable(false)]
 		public bool isDelayed
-		{ get; set; }
-		
-		//[NinjaScriptProperty]
-		[Browsable(false)]
-		//[Display(Name="Benutze Wochen (oder Tage)", Order=1, GroupName="Parameter")]
-		public bool useWeeks
 		{ get; set; }
 		
 		[XmlIgnore]
@@ -124,7 +122,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				noNewCotBrush								= Brushes.Orange;
 				lineWidth									= 4;
 				lineWidthSecondary							= 2;
-				//useWeeks									= true;
+				weeks										= 26;
 				isDelayed									= false;
 			} else if (State == State.Configure) {
 				suriSma = SuriSma(125);
@@ -133,8 +131,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				AddPlot(new Stroke(brush50Percent, lineWidthSecondary), PlotStyle.Line, "50%");
 				AddPlot(new Stroke(longBrush, lineWidthSecondary), PlotStyle.Line, "90%");
 			} else if (State == State.DataLoaded) {
-				if (Bars.Count > 0) cotRepo = new CotRepo(Instrument, Bars, isDelayed);
-				sessionIterator = new SessionIterator(Bars);
+				if (Bars.Count > 0) cotRepo = new CotRepo(Instrument, Bars, isDelayed, Bars.GetTime(0).AddDays(- weeks * 7 - 14));
 			}
 		}
 		public override string DisplayName { get { return isDelayed ? Name + " delayed" : Name; } }
@@ -158,6 +155,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			try {
 				cotData = cotRepo.Get(CurrentBar);
 				if (cotData == null || cotData.Cot1 == null) return;
+				CalcCot1();
 				Values[0][0] = cotData.Cot1.Value;
 			} catch (Exception) {
 				if (CurrentBar > 10) Value[0] = Value[1];
@@ -175,13 +173,49 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 					isCurrentlyASignal = IsSignal();
 				}
 				if (isCurrentlyASignal) {
-					if      (suriSma[0] > suriSma[1] && Value[0] >= 90) PlotBrushes[0][0] = longBrush;
-					else if (suriSma[0] < suriSma[1] && Value[0] <= 10) PlotBrushes[0][0] = shortBrush;
-					else PlotBrushes[0][0] = noSignalBrush;
+					// check sma
+					int smaBarsAgo = 0;
+					if (isDelayed) {
+						if (CurrentBar >= 15) {
+							var reportDate = cotRepo.Get(CurrentBar).date;
+							for (int j = 0; j < 15; j++) {
+								if (Time[j].Date == reportDate.Date) {
+									smaBarsAgo = j;
+									break;
+								}
+								if (j == 14) Print("Warning: Could not find reportDate for SMA.");
+							}
+						}
+					}
+					
+					if (suriSma[0] > suriSma[1] && Value[0] >= 90) {
+						PlotBrushes[0][0] = longBrush;
+						signalIndices.Add(CurrentBar);
+					} else if (suriSma[0] < suriSma[1] && Value[0] <= 10) {
+						PlotBrushes[0][0] = shortBrush;
+						signalIndices.Add(CurrentBar);
+					} else {
+						PlotBrushes[0][0] = noSignalBrush;
+					}
 				}
 			}
 		}
+
+		private void CalcCot1() {
+			var min = int.MaxValue;
+			var max = int.MinValue;
+			int cotIndex = cotRepo.CotIndexOf(CurrentBar);
+			var cot = cotRepo.data[cotIndex];
+			for (int i = cotIndex; i >= 0; i--) {
+				var v = cotRepo.data[i].commercialsLong - cotRepo.data[i].commercialsShort;
+				if (min > v) min = v;
+				if (max < v) max = v;
+				if (Math.Abs((cotRepo.data[i].date - cotRepo.data[cotIndex].date).Days) >= 7 * weeks) break;
+			}
+			cot.Cot1 = 100.0 * (cot.commercialsLong - cot.commercialsShort - min) / (max - min);
+		}
 		
+		/** Does not check SMA. */
 		private bool IsSignal() {
 			if (CurrentBar == 0) return false;
 			if (Value[0] < 90 && Value[0] > 10) return false;
@@ -190,30 +224,11 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			// check if we come from the other side
 			for (int i = 2; i <= CurrentBar-1; i++) {
 				if (Value[i] <= 10 && Value[i - 1] > 10 || Value[i] >= 90 && Value[i - 1] < 90) {
-					bool isSignal = IsValidDataPoint(i) && Math.Abs(Value[i] - Value[0]) >= 80;
-					
-					// check sma
-					int smaBarsAgo = 0;
-					if (isDelayed) {
-						if (CurrentBar < 15) return false;
-						var reportDate = cotRepo.Get(CurrentBar).date;
-						for (int j = 0; j < 15; j++) {
-							if (Time[j].Date == reportDate.Date) {
-								smaBarsAgo = j;
-								break;
-							}
-							if (j == 14) Print("Warning: Could not find reportDate for SMA.");
-						}
-					}
-					if (isSignal && (suriSma[smaBarsAgo] > suriSma[smaBarsAgo+1] && Value[0] >= 90 || suriSma[smaBarsAgo] < suriSma[smaBarsAgo+1] && Value[0] <= 10)) {
-						signalIndices.Add(CurrentBar);
-					}
-					return isSignal;
+					return IsValidDataPoint(i) && Math.Abs(Value[i] - Value[0]) >= 80;
 				}
 			}
 			return false;
 		}
-
 
 	}
 }
@@ -252,18 +267,18 @@ namespace NinjaTrader.NinjaScript.Indicators
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
 		private Suri.SuriCot1[] cacheSuriCot1;
-		public Suri.SuriCot1 SuriCot1(bool isDelayed)
+		public Suri.SuriCot1 SuriCot1(int weeks, bool isDelayed)
 		{
-			return SuriCot1(Input, isDelayed);
+			return SuriCot1(Input, weeks, isDelayed);
 		}
 
-		public Suri.SuriCot1 SuriCot1(ISeries<double> input, bool isDelayed)
+		public Suri.SuriCot1 SuriCot1(ISeries<double> input, int weeks, bool isDelayed)
 		{
 			if (cacheSuriCot1 != null)
 				for (int idx = 0; idx < cacheSuriCot1.Length; idx++)
-					if (cacheSuriCot1[idx] != null && cacheSuriCot1[idx].isDelayed == isDelayed && cacheSuriCot1[idx].EqualsInput(input))
+					if (cacheSuriCot1[idx] != null && cacheSuriCot1[idx].weeks == weeks && cacheSuriCot1[idx].isDelayed == isDelayed && cacheSuriCot1[idx].EqualsInput(input))
 						return cacheSuriCot1[idx];
-			return CacheIndicator<Suri.SuriCot1>(new Suri.SuriCot1(){ isDelayed = isDelayed }, input, ref cacheSuriCot1);
+			return CacheIndicator<Suri.SuriCot1>(new Suri.SuriCot1(){ weeks = weeks, isDelayed = isDelayed }, input, ref cacheSuriCot1);
 		}
 	}
 }
@@ -272,14 +287,14 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.SuriCot1 SuriCot1(bool isDelayed)
+		public Indicators.Suri.SuriCot1 SuriCot1(int weeks, bool isDelayed)
 		{
-			return indicator.SuriCot1(Input, isDelayed);
+			return indicator.SuriCot1(Input, weeks, isDelayed);
 		}
 
-		public Indicators.Suri.SuriCot1 SuriCot1(ISeries<double> input , bool isDelayed)
+		public Indicators.Suri.SuriCot1 SuriCot1(ISeries<double> input , int weeks, bool isDelayed)
 		{
-			return indicator.SuriCot1(input, isDelayed);
+			return indicator.SuriCot1(input, weeks, isDelayed);
 		}
 	}
 }
@@ -288,14 +303,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.SuriCot1 SuriCot1(bool isDelayed)
+		public Indicators.Suri.SuriCot1 SuriCot1(int weeks, bool isDelayed)
 		{
-			return indicator.SuriCot1(Input, isDelayed);
+			return indicator.SuriCot1(Input, weeks, isDelayed);
 		}
 
-		public Indicators.Suri.SuriCot1 SuriCot1(ISeries<double> input , bool isDelayed)
+		public Indicators.Suri.SuriCot1 SuriCot1(ISeries<double> input , int weeks, bool isDelayed)
 		{
-			return indicator.SuriCot1(input, isDelayed);
+			return indicator.SuriCot1(input, weeks, isDelayed);
 		}
 	}
 }

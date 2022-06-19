@@ -108,7 +108,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
         public int nonReportablesLong {get; set;}
         public int nonReportablesShort {get; set;}
         
-        public float? Cot1 {get; set;}
+        public double? Cot1 {get; set;}
         public int? Cot2Min {get; set;}
         public int? Cot2Mid {get; set;}
         public int? Cot2Max {get; set;}

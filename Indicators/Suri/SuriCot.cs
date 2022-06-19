@@ -20,8 +20,8 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		private CotRepo cotRepo;
 		private double min = double.MaxValue;
 		private double max = double.MinValue;
-		private int minIndex;
-		private int maxIndex;
+		private DateTime? lastMinDate;
+		private DateTime? lastMaxDate;
 		
 		#region Properties
 		[TypeConverter(typeof(FriendlyEnumConverter))]
@@ -38,14 +38,14 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		}
 		
 		[XmlIgnore]
-		[Display(Name="Zeichne 20 und 80% Linien", Order=0, GroupName="Parameter")]
+		[Display(Name="Zeichne 20% und 80% Linien", Order=0, GroupName="Parameter")]
 		public bool drawLines { get; set; }
 
+		[NinjaScriptProperty]
 		[XmlIgnore]
 		[Range(1, int.MaxValue)]
-		[Browsable(false)]
-		[Display(Name="Tage der 20% und 80% Linien", Order=1, GroupName="Parameter")]
-		public int days { get; set; }
+		[Display(Name="Jahre der 20% und 80% Linien", Order=1, GroupName="Parameter")]
+		public int years { get; set; }
 
 		[XmlIgnore]
 		[Range(1, int.MaxValue)]
@@ -117,15 +117,17 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				lineWidth									= 2;
 				lineWidthSecondary							= 1;
 				reportField									= SuriCotReportField.CommercialLong;
-				days										= 1000;
+				years										= 4;
 			} else if (State == State.Configure) {
 				AddPlot(new Stroke(regularLineBrush, lineWidth), PlotStyle.Line, "CoT-Daten");
 				if (drawLines) {
 					AddPlot(new Stroke(brush20, lineWidthSecondary), PlotStyle.Line, "20%");
 					AddPlot(new Stroke(brush80, lineWidthSecondary), PlotStyle.Line, "80%");
 				}
+				lastMinDate = null;
+				lastMaxDate = null;
 			} else if (State == State.DataLoaded) {
-				if (Bars.Count > 0) cotRepo = new CotRepo(Instrument, Bars);
+				if (Bars.Count > 0) cotRepo = new CotRepo(Instrument, Bars, false, Bars.GetTime(0).AddYears(-years).AddDays(-14));
 			}
 		}
 		public override string DisplayName { get { return Name + " " + CotReportMaper.ReportToString(reportField); } }
@@ -142,9 +144,8 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			try {
 				cotData = cotRepo.Get(CurrentBar);
 				if (cotData == null) return;
-				int? value = GetCotValue(reportField, cotData);
-				if (value == null) return;
-				Value[0] = value.Value;
+				int value = GetCotValue(cotData);
+				Value[0] = value;
 			} catch (Exception) {
 				if (CurrentBar > 10) Value[0] = Value[1];
 			}
@@ -152,17 +153,15 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			
 			if (drawLines) {
 				SetMinMax();
-				if (CurrentBar >= days) {
-					Values[1][0] = ValueOf(0.2);
-					Values[2][0] = ValueOf(0.8);
-				}
+				Values[1][0] = ValueOf(0.2);
+				Values[2][0] = ValueOf(0.8);
 			}
 			
 			if ((Time[0].Date - cotData.date).TotalDays > 12) PlotBrushes[0][0] = noNewCotBrush;
 		}
 
-		private int? GetCotValue(SuriCotReportField field, DbCotData cotData) {
-			switch (field) {
+		private int GetCotValue(DbCotData cotData) {
+			switch (reportField) {
 				case SuriCotReportField.OpenInterest: return cotData.openInterest;
 				case SuriCotReportField.NoncommercialLong: return cotData.nonCommercialsLong;
 				case SuriCotReportField.NoncommercialShort: return cotData.nonCommercialsShort;
@@ -188,22 +187,30 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				case SuriCotReportField.TradersInTotalLong: return cotData.OpenInterest;
 				case SuriCotReportField.TradersInTotalShort: return cotData.OpenInterest;*/
 			}
-			return null;
+			return 0;
 		}
 		
 		private void SetMinMax() {
-			if (min > Value[0]) { min = Value[0]; minIndex = CurrentBar; }
-			if (max < Value[0]) { max = Value[0]; maxIndex = CurrentBar; }
+			int currentCotIndex = cotRepo.CotIndexOf(CurrentBar);
+			DateTime currentReportDate = cotRepo.data[currentCotIndex].date;
 			
-			if (CurrentBar < days) return;
-			if (CurrentBar - maxIndex > days || CurrentBar - minIndex > days) {
+			if (lastMinDate == null || lastMaxDate == null ||
+				Math.Abs((lastMinDate.Value - currentReportDate).Days / 365.0) >= years ||
+			    Math.Abs((lastMaxDate.Value - currentReportDate).Days / 365.0) >= years
+			) {
 				// the last max or min is too far away. Recalculate.
 				min = double.MaxValue;
 				max = double.MinValue;
-				for (int i = 0; i < days; i++) {
-					if (min > Value[i]) { min = Value[i]; minIndex = CurrentBar-i; }
-					if (max < Value[i]) { max = Value[i]; maxIndex = CurrentBar-i; }
+				for (int i = currentCotIndex; i >= 0; i--) {
+					int cotValue = GetCotValue(cotRepo.data[i]);
+					DateTime date = cotRepo.data[i].date;
+					if (min > cotValue) { min = cotValue; lastMinDate = date; }
+					if (max < cotValue) { max = cotValue; lastMaxDate = date; }
+					if (Math.Abs((date - currentReportDate).Days / 365.0) >= years) break;
 				}
+			} else {
+				if (min > Value[0]) { min = Value[0]; lastMinDate = currentReportDate; }
+				if (max < Value[0]) { max = Value[0]; lastMaxDate = currentReportDate; }
 			}
 		}
 
@@ -383,18 +390,18 @@ namespace NinjaTrader.NinjaScript.Indicators
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
 		private Suri.SuriCot[] cacheSuriCot;
-		public Suri.SuriCot SuriCot(SuriCotReportField reportField)
+		public Suri.SuriCot SuriCot(SuriCotReportField reportField, int years)
 		{
-			return SuriCot(Input, reportField);
+			return SuriCot(Input, reportField, years);
 		}
 
-		public Suri.SuriCot SuriCot(ISeries<double> input, SuriCotReportField reportField)
+		public Suri.SuriCot SuriCot(ISeries<double> input, SuriCotReportField reportField, int years)
 		{
 			if (cacheSuriCot != null)
 				for (int idx = 0; idx < cacheSuriCot.Length; idx++)
-					if (cacheSuriCot[idx] != null && cacheSuriCot[idx].reportField == reportField && cacheSuriCot[idx].EqualsInput(input))
+					if (cacheSuriCot[idx] != null && cacheSuriCot[idx].reportField == reportField && cacheSuriCot[idx].years == years && cacheSuriCot[idx].EqualsInput(input))
 						return cacheSuriCot[idx];
-			return CacheIndicator<Suri.SuriCot>(new Suri.SuriCot(){ reportField = reportField }, input, ref cacheSuriCot);
+			return CacheIndicator<Suri.SuriCot>(new Suri.SuriCot(){ reportField = reportField, years = years }, input, ref cacheSuriCot);
 		}
 	}
 }
@@ -403,14 +410,14 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.SuriCot SuriCot(SuriCotReportField reportField)
+		public Indicators.Suri.SuriCot SuriCot(SuriCotReportField reportField, int years)
 		{
-			return indicator.SuriCot(Input, reportField);
+			return indicator.SuriCot(Input, reportField, years);
 		}
 
-		public Indicators.Suri.SuriCot SuriCot(ISeries<double> input , SuriCotReportField reportField)
+		public Indicators.Suri.SuriCot SuriCot(ISeries<double> input , SuriCotReportField reportField, int years)
 		{
-			return indicator.SuriCot(input, reportField);
+			return indicator.SuriCot(input, reportField, years);
 		}
 	}
 }
@@ -419,14 +426,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.SuriCot SuriCot(SuriCotReportField reportField)
+		public Indicators.Suri.SuriCot SuriCot(SuriCotReportField reportField, int years)
 		{
-			return indicator.SuriCot(Input, reportField);
+			return indicator.SuriCot(Input, reportField, years);
 		}
 
-		public Indicators.Suri.SuriCot SuriCot(ISeries<double> input , SuriCotReportField reportField)
+		public Indicators.Suri.SuriCot SuriCot(ISeries<double> input , SuriCotReportField reportField, int years)
 		{
-			return indicator.SuriCot(input, reportField);
+			return indicator.SuriCot(input, reportField, years);
 		}
 	}
 }

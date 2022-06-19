@@ -13,7 +13,7 @@ namespace NinjaTrader.NinjaScript.Strategies {
 		}
 
 		private void PrepareCot1() {
-			SuriCot1 cot1 = SuriCot1(true);
+			SuriCot1 cot1 = SuriCot1(125, true);
 			SuriCot2 cot2 = SuriCot2(true);
 			SuriBarRange barRange = SuriBarRange(true, 125);
 			SuriVolume volume = SuriVolume(125);

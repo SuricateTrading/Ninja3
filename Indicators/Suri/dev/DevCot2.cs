@@ -11,7 +11,7 @@ using NinjaTrader.Gui.NinjaScript;
 using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
 
 #endregion
-
+/*
 namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 	public sealed class DevCot2 : Indicator {
 		private DevCot suriCotData;
@@ -124,16 +124,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 		public override string DisplayName { get { return Name; } }
 		private double ValueOf(double percent) { return min + percent * (max - min); }
 		
-		protected override void OnRender(ChartControl chartControl, ChartScale chartScale) {
-			//base.OnRender(chartControl, chartScale);
-			/*chartScale.Properties.AutoScaleMarginType = AutoScaleMarginType.Percent;
-			chartScale.Properties.AutoScaleMarginUpper = 30;
-			chartScale.Properties.AutoScaleMarginLower = 30;*/
-			
-			base.OnRender(chartControl, chartScale);
-			if (SuriAddOn.license == License.None) SuriCommon.NoValidLicenseError(RenderTarget, ChartControl, ChartPanel);
-		}
-		
 		private int noNewCotSince;
 		protected override void OnBarUpdate() {
 			if (SuriAddOn.license == License.None) return;
@@ -220,81 +210,4 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 		
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//
-#region NinjaScript generated code. Neither change nor remove.
-
-namespace NinjaTrader.NinjaScript.Indicators
-{
-	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
-	{
-		private Suri.dev.DevCot2[] cacheDevCot2;
-		public Suri.dev.DevCot2 DevCot2(int days)
-		{
-			return DevCot2(Input, days);
-		}
-
-		public Suri.dev.DevCot2 DevCot2(ISeries<double> input, int days)
-		{
-			if (cacheDevCot2 != null)
-				for (int idx = 0; idx < cacheDevCot2.Length; idx++)
-					if (cacheDevCot2[idx] != null && cacheDevCot2[idx].days == days && cacheDevCot2[idx].EqualsInput(input))
-						return cacheDevCot2[idx];
-			return CacheIndicator<Suri.dev.DevCot2>(new Suri.dev.DevCot2(){ days = days }, input, ref cacheDevCot2);
-		}
-	}
-}
-
-namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
-{
-	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
-	{
-		public Indicators.Suri.dev.DevCot2 DevCot2(int days)
-		{
-			return indicator.DevCot2(Input, days);
-		}
-
-		public Indicators.Suri.dev.DevCot2 DevCot2(ISeries<double> input , int days)
-		{
-			return indicator.DevCot2(input, days);
-		}
-	}
-}
-
-namespace NinjaTrader.NinjaScript.Strategies
-{
-	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
-	{
-		public Indicators.Suri.dev.DevCot2 DevCot2(int days)
-		{
-			return indicator.DevCot2(Input, days);
-		}
-
-		public Indicators.Suri.dev.DevCot2 DevCot2(ISeries<double> input , int days)
-		{
-			return indicator.DevCot2(input, days);
-		}
-	}
-}
-
-#endregion
+*/

@@ -34,6 +34,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			}
 		}
 		
+		
 		public static string LongNameToShortName(string longName) {
 			try {
 				return data.First(pair => pair.Value.longName.Equals(longName)).Value.shortName;

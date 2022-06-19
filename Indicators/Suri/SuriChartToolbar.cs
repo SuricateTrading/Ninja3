@@ -19,6 +19,7 @@ using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using VerticalAlignment = System.Windows.VerticalAlignment;
 using System.ComponentModel.DataAnnotations;
 using System.Xml.Serialization;
+using Newtonsoft.Json;
 
 #endregion
 
@@ -165,9 +166,18 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				Height = 23,
 				Margin = new Thickness(0,2,0,0),
 			};
-			foreach (KeyValuePair<Commodity,CommodityData> entry in SuriStrings.data) {
-				comList.Items.Add(entry.Value.shortName + "\t" + entry.Value.longName);
+
+			foreach (string marketShortNames in SuriSettings.Get.toolbarMarketNames) {
+				Commodity? commodity = SuriStrings.GetComm(marketShortNames);
+				if (commodity == null) {
+					comList.Items.Add(marketShortNames);
+					continue;
+				}
+				CommodityData commodityData = SuriStrings.data[commodity.Value];
+				comList.Items.Add(commodityData.shortName + "\t" + commodityData.longName);
+
 			}
+			
 			Commodity? currentComm = SuriStrings.GetComm(Instrument.MasterInstrument.Name);
 			if (currentComm != null) {
 				var c = SuriStrings.data[currentComm.Value];
@@ -240,6 +250,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 
 			string shortName = Regex.Replace(marketName, "\t.*", "");
 			Instrument nextInstrument = Instrument.GetInstrument(shortName + Instrument.GetInstrument(shortName+" ##-##").MasterInstrument.GetNextExpiry(DateTime.Now).ToString(" MM-yy"));
+			if (nextInstrument == null) return;
 				
 			Keyboard.FocusedElement.RaiseEvent(new TextCompositionEventArgs(InputManager.Current.PrimaryKeyboardDevice, new TextComposition(InputManager.Current, ChartControl.OwnerChart, "open sesame"))	{ RoutedEvent = TextCompositionManager.PreviewTextInputEvent });
 			Keyboard.FocusedElement.RaiseEvent(new TextCompositionEventArgs(InputManager.Current.PrimaryKeyboardDevice, new TextComposition(InputManager.Current, ChartControl.OwnerChart, nextInstrument.FullName))			{ RoutedEvent = TextCompositionManager.TextInputEvent });

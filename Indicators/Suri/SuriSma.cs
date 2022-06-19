@@ -29,6 +29,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				PaintPriceMarkers							= true;
 				ScaleJustification							= Gui.Chart.ScaleJustification.Right;
 				IsSuspendedWhileInactive					= true;
+				BarsRequiredToPlot							= 0;
 				lineWidth									= 2;
 				longBrush									= Brushes.Green;
 				shortBrush									= Brushes.Red;
@@ -49,22 +50,9 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		protected override void OnBarUpdate() {
 			if (SuriAddOn.license == License.None) return;
 			
-			if (BarsArray[0].BarsType.IsRemoveLastBarSupported) {
-				if (CurrentBar == 0) {
-					Value[0] = Input[0];
-				} else {
-					double last = Value[1] * Math.Min(CurrentBar, days);
-					if (CurrentBar >= days) {
-						Value[0] = (last + Input[0] - Input[days]) / Math.Min(CurrentBar, days);
-					} else {
-						Value[0] = (last + Input[0]) / (Math.Min(CurrentBar, days) + 1);
-					}
-				}
-			} else {
-				if (IsFirstTickOfBar) priorSum = sum;
-				sum = priorSum + Input[0] - (CurrentBar >= days ? Input[days] : 0);
-				Value[0] = sum / (CurrentBar < days ? CurrentBar + 1 : days);
-			}
+			if (IsFirstTickOfBar) priorSum = sum;
+			sum = priorSum + Input[0] - (CurrentBar >= days ? Input[days] : 0);
+			Value[0] = sum / (CurrentBar < days ? CurrentBar + 1 : days);
 			
 			if (CurrentBar > 0 && SuriAddOn.license != License.Basic) {
 				if (Value[0] > Value[1]) {
@@ -77,7 +65,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 
 		#region Properties
 		[NinjaScriptProperty]
-		[Browsable(false)]
 		[Range(1, int.MaxValue)]
 		[Display(Name="Tage", Order=0, GroupName="Parameter")]
 		public int days

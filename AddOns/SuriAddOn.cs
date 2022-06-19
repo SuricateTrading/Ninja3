@@ -31,6 +31,8 @@ namespace NinjaTrader.Gui.NinjaScript {
 			ControlCenter cc = window as ControlCenter;
 			if (cc == null) return;
 
+			SuriSettings.InitializeSettings();
+			
 			path = Globals.UserDataDir + @"suri\";
 			Directory.CreateDirectory(path + @"\downloads");
 			
