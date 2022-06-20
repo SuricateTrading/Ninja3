@@ -5,10 +5,8 @@ using NinjaTrader.NinjaScript;
 using System.IO;
 using System.Linq;
 using MathNet.Numerics.Statistics;
-using Newtonsoft.Json;
 using NinjaTrader.Cbi;
 using NinjaTrader.Core;
-using NinjaTrader.Custom.AddOns.SuriCommon.Vp;
 using NinjaTrader.Data;
 using NinjaTrader.Gui.Tools;
 using Instrument = NinjaTrader.Cbi.Instrument;
@@ -98,7 +96,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 				    List<double> bars1Matches = new List<double>();
 				    List<double> bars2Matches = new List<double>();
 				    Tuple<int, int> t = new Tuple<int, int>(-1, -1);
-				    while ((t = SynchronizeIndex(new Tuple<int, int>(t.Item1 + 1, t.Item2 + 1), bars1, bars2)) != null) {
+				    while ((t = SuriCommon.SynchronizeIndex(new Tuple<int, int>(t.Item1 + 1, t.Item2 + 1), bars1, bars2)) != null) {
 					    if (endYear != null) {
 						    int year = bars1.GetTime(t.Item1).Year;
 						    if (year <= endYear - years) continue;
@@ -130,25 +128,6 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 		    meanWriter.Write(text);
 	    }
 
-	    private Tuple<int, int> SynchronizeIndex(Tuple<int, int> index, Bars bars1, Bars bars2) {
-			// Synchronizes the index of 2 Bars so that the index for each bar points to the exact same date.
-		    if (index.Item1 >= bars1.Count || index.Item2 >= bars2.Count) return null;
-		    if (bars1.GetTime(index.Item1).Date == bars2.GetTime(index.Item2).Date) return index;
-
-		    int i1 = index.Item1;
-		    int i2 = index.Item2;
-		    while (bars1.GetTime(i1).Date != bars2.GetTime(i2).Date) {
-			    while (bars1.GetTime(i1).Date < bars2.GetTime(i2).Date) {
-				    i1++;
-				    if (i1 >= bars1.Count) return null;
-			    }
-			    while (bars1.GetTime(i1).Date > bars2.GetTime(i2).Date) {
-				    i2++;
-				    if (i2 >= bars2.Count) return null;
-			    }
-		    }
-		    return new Tuple<int, int>(i1, i2);
-	    }
 	    
     }
 }

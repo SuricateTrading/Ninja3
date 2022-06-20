@@ -1,4 +1,4 @@
-﻿#region Using declarations
+#region Using declarations
 using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -11,8 +11,8 @@ using NinjaTrader.Gui.NinjaScript;
 using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
 #endregion
 
-namespace NinjaTrader.NinjaScript.Indicators.Suri {
-	public sealed class SuriFight : Indicator {
+namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
+	public sealed class DevFight : Indicator {
 		private SuriBarRange range;
 		
 		#region Properties
@@ -118,19 +118,19 @@ namespace NinjaTrader.NinjaScript.Indicators
 {
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
-		private Suri.SuriFight[] cacheSuriFight;
-		public Suri.SuriFight SuriFight(int days)
+		private Suri.dev.DevFight[] cacheDevFight;
+		public Suri.dev.DevFight DevFight(int days)
 		{
-			return SuriFight(Input, days);
+			return DevFight(Input, days);
 		}
 
-		public Suri.SuriFight SuriFight(ISeries<double> input, int days)
+		public Suri.dev.DevFight DevFight(ISeries<double> input, int days)
 		{
-			if (cacheSuriFight != null)
-				for (int idx = 0; idx < cacheSuriFight.Length; idx++)
-					if (cacheSuriFight[idx] != null && cacheSuriFight[idx].days == days && cacheSuriFight[idx].EqualsInput(input))
-						return cacheSuriFight[idx];
-			return CacheIndicator<Suri.SuriFight>(new Suri.SuriFight(){ days = days }, input, ref cacheSuriFight);
+			if (cacheDevFight != null)
+				for (int idx = 0; idx < cacheDevFight.Length; idx++)
+					if (cacheDevFight[idx] != null && cacheDevFight[idx].days == days && cacheDevFight[idx].EqualsInput(input))
+						return cacheDevFight[idx];
+			return CacheIndicator<Suri.dev.DevFight>(new Suri.dev.DevFight(){ days = days }, input, ref cacheDevFight);
 		}
 	}
 }
@@ -139,14 +139,14 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.SuriFight SuriFight(int days)
+		public Indicators.Suri.dev.DevFight DevFight(int days)
 		{
-			return indicator.SuriFight(Input, days);
+			return indicator.DevFight(Input, days);
 		}
 
-		public Indicators.Suri.SuriFight SuriFight(ISeries<double> input , int days)
+		public Indicators.Suri.dev.DevFight DevFight(ISeries<double> input , int days)
 		{
-			return indicator.SuriFight(input, days);
+			return indicator.DevFight(input, days);
 		}
 	}
 }
@@ -155,14 +155,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.SuriFight SuriFight(int days)
+		public Indicators.Suri.dev.DevFight DevFight(int days)
 		{
-			return indicator.SuriFight(Input, days);
+			return indicator.DevFight(Input, days);
 		}
 
-		public Indicators.Suri.SuriFight SuriFight(ISeries<double> input , int days)
+		public Indicators.Suri.dev.DevFight DevFight(ISeries<double> input , int days)
 		{
-			return indicator.SuriFight(input, days);
+			return indicator.DevFight(input, days);
 		}
 	}
 }

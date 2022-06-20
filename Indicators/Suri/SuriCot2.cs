@@ -11,13 +11,21 @@ using NinjaTrader.Gui.Chart;
 using NinjaTrader.Gui.NinjaScript;
 using NinjaTrader.NinjaScript.Strategies;
 using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
-
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
 	public sealed class SuriCot2 : Indicator {
 		private CotRepo cotRepo;
+		private double min = double.MaxValue;
+		private double max = double.MinValue;
+		private DateTime? lastMinDate;
+		private DateTime? lastMaxDate;
+		
 		#region Properties
+		//[NinjaScriptProperty]
+		[Range(1, int.MaxValue)]
+		[Display(Name="Jahre", Order=1, GroupName="Parameter")]
+		public int years { get; set; }
 		
 		[NinjaScriptProperty]
 		[Browsable(false)]
@@ -101,22 +109,27 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				lineWidth									= 4;
 				lineWidthSecondary							= 2;
 				isDelayed									= false;
+				years										= 4;
 			} else if (State == State.Configure) {
 				AddPlot(new Stroke(shortBrush, lineWidthSecondary), PlotStyle.Line, "75%");
 				AddPlot(new Stroke(brush50Percent, lineWidthSecondary), PlotStyle.Line, "50%");
 				AddPlot(new Stroke(longBrush, lineWidthSecondary), PlotStyle.Line, "25%");
 				AddPlot(new Stroke(regularLineBrush, lineWidth), PlotStyle.Line, "Com Short");
+				lastMinDate = null;
+				lastMaxDate = null;
 			} else if (State == State.DataLoaded) {
-				if (Bars.Count > 0) cotRepo = new CotRepo(Instrument, Bars, isDelayed);
+				if (Bars.Count > 0) cotRepo = new CotRepo(Instrument, Bars, isDelayed, Bars.GetTime(0).AddYears(-years).AddDays(-14));
 			}
 		}
 
-		public Series<double> seriesMain { get { return Values[3]; } }
-		public Series<double> series25   { get { return Values[2]; } }
-		public Series<double> series50   { get { return Values[1]; } }
-		public Series<double> series75   { get { return Values[0]; } }
+		[Browsable(false)] public Series<double> seriesMain { get { return Values[3]; } }
+		[Browsable(false)] public Series<double> series25   { get { return Values[2]; } }
+		[Browsable(false)] public Series<double> series50   { get { return Values[1]; } }
+		[Browsable(false)] public Series<double> series75   { get { return Values[0]; } }
 		public bool IsInLongHalf(int barIndex) { return Values[3].GetValueAt(barIndex) < Values[1].GetValueAt(barIndex); }
 		public bool IsInShortHalf(int barIndex) { return !IsInLongHalf(barIndex); }
+		private double ValueOf(double percent) { return min + percent * (max - min); }
+		public override string DisplayName { get { return isDelayed ? Name + " delayed" : Name; } }
 
 		/** Returns a position iff over 75% or under 25%. */
 		public SuriPosition GetSuriPosition(int i) {
@@ -124,8 +137,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			if (seriesMain.GetValueAt(i) >= series75.GetValueAt(i)) return SuriPosition.Short;
 			return SuriPosition.None;
 		}
-
-		public override string DisplayName { get { return isDelayed ? Name + " delayed" : Name; } }
 
 		protected override void OnRender(ChartControl chartControl, ChartScale chartScale) {
 			base.OnRender(chartControl, chartScale);
@@ -139,16 +150,19 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			try {
 				cotData = cotRepo.Get(CurrentBar);
 				if (cotData == null || cotData.Cot2Max == null) return;
-				Values[0][0] = cotData.Cot2Max.Value;
-				Values[1][0] = cotData.Cot2Mid.Value;
-				Values[2][0] = cotData.Cot2Min.Value;
-				Values[3][0] = cotData.commercialsShort;
+				seriesMain[0] = cotData.commercialsShort;
+				
+				SetMinMax();
+				series75[0] = ValueOf(0.75);
+				series50[0] = ValueOf(0.5);
+				series25[0] = ValueOf(0.25);
+				MoveLines();
 			} catch (Exception) {
 				if (CurrentBar > 10) {
-					Values[0][0] = Values[0][1];
-					Values[1][0] = Values[1][1];
-					Values[2][0] = Values[2][1];
-					Values[3][0] = Values[3][1];
+					series75[0] = series75[1];
+					series50[0] = series50[1];
+					series25[0] = series25[1];
+					seriesMain[0] = seriesMain[1];
 				}
 			}
 			if (cotData == null) return;
@@ -159,18 +173,69 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				PlotBrushes[2][0] = noNewCotBrush;
 				PlotBrushes[3][0] = noNewCotBrush;
 			} else {
-				Analyze();
+				if (SuriAddOn.license == License.Premium || SuriAddOn.license == License.Dev) {
+					if (seriesMain[0] > series75[0]) { PlotBrushes[3][0] = shortBrush; }
+					if (seriesMain[0] < series25[0]) { PlotBrushes[3][0] = longBrush; }
+				}
 			}
 		}
 		
-		private void Analyze() {
-			if (SuriAddOn.license == License.Basic) return;
-			if (Values[3][0] > Values[0][0]) {
-				PlotBrushes[3][0] = shortBrush;
+		private void SetMinMax() {
+			int currentCotIndex = cotRepo.CotIndexOf(CurrentBar);
+			DateTime currentReportDate = cotRepo.data[currentCotIndex].date;
+			
+			if (lastMinDate == null || lastMaxDate == null ||
+			    Math.Abs((lastMinDate.Value - currentReportDate).Days / 365.0) >= years ||
+			    Math.Abs((lastMaxDate.Value - currentReportDate).Days / 365.0) >= years
+			) {
+				// the last max or min is too far away. Recalculate.
+				min = double.MaxValue;
+				max = double.MinValue;
+				for (int i = currentCotIndex; i >= 0; i--) {
+					int cotValue = cotRepo.data[i].commercialsShort;
+					DateTime date = cotRepo.data[i].date;
+					if (min > cotValue) { min = cotValue; lastMinDate = date; }
+					if (max < cotValue) { max = cotValue; lastMaxDate = date; }
+					if (Math.Abs((date - currentReportDate).Days / 365.0) >= years) break;
+				}
+			} else {
+				if (min > seriesMain[0]) { min = seriesMain[0]; lastMinDate = currentReportDate; }
+				if (max < seriesMain[0]) { max = seriesMain[0]; lastMaxDate = currentReportDate; }
 			}
-			if (Values[3][0] < Values[2][0]) {
-				PlotBrushes[3][0] = longBrush;
+		}
+
+		private void MoveLines() {
+			double line25 = ValueOf(0.25);
+			double line75 = ValueOf(0.75);
+			int localHigh  = int.MaxValue;
+			int localLow   = int.MaxValue;
+			int highestLow = int.MinValue;
+			int lowestHigh = int.MaxValue;
+			int countHigh = 0;
+			int countLow = 0;
+
+			int currentCotIndex = cotRepo.CotIndexOf(CurrentBar);
+			var cot = cotRepo.Get(CurrentBar);
+			for (int i = currentCotIndex - 1; i >= 0; i--) {
+				var current = cotRepo.data[i].commercialsShort;
+				var prev = cotRepo.data[i + 1].commercialsShort;
+				if (current > line75 && (prev < line75 || current > localHigh)) localHigh = current;
+				if (current < line25 && (prev > line25 || current < localLow )) localLow  = current;
+
+				if (localHigh != int.MinValue && current < line75 && prev > line75) {
+					if (lowestHigh > localHigh) lowestHigh = localHigh;
+					countHigh++;
+				}
+				if (localLow != int.MaxValue && current > line25 && prev < line25) {
+					if (highestLow < localLow) highestLow = localLow;
+					countLow++;
+				}
+
+				if (Math.Abs((cotRepo.data[i].date - cot.date).Days / 365.0) >= years) break;
 			}
+				
+			series75[0] = countHigh > 1 ? lowestHigh : line75;
+			series25[0] = countLow  > 1 ? highestLow : line25;
 		}
 		
 	}

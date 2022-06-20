@@ -10,8 +10,8 @@ using NinjaTrader.Cbi;
 using NinjaTrader.Data;
 #endregion
 
-namespace NinjaTrader.NinjaScript.Indicators.Suri.Weiteres {
-	public class SuriSpread : Indicator {
+namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
+	public class DevSuriSpread : Indicator {
 		private Bars bars1;
 		private Bars bars2;
 		
@@ -115,19 +115,19 @@ namespace NinjaTrader.NinjaScript.Indicators
 {
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
-		private Suri.Weiteres.SuriSpread[] cacheSuriSpread;
-		public Suri.Weiteres.SuriSpread SuriSpread(string market1, string market2)
+		private Suri.dev.DevSuriSpread[] cacheDevSuriSpread;
+		public Suri.dev.DevSuriSpread DevSuriSpread(string market1, string market2)
 		{
-			return SuriSpread(Input, market1, market2);
+			return DevSuriSpread(Input, market1, market2);
 		}
 
-		public Suri.Weiteres.SuriSpread SuriSpread(ISeries<double> input, string market1, string market2)
+		public Suri.dev.DevSuriSpread DevSuriSpread(ISeries<double> input, string market1, string market2)
 		{
-			if (cacheSuriSpread != null)
-				for (int idx = 0; idx < cacheSuriSpread.Length; idx++)
-					if (cacheSuriSpread[idx] != null && cacheSuriSpread[idx].market1 == market1 && cacheSuriSpread[idx].market2 == market2 && cacheSuriSpread[idx].EqualsInput(input))
-						return cacheSuriSpread[idx];
-			return CacheIndicator<Suri.Weiteres.SuriSpread>(new Suri.Weiteres.SuriSpread(){ market1 = market1, market2 = market2 }, input, ref cacheSuriSpread);
+			if (cacheDevSuriSpread != null)
+				for (int idx = 0; idx < cacheDevSuriSpread.Length; idx++)
+					if (cacheDevSuriSpread[idx] != null && cacheDevSuriSpread[idx].market1 == market1 && cacheDevSuriSpread[idx].market2 == market2 && cacheDevSuriSpread[idx].EqualsInput(input))
+						return cacheDevSuriSpread[idx];
+			return CacheIndicator<Suri.dev.DevSuriSpread>(new Suri.dev.DevSuriSpread(){ market1 = market1, market2 = market2 }, input, ref cacheDevSuriSpread);
 		}
 	}
 }
@@ -136,14 +136,14 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.Weiteres.SuriSpread SuriSpread(string market1, string market2)
+		public Indicators.Suri.dev.DevSuriSpread DevSuriSpread(string market1, string market2)
 		{
-			return indicator.SuriSpread(Input, market1, market2);
+			return indicator.DevSuriSpread(Input, market1, market2);
 		}
 
-		public Indicators.Suri.Weiteres.SuriSpread SuriSpread(ISeries<double> input , string market1, string market2)
+		public Indicators.Suri.dev.DevSuriSpread DevSuriSpread(ISeries<double> input , string market1, string market2)
 		{
-			return indicator.SuriSpread(input, market1, market2);
+			return indicator.DevSuriSpread(input, market1, market2);
 		}
 	}
 }
@@ -152,14 +152,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.Weiteres.SuriSpread SuriSpread(string market1, string market2)
+		public Indicators.Suri.dev.DevSuriSpread DevSuriSpread(string market1, string market2)
 		{
-			return indicator.SuriSpread(Input, market1, market2);
+			return indicator.DevSuriSpread(Input, market1, market2);
 		}
 
-		public Indicators.Suri.Weiteres.SuriSpread SuriSpread(ISeries<double> input , string market1, string market2)
+		public Indicators.Suri.dev.DevSuriSpread DevSuriSpread(ISeries<double> input , string market1, string market2)
 		{
-			return indicator.SuriSpread(input, market1, market2);
+			return indicator.DevSuriSpread(input, market1, market2);
 		}
 	}
 }

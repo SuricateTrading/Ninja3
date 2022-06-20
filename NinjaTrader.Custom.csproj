@@ -205,13 +205,14 @@
     <Compile Include="Indicators\%40VolumeUpDown.cs" />
     <Compile Include="Indicators\%40VolumeZones.cs" />
     <Compile Include="Indicators\%40Vortex.cs" />
+    <Compile Include="Indicators\Suri\dev\DevBidAskDelta.cs" />
     <Compile Include="Indicators\Suri\dev\DevDailyOpenInterestQuandl.cs" />
+    <Compile Include="Indicators\Suri\dev\DevSuriSpread.cs" />
+    <Compile Include="Indicators\Suri\dev\DevFight.cs" />
     <Compile Include="Indicators\Suri\Reports\SuriCotton.cs" />
     <Compile Include="Indicators\Suri\Reports\SuriNgas.cs" />
-    <Compile Include="Indicators\Suri\SuriBidAskDelta.cs" />
     <Compile Include="Indicators\Suri\dev\DevAverageBarSize.cs" />
     <Compile Include="Indicators\Suri\dev\DevAverageMovement.cs" />
-    <Compile Include="Indicators\Suri\dev\DevCot2.cs" />
     <Compile Include="Indicators\Suri\dev\DevRolloverButton.cs" />
     <Compile Include="Indicators\Suri\dev\DevTerminkurve.cs" />
     <Compile Include="Indicators\Suri\dev\DevTickExtractor.cs" />
@@ -219,16 +220,14 @@
     <Compile Include="Indicators\Suri\dev\DevWasde.cs" />
     <Compile Include="Indicators\Suri\dev\DevSwing.cs" />
     <Compile Include="Indicators\Suri\dev\DevSwing2.cs" />
-    <Compile Include="Indicators\Suri\SuriFight.cs" />
     <Compile Include="Indicators\Suri\SuriMega.cs" />
     <Compile Include="Indicators\Suri\SuriDrawingToolTile.cs" />
     <Compile Include="Indicators\Suri\SuriProductionCost.cs" />
-    <Compile Include="Indicators\Suri\SuriVolatility.cs" />
     <Compile Include="Indicators\Suri\SuriVolumeProfileBig.cs" />
     <Compile Include="Indicators\Suri\SuriVolumeProfileIntraday.cs" />
     <Compile Include="Indicators\Suri\Weiteres\SuriNonAdjusted.cs" />
     <Compile Include="Indicators\Suri\Weiteres\SuriOscillator.cs" />
-    <Compile Include="Indicators\Suri\Weiteres\SuriSpread.cs" />
+    <Compile Include="Indicators\Suri\Weiteres\SuriVolatility.cs" />
     <Compile Include="MarketAnalyzerColumns\%40ChartMini.cs" />
     <Compile Include="MarketAnalyzerColumns\%40ChartNetChange.cs" />
     <Compile Include="MarketAnalyzerColumns\%40DaysUntilRollover.cs" />
@@ -454,6 +453,7 @@
     <Compile Include="Indicators\Suri\SuriBarRange.cs" />
     <Compile Include="DrawingTools\DrawRange.cs" />
     <Compile Include="Indicators\Suri\ComShortOpenInterest.cs" />
+    <Compile Include="Indicators\Suri\dev\SuriFight.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resource.resx">
