@@ -9,9 +9,9 @@ namespace NinjaTrader.Gui.NinjaScript {
     public class SuriChartMonth {
         public int monthValue;
         public int year;
-        public double settle;
-        public double last;
-        public long volume;
-        public long openInterest;
+        public double settle = 0.0;
+        public double last = 0.0;
+        public long volume = 0;
+        public long openInterest = 0;
     }
 }

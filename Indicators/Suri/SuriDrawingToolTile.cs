@@ -66,7 +66,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		protected override void OnRender(ChartControl chartControl, ChartScale chartScale) { }
 		
 		public override void CopyTo(NinjaScript ninjaScript) {
-			DrawingToolTile dti = ninjaScript as DrawingToolTile;
+			SuriDrawingToolTile dti = ninjaScript as SuriDrawingToolTile;
 			if (dti != null) {
 				dti.Left	= Left;
 				dti.Top		= Top;

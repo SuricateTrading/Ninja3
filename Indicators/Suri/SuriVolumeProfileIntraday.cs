@@ -119,7 +119,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				offset										= 0;
 				maxWidth									= null;
 				drawText									= true;
-				drawNakedPoc								= true;
+				drawNakedPoc								= false;
 				valueAreaBrush								= Brushes.RoyalBlue;
 				normalAreaBrush								= Brushes.Azure;
 				pocBrush									= Brushes.Red;
@@ -138,11 +138,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				}
 			}
 		}
-
-		/*protected override void OnMarketDepth(MarketDepthEventArgs e) {
-			base.OnMarketDepth(e);
-			//e.
-		}*/
 
 		protected override void OnMarketData(MarketDataEventArgs e) {
 			if (SuriAddOn.license == License.None || Bars.Count <= 0 || !Bars.IsTickReplay || e.MarketDataType != MarketDataType.Last) return;

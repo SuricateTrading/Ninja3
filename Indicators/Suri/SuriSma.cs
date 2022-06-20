@@ -54,11 +54,15 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			sum = priorSum + Input[0] - (CurrentBar >= days ? Input[days] : 0);
 			Value[0] = sum / (CurrentBar < days ? CurrentBar + 1 : days);
 			
-			if (CurrentBar > 0 && SuriAddOn.license != License.Basic) {
-				if (Value[0] > Value[1]) {
-					PlotBrushes[0][0] = longBrush;
-				} else if (Value[0] < Value[1]) {
-					PlotBrushes[0][0] = shortBrush;
+			if (SuriAddOn.license != License.Basic) {
+				if (CurrentBar < days) {
+					PlotBrushes[0][0] = Brushes.Transparent;
+				} else {
+					if (Value[0] > Value[1]) {
+						PlotBrushes[0][0] = longBrush;
+					} else if (Value[0] < Value[1]) {
+						PlotBrushes[0][0] = shortBrush;
+					}
 				}
 			}
 		}

@@ -96,6 +96,14 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			get { return Serialize.BrushToString(noNewCotBrush); }
 			set { noNewCotBrush = Serialize.StringToBrush(value); }
 		}
+		[XmlIgnore]
+		[Display(Name = "SMA noch nicht bereit", Order = 5, GroupName = "Farben", Description = "Der SMA braucht eine gewisse Menge an Daten, bis er richtig berechnet ist. Normalerweise 125 Bars.")]
+		public Brush smaNotReadyBrush { get; set; }
+		[Browsable(false)]
+		public string smaNotReadyBrushSerialize {
+			get { return Serialize.BrushToString(smaNotReadyBrush); }
+			set { smaNotReadyBrush = Serialize.StringToBrush(value); }
+		}
 		#endregion
 		#endregion
 
@@ -120,12 +128,13 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				noSignalBrush								= Brushes.Yellow;
 				regularLineBrush							= Brushes.DarkGray;
 				noNewCotBrush								= Brushes.Orange;
+				smaNotReadyBrush							= Brushes.CornflowerBlue;
 				lineWidth									= 4;
 				lineWidthSecondary							= 2;
 				weeks										= 26;
 				isDelayed									= false;
 			} else if (State == State.Configure) {
-				suriSma = SuriSma(125);
+				suriSma = SuriSma(125 * weeks / 26);
 				AddPlot(new Stroke(regularLineBrush, lineWidth), PlotStyle.Line, "COT1");
 				AddPlot(new Stroke(shortBrush, lineWidthSecondary), PlotStyle.Line, "10%");
 				AddPlot(new Stroke(brush50Percent, lineWidthSecondary), PlotStyle.Line, "50%");
@@ -173,29 +182,33 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 					isCurrentlyASignal = IsSignal();
 				}
 				if (isCurrentlyASignal) {
-					// check sma
-					int smaBarsAgo = 0;
 					if (isDelayed) {
+						// todo
 						if (CurrentBar >= 15) {
+							//int smaBarsAgo = 0;
 							var reportDate = cotRepo.Get(CurrentBar).date;
 							for (int j = 0; j < 15; j++) {
 								if (Time[j].Date == reportDate.Date) {
-									smaBarsAgo = j;
+									//smaBarsAgo = j;
 									break;
 								}
 								if (j == 14) Print("Warning: Could not find reportDate for SMA.");
 							}
 						}
 					}
-					
-					if (suriSma[0] > suriSma[1] && Value[0] >= 90) {
-						PlotBrushes[0][0] = longBrush;
-						signalIndices.Add(CurrentBar);
-					} else if (suriSma[0] < suriSma[1] && Value[0] <= 10) {
-						PlotBrushes[0][0] = shortBrush;
-						signalIndices.Add(CurrentBar);
+
+					if (CurrentBar < 125 * weeks / 26) {
+						PlotBrushes[0][0] = smaNotReadyBrush;
 					} else {
-						PlotBrushes[0][0] = noSignalBrush;
+						if (suriSma[0] > suriSma[1] && Value[0] >= 90) {
+							PlotBrushes[0][0] = longBrush;
+							signalIndices.Add(CurrentBar);
+						} else if (suriSma[0] < suriSma[1] && Value[0] <= 10) {
+							PlotBrushes[0][0] = shortBrush;
+							signalIndices.Add(CurrentBar);
+						} else {
+							PlotBrushes[0][0] = noSignalBrush;
+						}
 					}
 				}
 			}

@@ -19,7 +19,6 @@ namespace NinjaTrader.Gui.NinjaScript {
         private static List<BarsRequest> _barsRequests = new List<BarsRequest>();
         private static SuriChartData _currentChartData;
 
-        
         public static void Start() {
             try {
                 if (_httpListener != null && _httpListener.IsListening) {
@@ -49,9 +48,10 @@ namespace NinjaTrader.Gui.NinjaScript {
             
             Instrument instrument = SuriCommon.GetInstrument(commodityData);
             for (int i = 0; i < commodityData.count - 3; i++) {
+                SuriCommon.Print(instrument.FullName);
                 var barsRequest = new BarsRequest(instrument, 2) {
                     MergePolicy = MergePolicy.DoNotMerge,
-                    BarsPeriod = new BarsPeriod {BarsPeriodType = BarsPeriodType.Minute, Value = 1},
+                    BarsPeriod = new BarsPeriod {BarsPeriodType = BarsPeriodType.Day, Value = 1},
                     TradingHours = instrument.MasterInstrument.TradingHours,
                 };
                 barsRequest.Request((request, error, arg3) => {
@@ -72,12 +72,16 @@ namespace NinjaTrader.Gui.NinjaScript {
                             _currentChartData.months.Add(suriChartMonth);
                         }
 
-                        suriChartMonth.last = request.Bars.GetClose(0);
-                        suriChartMonth.settle = request.Bars.GetClose(0);
-                        suriChartMonth.volume = request.Bars.GetVolume(0);
+                        if (request.Bars.Count > 1) {
+                            suriChartMonth.last = request.Bars.GetClose(0);
+                            suriChartMonth.settle = request.Bars.GetClose(0);
+                            suriChartMonth.volume = request.Bars.GetVolume(0);
+                        } else {
+                            SuriCommon.Print("Empty bars.");
+                        }
+                        
                         suriChartMonth.year = year;
                         suriChartMonth.monthValue = month;
-                        suriChartMonth.openInterest = 0;
                     } catch (Exception e) {
                         SuriCommon.Print(e.ToString());
                     }

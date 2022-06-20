@@ -453,7 +453,6 @@
     <Compile Include="Indicators\Suri\SuriBarRange.cs" />
     <Compile Include="DrawingTools\DrawRange.cs" />
     <Compile Include="Indicators\Suri\ComShortOpenInterest.cs" />
-    <Compile Include="Indicators\Suri\dev\SuriFight.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resource.resx">
