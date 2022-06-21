@@ -4,26 +4,14 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
-using System.Windows.Media;
 using System.Xml.Serialization;
 using NinjaTrader.Custom.AddOns.SuriCommon;
-using NinjaTrader.Custom.AddOns.SuriData;
 using NinjaTrader.Gui;
-using NinjaTrader.Gui.Chart;
-using NinjaTrader.Gui.NinjaScript;
 using NinjaTrader.NinjaScript;
-using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
-	public sealed class SuriCot : Indicator {
-		private CotRepo cotRepo;
-		private double min = double.MaxValue;
-		private double max = double.MinValue;
-		private DateTime? lastMinDate;
-		private DateTime? lastMaxDate;
-		
-		#region Properties
+	public sealed class SuriCot : Suri2080Indicator {
 		[TypeConverter(typeof(FriendlyEnumConverter))]
 		[PropertyEditor("NinjaTrader.Gui.Tools.StringStandardValuesEditorKey")]
 		[NinjaScriptProperty]
@@ -31,136 +19,17 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		[XmlIgnore]
 		public SuriCotReportField reportField { get; set; }
 		
-		[Browsable(false)]
-		public int cotSerialize {
-			get { return (int) reportField; }
-			set { reportField = (SuriCotReportField) value; }
-		}
-		
-		[XmlIgnore]
-		[Display(Name="Zeichne 20% und 80% Linien", Order=0, GroupName="Parameter")]
-		public bool drawLines { get; set; }
-
-		[NinjaScriptProperty]
-		[XmlIgnore]
-		[Range(1, int.MaxValue)]
-		[Display(Name="Jahre der 20% und 80% Linien", Order=1, GroupName="Parameter")]
-		public int years { get; set; }
-
-		[XmlIgnore]
-		[Range(1, int.MaxValue)]
-		[Display(Name="Breite der Hauptlinie", Order=2, GroupName="Parameter")]
-		public int lineWidth
-		{ get; set; }
-		[XmlIgnore]
-		[Range(1, int.MaxValue)]
-		[Display(Name="Breite der sekundären Linien", Order=3, GroupName="Parameter")]
-		public int lineWidthSecondary
-		{ get; set; }
-
-		[XmlIgnore]
-		[Display(Name = "Normale Linie", Order = 0, GroupName = "Farben")]
-		public Brush regularLineBrush { get; set; }
-		[Browsable(false)]
-		public string regularLineBrushSerialize {
-			get { return Serialize.BrushToString(regularLineBrush); }
-			set { regularLineBrush = Serialize.StringToBrush(value); }
-		}
-		[XmlIgnore]
-		[Display(Name = "20% Linie", Order = 1, GroupName = "Farben")]
-		public Brush brush20 { get; set; }
-		[Browsable(false)]
-		public string brushSerialize20 {
-			get { return Serialize.BrushToString(brush20); }
-			set { brush20 = Serialize.StringToBrush(value); }
-		}
-		
-		[XmlIgnore]
-		[Display(Name = "80% Linie", Order = 2, GroupName = "Farben")]
-		public Brush brush80 { get; set; }
-		[Browsable(false)]
-		public string brushSerialize80 {
-			get { return Serialize.BrushToString(brush80); }
-			set { brush80 = Serialize.StringToBrush(value); }
-		}
-		
-		[XmlIgnore]
-		[Display(Name = "Keine neuen COT Daten", Order = 3, GroupName = "Farben", Description = "Wird benutzt, wenn die CFTC keinen aktuellen COT Report veröffentlicht hat.")]
-		public Brush noNewCotBrush { get; set; }
-		[Browsable(false)]
-		public string noNewCotBrushSerialize {
-			get { return Serialize.BrushToString(noNewCotBrush); }
-			set { noNewCotBrush = Serialize.StringToBrush(value); }
-		}
-		#endregion
-		
 		protected override void OnStateChange() {
+			base.OnStateChange();
 			if (State == State.SetDefaults) {
-				Name										= "CoT-Daten";
-				Description									= @"CoT-Daten";
-				Calculate									= Calculate.OnPriceChange;
-				IsOverlay									= false;
-				DisplayInDataBox							= true;
-				DrawOnPricePanel							= true;
-				DrawHorizontalGridLines						= true;
-				DrawVerticalGridLines						= true;
-				PaintPriceMarkers							= true;
-				ScaleJustification							= ScaleJustification.Right;
-				IsSuspendedWhileInactive					= true;
-				BarsRequiredToPlot							= 0;
-				
-				drawLines									= true;
-				brush20										= Brushes.RoyalBlue;
-				brush80										= Brushes.RoyalBlue;
-				regularLineBrush							= Brushes.DarkGray;
-				noNewCotBrush								= Brushes.Orange;
-				lineWidth									= 2;
-				lineWidthSecondary							= 1;
-				reportField									= SuriCotReportField.CommercialLong;
-				years										= 4;
-			} else if (State == State.Configure) {
-				AddPlot(new Stroke(regularLineBrush, lineWidth), PlotStyle.Line, "CoT-Daten");
-				if (drawLines) {
-					AddPlot(new Stroke(brush20, lineWidthSecondary), PlotStyle.Line, "20%");
-					AddPlot(new Stroke(brush80, lineWidthSecondary), PlotStyle.Line, "80%");
-				}
-				lastMinDate = null;
-				lastMaxDate = null;
-			} else if (State == State.DataLoaded) {
-				if (Bars.Count > 0) cotRepo = new CotRepo(Instrument, Bars, false, Bars.GetTime(0).AddYears(-years).AddDays(-14));
+				Description = @"CoT-Daten";
+				Name = "CoT-Daten";
+				reportField = SuriCotReportField.CommercialShort;
 			}
 		}
-		public override string DisplayName { get { return Name + " " + CotReportMaper.ReportToString(reportField); } }
-		private double ValueOf(double percent) { return min + percent * (max - min); }
-		protected override void OnRender(ChartControl chartControl, ChartScale chartScale) {
-			base.OnRender(chartControl, chartScale);
-			if (SuriAddOn.license == License.None) SuriCommon.NoValidLicenseError(RenderTarget, ChartControl, ChartPanel);
-		}
-
-		protected override void OnBarUpdate() {
-			if (SuriAddOn.license == License.None || cotRepo == null || cotRepo.IsEmpty()) return;
-			
-			DbCotData cotData = null;
-			try {
-				cotData = cotRepo.Get(CurrentBar);
-				if (cotData == null) return;
-				int value = GetCotValue(cotData);
-				Value[0] = value;
-			} catch (Exception) {
-				if (CurrentBar > 10) Value[0] = Value[1];
-			}
-			if (cotData == null) return;
-			
-			if (drawLines) {
-				SetMinMax();
-				Values[1][0] = ValueOf(0.2);
-				Values[2][0] = ValueOf(0.8);
-			}
-			
-			if ((Time[0].Date - cotData.date).TotalDays > 12) PlotBrushes[0][0] = noNewCotBrush;
-		}
-
-		private int GetCotValue(DbCotData cotData) {
+		public override string DisplayName { get { return CotReportMaper.ReportToString(reportField); } }
+		protected override string plotName { get { return CotReportMaper.ReportToString(reportField); } }
+		protected override double GetMainValue(DbCotData cotData) {
 			switch (reportField) {
 				case SuriCotReportField.OpenInterest: return cotData.openInterest;
 				case SuriCotReportField.NoncommercialLong: return cotData.nonCommercialsLong;
@@ -189,34 +58,8 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			}
 			return 0;
 		}
-		
-		private void SetMinMax() {
-			int currentCotIndex = cotRepo.CotIndexOf(CurrentBar);
-			DateTime currentReportDate = cotRepo.data[currentCotIndex].date;
-			
-			if (lastMinDate == null || lastMaxDate == null ||
-				Math.Abs((lastMinDate.Value - currentReportDate).Days / 365.0) >= years ||
-			    Math.Abs((lastMaxDate.Value - currentReportDate).Days / 365.0) >= years
-			) {
-				// the last max or min is too far away. Recalculate.
-				min = double.MaxValue;
-				max = double.MinValue;
-				for (int i = currentCotIndex; i >= 0; i--) {
-					int cotValue = GetCotValue(cotRepo.data[i]);
-					DateTime date = cotRepo.data[i].date;
-					if (min > cotValue) { min = cotValue; lastMinDate = date; }
-					if (max < cotValue) { max = cotValue; lastMaxDate = date; }
-					if (Math.Abs((date - currentReportDate).Days / 365.0) >= years) break;
-				}
-			} else {
-				if (min > Value[0]) { min = Value[0]; lastMinDate = currentReportDate; }
-				if (max < Value[0]) { max = Value[0]; lastMaxDate = currentReportDate; }
-			}
-		}
-
 	}
 }
-
 
 
 #region Boilerplate code for enum list
@@ -357,30 +200,6 @@ public enum SuriCotReportField {
 #endregion
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 //
 
 #region NinjaScript generated code. Neither change nor remove.
@@ -390,18 +209,18 @@ namespace NinjaTrader.NinjaScript.Indicators
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
 		private Suri.SuriCot[] cacheSuriCot;
-		public Suri.SuriCot SuriCot(SuriCotReportField reportField, int years)
+		public Suri.SuriCot SuriCot(SuriCotReportField reportField)
 		{
-			return SuriCot(Input, reportField, years);
+			return SuriCot(Input, reportField);
 		}
 
-		public Suri.SuriCot SuriCot(ISeries<double> input, SuriCotReportField reportField, int years)
+		public Suri.SuriCot SuriCot(ISeries<double> input, SuriCotReportField reportField)
 		{
 			if (cacheSuriCot != null)
 				for (int idx = 0; idx < cacheSuriCot.Length; idx++)
-					if (cacheSuriCot[idx] != null && cacheSuriCot[idx].reportField == reportField && cacheSuriCot[idx].years == years && cacheSuriCot[idx].EqualsInput(input))
+					if (cacheSuriCot[idx] != null && cacheSuriCot[idx].reportField == reportField && cacheSuriCot[idx].EqualsInput(input))
 						return cacheSuriCot[idx];
-			return CacheIndicator<Suri.SuriCot>(new Suri.SuriCot(){ reportField = reportField, years = years }, input, ref cacheSuriCot);
+			return CacheIndicator<Suri.SuriCot>(new Suri.SuriCot(){ reportField = reportField }, input, ref cacheSuriCot);
 		}
 	}
 }
@@ -410,14 +229,14 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.SuriCot SuriCot(SuriCotReportField reportField, int years)
+		public Indicators.Suri.SuriCot SuriCot(SuriCotReportField reportField)
 		{
-			return indicator.SuriCot(Input, reportField, years);
+			return indicator.SuriCot(Input, reportField);
 		}
 
-		public Indicators.Suri.SuriCot SuriCot(ISeries<double> input , SuriCotReportField reportField, int years)
+		public Indicators.Suri.SuriCot SuriCot(ISeries<double> input , SuriCotReportField reportField)
 		{
-			return indicator.SuriCot(input, reportField, years);
+			return indicator.SuriCot(input, reportField);
 		}
 	}
 }
@@ -426,14 +245,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.SuriCot SuriCot(SuriCotReportField reportField, int years)
+		public Indicators.Suri.SuriCot SuriCot(SuriCotReportField reportField)
 		{
-			return indicator.SuriCot(Input, reportField, years);
+			return indicator.SuriCot(Input, reportField);
 		}
 
-		public Indicators.Suri.SuriCot SuriCot(ISeries<double> input , SuriCotReportField reportField, int years)
+		public Indicators.Suri.SuriCot SuriCot(ISeries<double> input , SuriCotReportField reportField)
 		{
-			return indicator.SuriCot(input, reportField, years);
+			return indicator.SuriCot(input, reportField);
 		}
 	}
 }
