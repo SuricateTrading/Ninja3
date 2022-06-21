@@ -18,16 +18,22 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		[Display(Name = "COT Daten", Order=0, GroupName = "Parameter")]
 		[XmlIgnore]
 		public SuriCotReportField reportField { get; set; }
-		
+
+		private String initialName;
 		protected override void OnStateChange() {
 			base.OnStateChange();
 			if (State == State.SetDefaults) {
 				Description = @"CoT-Daten";
 				Name = "CoT-Daten";
+				initialName = Name;
 				reportField = SuriCotReportField.CommercialShort;
 			}
 		}
-		public override string DisplayName { get { return CotReportMaper.ReportToString(reportField); } }
+
+		public override string DisplayName {
+			get { return Name.Equals(initialName) ? CotReportMaper.ReportToString(reportField) : Name; }
+		}
+
 		protected override string plotName { get { return CotReportMaper.ReportToString(reportField); } }
 		protected override double GetMainValue(DbCotData cotData) {
 			switch (reportField) {

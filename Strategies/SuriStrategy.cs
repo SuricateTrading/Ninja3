@@ -9,9 +9,9 @@ namespace NinjaTrader.NinjaScript.Strategies {
 		protected override void OnStateChange() {
 			base.OnStateChange();
 			if (State == State.SetDefaults) Name = "SuriTest";
-			else if (State == State.DataLoaded) PrepareMyTk();
+			//else if (State == State.DataLoaded) PrepareMyTk();
 		}
-
+/*
 		private void PrepareCot1() {
 			SuriCot1 cot1 = SuriCot1(125, true);
 			SuriCot2 cot2 = SuriCot2(true);
@@ -63,6 +63,6 @@ namespace NinjaTrader.NinjaScript.Strategies {
 			//AddChartIndicator(vpIntra);
 			strategy = new VpIntraStrategy(Bars, Instrument, barRange);
 		}
-
+*/
 	}
 }
