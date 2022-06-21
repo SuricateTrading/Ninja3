@@ -98,9 +98,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AddOns\AbstractIndicators\Suri2080Indicator.cs" />
     <Compile Include="AddOns\NinjaTk\NinjaTk.cs" />
     <Compile Include="AddOns\NinjaTk\SuriChartData.cs" />
-    <Compile Include="AddOns\Suri2080Indicator.cs" />
     <Compile Include="AddOns\SuriCommon\RenderCommons.cs" />
     <Compile Include="AddOns\SuriCommon\SuriSettings.cs" />
     <Compile Include="AddOns\SuriData\CotRepo.cs" />
@@ -506,9 +506,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include=".gitignore" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="AddOns\AbstractIndicators" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

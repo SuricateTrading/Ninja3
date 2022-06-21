@@ -15,6 +15,3 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		protected override double GetMainValue(DbCotData cotData) { return 100 * cotData.commercialsShort / (double) cotData.openInterest; }
 	}
 }
-
-
-//

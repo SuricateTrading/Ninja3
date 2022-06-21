@@ -34,6 +34,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				moveLines									= true;
 				topLinePercent								= 75;
 				bottomLinePercent							= 25;
+				reportField									= SuriCotReportField.CommercialShort;
 			}
 		}
 		protected override string plotName { get { return "Com Short"; } }
@@ -54,37 +55,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		}
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//
 
 #region NinjaScript generated code. Neither change nor remove.
 
