@@ -25,6 +25,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 	public sealed class SuriVolumeProfileIntraday : Indicator {
 		private SuriVpIntraData suriVpIntraData = new SuriVpIntraData();
 		private int? lastBar;
+		private RectangleF rect;
 		
 		private SharpDX.Direct2D1.Brush normalAreaFill;
 		private SharpDX.Direct2D1.Brush pocFill;
@@ -60,6 +61,11 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		public bool showBidAsk { get; set; }
 		[Display(Name = "Platz zwischen Bid/Ask", Order = 5, GroupName = "Parameter", Description = "Wenn das Volumen in Bids und Asks unterteilt ist, stellt man hiermit den Platz zwischen den Bid und Ask Balken ein.")]
 		public int bidAskSpace { get; set; }
+		[Display(Name = "Zeige Bid/Ask Delta (P)", Order = 6, GroupName = "Parameter", Description = "Zeichnet eine Linie, die die Differenz zwischen Bids und Asks für jeden Tick anzeigt. Nur für Premium-Suris.")]
+		public bool showBidAskDelta { get; set; }
+		[Display(Name = "Breite der Bid/Ask Delta Linie", Order = 6, GroupName = "Parameter")]
+		[Range(1, 100)]
+		public int bidAskDeltaLineWidth { get; set; }
 		
 		#region Colors
 		[XmlIgnore]
@@ -92,7 +98,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		
 		[XmlIgnore]
 		[Display(Name = "Bid Ask Delta Linie", Order = 3, GroupName = "Farben")]
-		[Browsable(false)]
 		public Brush footprintBrush { get; set; }
 		[Browsable(false)]
 		public string footprintBrushSerialize {
@@ -138,16 +143,18 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				drawTickText								= true;
 				drawNakedPoc								= false;
 				showBidAsk									= false;
+				showBidAskDelta								= false;
 				valueAreaBrush								= Brushes.RoyalBlue.Clone();
 				normalAreaBrush								= Brushes.DarkGray.Clone();
 				pocBrush									= Brushes.DarkOrange;
 				smaBrush									= Brushes.Yellow;
-				footprintBrush								= Brushes.Orange;
+				footprintBrush								= Brushes.Yellow;
 				tickTextBrush								= Brushes.White;
 				boxBrush									= Brushes.CornflowerBlue.Clone();
 				boxBrush.Opacity							= 0.5;
 				opacity										= 100;
 				bidAskSpace									= 5;
+				bidAskDeltaLineWidth						= 2;
 			} else if (State == State.Configure) {
 				textFormatBarInfo = new TextFormat(Globals.DirectWriteFactory,"Arial", textSize);
 				if (!Bars.IsTickReplay && SuriAddOn.license == License.Dev /*&& Bars.BarsPeriod.BarsPeriodType == BarsPeriodType.Minute && Bars.BarsPeriod.Value == 1440*/) {
@@ -215,7 +222,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			if (!suriVpIntraData.isPrepared) suriVpIntraData.Prepare();
 			if (textFill == null) textFill = ChartControl.Properties.ChartText.ToDxBrush(RenderTarget);
 
-			RectangleF rect = new RectangleF();
+			rect = new RectangleF();
 			float barWidth = (float) (chartControl.GetXByBarIndex(ChartBars, 1) - chartControl.GetXByBarIndex(ChartBars, 0) - chartControl.BarWidth*1.2);
 
 			bool isFirstTick = true;
@@ -236,28 +243,32 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 						}
 					}
 				}*/
+
+				previousDelta = null;
 				
 				// Draw for each tick
 				rect.X = chartControl.GetXByBarIndex(ChartBars, barIndex) + offset;
 				foreach (KeyValuePair<int, SuriVpTickData> entry in suriVpIntraData.barData[barIndex].tickData) {
 					SuriVpTickData tickData = entry.Value;
-					DrawVolumeBar(rect, chartScale, tickData, barWidth, barIndex, isFirstTick);
-					DrawNakedPoc(rect, tickData);
+					DrawVolumeBar(chartScale, tickData, barWidth, barIndex, isFirstTick);
+					DrawNakedPoc(tickData);
+					DrawBidAskDeltaLine(barIndex, tickData, barWidth);
+					
 					//DrawLvn();
 					//DrawDistributedVolume();
-					//DrawBidAskDeltaLine(rect, barIndex, tickData, barWidth);
+					
 					isFirstTick = false;
 				}
 				
 				// Draw per Bar
-				if (drawText && barWidth > 20) DrawText(rect, barIndex, chartScale);
+				if (drawText && barWidth > 20) DrawText(barIndex, chartScale);
 				//if (SuriAddOn.license == License.Dev) DrawBox(barIndex, chartScale, chartControl);
 			}
 		}
 
 		private bool showSpaceBetweenBars;
 		private bool showTickBarText;
-		private void DrawVolumeBar(RectangleF rect, ChartScale chartScale, SuriVpTickData tickData, float barWidth, int barIndex, bool isFirstBar) {
+		private void DrawVolumeBar(ChartScale chartScale, SuriVpTickData tickData, float barWidth, int barIndex, bool isFirstBar) {
 			double priceLower = tickData.tick * TickSize - TickSize / 2;
 			float yLower = chartScale.GetYByValue(priceLower);
 			float yUpper = chartScale.GetYByValue(priceLower + TickSize);
@@ -276,7 +287,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			rect.Height = height;
 			
 			SharpDX.Direct2D1.Brush b;
-			/*if (entry.Value.isLvn)				b = testing1Fill;
+			/*if (entry.Value.isLvn)			b = testing1Fill;
 			else if (entry.Value.isHigh)		b = testing2Fill;
 			else */
 			if (tickData.isMainPoc)				b = pocFill;
@@ -285,11 +296,11 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			
 			if (showBidAsk) {
 				// left
-				rect.Width = -(float) ((maxWidth ?? barWidth) * tickData.asks / suriVpIntraData.barData[barIndex].pocVolume);
+				rect.Width = -(float) ((maxWidth ?? barWidth) * tickData.bids / suriVpIntraData.barData[barIndex].pocVolume);
 				rect.X -= bidAskSpace;
 				RenderTarget.FillRectangle(rect, b);
 				// right
-				rect.Width = (float) ((maxWidth ?? barWidth) * tickData.bids / suriVpIntraData.barData[barIndex].pocVolume);
+				rect.Width = (float) ((maxWidth ?? barWidth) * tickData.asks / suriVpIntraData.barData[barIndex].pocVolume);
 				rect.X += bidAskSpace * 2;
 				RenderTarget.FillRectangle(rect, b);
 				
@@ -299,11 +310,11 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 					if (textFormatTickInfo == null || isFirstBar) {
 						textFormatTickInfo = new TextFormat(Globals.DirectWriteFactory,"Arial", rect.Height * 0.85f);
 					}
-					TextLayout textLayout = new TextLayout(Globals.DirectWriteFactory, tickData.asks.ToString("F0"), textFormatTickInfo, rect.X - bidAskSpace - 5, ChartPanel.H);
+					TextLayout textLayout = new TextLayout(Globals.DirectWriteFactory, tickData.bids.ToString("F0"), textFormatTickInfo, rect.X - bidAskSpace - 5, ChartPanel.H);
 					textLayout.TextAlignment = TextAlignment.Trailing;
 					RenderTarget.DrawTextLayout(new Vector2(0, rect.Y), textLayout, tickTextFill, DrawTextOptions.NoSnap);
 					
-					textLayout = new TextLayout(Globals.DirectWriteFactory, tickData.bids.ToString("F0"), textFormatTickInfo, ChartPanel.W, ChartPanel.H);
+					textLayout = new TextLayout(Globals.DirectWriteFactory, tickData.asks.ToString("F0"), textFormatTickInfo, ChartPanel.W, ChartPanel.H);
 					RenderTarget.DrawTextLayout(new Vector2(rect.X + bidAskSpace + 5, rect.Y), textLayout, tickTextFill, DrawTextOptions.NoSnap);
 				}
 			}
@@ -323,7 +334,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			}
 		}
 		
-		private void DrawNakedPoc(RectangleF rect, SuriVpTickData tickData) {
+		private void DrawNakedPoc(SuriVpTickData tickData) {
 			if (!drawNakedPoc || !tickData.isNakedPoc) return;
 			
 			float pocX1 = rect.X + rect.Width + 10;
@@ -344,16 +355,14 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		}
 
 		private float? previousDelta;
-		private void DrawBidAskDeltaLine(RectangleF rect, int barIndex, SuriVpTickData tickData, float barWidth) {
-			if (SuriAddOn.license != License.Dev) return;
-			
-			float delta = tickData.asks - tickData.bids;
-			delta = (float) (((maxWidth ?? barWidth)/2f) * delta / suriVpIntraData.barData[barIndex].highestDelta);
+		private void DrawBidAskDeltaLine(int barIndex, SuriVpTickData tickData, float barWidth) {
+			if (!showBidAskDelta || SuriAddOn.license != License.Dev && SuriAddOn.license != License.Premium) return;
+			float delta = (float) (((maxWidth ?? barWidth)/2f) * (tickData.asks - tickData.bids) / suriVpIntraData.barData[barIndex].highestDelta);
 			if (previousDelta != null) {
 				RenderTarget.DrawLine(
 					new Vector2(rect.X + previousDelta.Value, rect.Y + rect.Height + rect.Height / 2f),
 					new Vector2(rect.X + delta              , rect.Y + rect.Height / 2f),
-					footprintFill, 1.5f
+					footprintFill, bidAskDeltaLineWidth
 				);
 			}
 			previousDelta = delta;
@@ -383,7 +392,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			*/
 		}
 
-		private void DrawText(RectangleF rect, int barIndex, ChartScale chartScale) {
+		private void DrawText(int barIndex, ChartScale chartScale) {
 			double delta = suriVpIntraData.barData[barIndex].delta;
 			string str =	"Σ " + suriVpIntraData.barData[barIndex].totalVolume + "\n" +
 			                "∆ " + delta + "\n" +
