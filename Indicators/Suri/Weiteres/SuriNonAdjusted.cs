@@ -18,6 +18,10 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.Weiteres {
 	public class SuriNonAdjusted : Indicator {
 		private Bars bars;
 		private bool isPrepared;
+		
+		//[NinjaScriptProperty]
+		[Display(Name = "Preis Typ", Order = 0, GroupName = "Parameter", Description = "")]
+		public PriceType priceType { get; set; }
 
 		[NinjaScriptProperty]
 		[Display(Name = "Instrumentname", Order = 0, GroupName = "Parameter", Description = "Lasse das Feld leer, damit das Haupt-Instrument benutzt wird. Ansonsten kann beispielsweise 'GC 04-23' eingegeben werden.")]
@@ -53,6 +57,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.Weiteres {
 				BarsRequiredToPlot							= 0;
 				market										= "";
 				merge										= false;
+				priceType									= PriceType.Preis;
 			} else if (State == State.Configure) {
 				AddPlot(Brushes.White, "O");
 				AddPlot(Brushes.White, "H");
@@ -106,8 +111,12 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.Weiteres {
 					opens[j] 	=	bars.GetOpen(index.Item2);
 					highs[j] 	=	bars.GetHigh(index.Item2);
 					lows[j]		=	bars.GetLow(index.Item2);
-					closes[j]	=	bars.GetClose(index.Item2);
 					volumes[j]	=	bars.GetVolume(index.Item2);
+					switch (priceType) {
+						case PriceType.Ask:		closes[j] = bars.GetAsk(index.Item2); break;
+						case PriceType.Bid:		closes[j] = bars.GetBid(index.Item2); break;
+						case PriceType.Preis:	closes[j] = bars.GetClose(index.Item2); break;
+					}
 					index = SuriCommon.SynchronizeIndex(new Tuple<int, int>(index.Item1 + 1, index.Item2 + 1), Bars, bars);
 				} else {
 					opens[j] 	= double.NaN;
@@ -180,6 +189,12 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.Weiteres {
 			}
 		}
 
+	}
+
+	public enum PriceType {
+		Ask,
+		Bid,
+		Preis,
 	}
 }
 

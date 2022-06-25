@@ -11,9 +11,12 @@ using NinjaTrader.Gui.Tools;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Xml.Serialization;
+using NinjaTrader.Core;
 using NinjaTrader.Custom.AddOns.SuriCommon;
 using NinjaTrader.Custom.AddOns.SuriCommon.Vp;
 using NinjaTrader.Gui.NinjaScript;
+using SharpDX.Direct2D1;
+using SharpDX.DirectWrite;
 using Brush = System.Windows.Media.Brush;
 using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
 #endregion
@@ -23,7 +26,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		private SuriVpIntraData suriVpIntraData = new SuriVpIntraData();
 		private int? lastBar;
 		
-		#region Properties
 		private SharpDX.Direct2D1.Brush normalAreaFill;
 		private SharpDX.Direct2D1.Brush pocFill;
 		private SharpDX.Direct2D1.Brush vaFill;
@@ -31,11 +33,14 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		private SharpDX.Direct2D1.Brush smaFill;
 		private SharpDX.Direct2D1.Brush footprintFill;
 		private SharpDX.Direct2D1.Brush boxFill;
+		private SharpDX.Direct2D1.Brush tickTextFill;
 		private SharpDX.Direct2D1.Brush testing1Fill;
 		private SharpDX.Direct2D1.Brush testing2Fill;
 		private SharpDX.Direct2D1.Brush testing3Fill;
-		private SharpDX.DirectWrite.TextFormat textFormat;
-
+		private SharpDX.DirectWrite.TextFormat textFormatBarInfo;
+		private SharpDX.DirectWrite.TextFormat textFormatTickInfo;
+		
+		#region Properties
 		[Display(Name = "Breite", Order = 0, GroupName = "Parameter", Description = "Wenn leer, dann wird die Breite automatisch berechnet. Ansonsten wird es maximal so breit.")]
 		public int? maxWidth { get; set; }
 		
@@ -45,10 +50,16 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		[Display(Name = "Textgröße", Order = 0, GroupName = "Parameter")]
 		public int textSize { get; set; }
 		
-		[Display(Name = "Zeige Text", Order = 1, GroupName = "Parameter")]
+		[Display(Name = "Zeige Text unter der Bar", Order = 1, GroupName = "Parameter")]
 		public bool drawText { get; set; }
-		[Display(Name = "Zeige 'Naked PoC'", Order = 2, GroupName = "Parameter")]
+		[Display(Name = "Zeige Text bei Ticks", Order = 2, GroupName = "Parameter")]
+		public bool drawTickText { get; set; }
+		[Display(Name = "Zeige 'Naked PoC'", Order = 3, GroupName = "Parameter")]
 		public bool drawNakedPoc { get; set; }
+		[Display(Name = "Unterteile in Bid/Ask", Order = 4, GroupName = "Parameter", Description = "Unterteilt das Volumen in Bids und Asks. Wird auch als Footprintchart bezeichnet.")]
+		public bool showBidAsk { get; set; }
+		[Display(Name = "Platz zwischen Bid/Ask", Order = 5, GroupName = "Parameter", Description = "Wenn das Volumen in Bids und Asks unterteilt ist, stellt man hiermit den Platz zwischen den Bid und Ask Balken ein.")]
+		public int bidAskSpace { get; set; }
 		
 		#region Colors
 		[XmlIgnore]
@@ -75,20 +86,12 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			get { return Serialize.BrushToString(pocBrush); }
 			set { pocBrush = Serialize.StringToBrush(value); }
 		}
-		[XmlIgnore]
-		[Display(Name = "Text", Order = 3, GroupName = "Farben")]
-		public Brush textBrush { get; set; }
-		[Browsable(false)]
-		public string textBrushSerialize {
-			get { return Serialize.BrushToString(textBrush); }
-			set { textBrush = Serialize.StringToBrush(value); }
-		}
 		
 		private Brush smaBrush { get; set; }
 		private Brush boxBrush { get; set; }
 		
 		[XmlIgnore]
-		[Display(Name = "Bid Ask Delta Linie", Order = 4, GroupName = "Farben")]
+		[Display(Name = "Bid Ask Delta Linie", Order = 3, GroupName = "Farben")]
 		[Browsable(false)]
 		public Brush footprintBrush { get; set; }
 		[Browsable(false)]
@@ -96,6 +99,19 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			get { return Serialize.BrushToString(footprintBrush); }
 			set { footprintBrush = Serialize.StringToBrush(value); }
 		}
+		[XmlIgnore]
+		[Display(Name = "Text bei Ticks", Order = 4, GroupName = "Farben")]
+		public Brush tickTextBrush { get; set; }
+		[Browsable(false)]
+		public string tickTextBrushSerialize {
+			get { return Serialize.BrushToString(tickTextBrush); }
+			set { tickTextBrush = Serialize.StringToBrush(value); }
+		}
+		
+		[Display(Name = "Deckkraft der Volumenfarben in %", Order = 5, GroupName = "Farben", Description = "Wie hoch die Deckkraft der Value Area und Normal Area sein soll. Bei niedriger Deckkraft kann man besser die normale Bar dahinter sehen.")]
+		[Range(1, 100)]
+		public int opacity { get; set; }
+		
 		#endregion
 		#endregion
 		
@@ -119,29 +135,37 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				offset										= 0;
 				maxWidth									= null;
 				drawText									= true;
+				drawTickText								= true;
 				drawNakedPoc								= false;
-				valueAreaBrush								= Brushes.RoyalBlue;
-				normalAreaBrush								= Brushes.Azure;
-				pocBrush									= Brushes.Red;
-				textBrush									= Brushes.White;
+				showBidAsk									= false;
+				valueAreaBrush								= Brushes.RoyalBlue.Clone();
+				normalAreaBrush								= Brushes.DarkGray.Clone();
+				pocBrush									= Brushes.DarkOrange;
 				smaBrush									= Brushes.Yellow;
 				footprintBrush								= Brushes.Orange;
+				tickTextBrush								= Brushes.White;
 				boxBrush									= Brushes.CornflowerBlue.Clone();
 				boxBrush.Opacity							= 0.5;
+				opacity										= 100;
+				bidAskSpace									= 5;
 			} else if (State == State.Configure) {
-				SimpleFont font = new SimpleFont { Size = textSize };
-				textFormat					= font.ToDirectWriteTextFormat();
-				textFormat.TextAlignment	= SharpDX.DirectWrite.TextAlignment.Leading;
-				textFormat.WordWrapping		= SharpDX.DirectWrite.WordWrapping.NoWrap;
+				textFormatBarInfo = new TextFormat(Globals.DirectWriteFactory,"Arial", textSize);
 				if (!Bars.IsTickReplay && SuriAddOn.license == License.Dev /*&& Bars.BarsPeriod.BarsPeriodType == BarsPeriodType.Minute && Bars.BarsPeriod.Value == 1440*/) {
 					suriVpIntraData = SuriIntraRepo.GetVpIntra(Instrument, Bars.GetTime(0).Date, Bars.LastBarTime.Date);
 				}
+				valueAreaBrush	= valueAreaBrush.Clone();
+				normalAreaBrush	= normalAreaBrush.Clone();
+				normalAreaBrush.Opacity = opacity / 100.0;
+				valueAreaBrush.Opacity = opacity / 100.0;
 			}
 		}
+		/*
+		 * todo:
+		 *	- wenn eine neue bar entsteht, wird das volumen dort nicht angesammelt.
+		 */
 
 		protected override void OnMarketData(MarketDataEventArgs e) {
 			if (SuriAddOn.license == License.None || Bars.Count <= 0 || !Bars.IsTickReplay || e.MarketDataType != MarketDataType.Last) return;
-			//Print("asdsd " + e.MarketDataType);
 			if (lastBar != CurrentBar) {
 				lastBar = CurrentBar;
 				suriVpIntraData.barData.Add(new SuriVpBarData(TickSize, e.Time));
@@ -160,6 +184,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				smaFill.Dispose();
 				footprintFill.Dispose();
 				boxFill.Dispose();
+				tickTextFill.Dispose();
 				testing1Fill.Dispose();
 				testing2Fill.Dispose();
 				testing3Fill.Dispose();
@@ -168,10 +193,11 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				normalAreaFill = normalAreaBrush.ToDxBrush(RenderTarget);
 				pocFill = pocBrush.ToDxBrush(RenderTarget);
 				vaFill = valueAreaBrush.ToDxBrush(RenderTarget);
-				textFill = textBrush.ToDxBrush(RenderTarget);
+				if (ChartControl != null) textFill = ChartControl.Properties.ChartText.ToDxBrush(RenderTarget);
 				smaFill = smaBrush.ToDxBrush(RenderTarget);
 				footprintFill = footprintBrush.ToDxBrush(RenderTarget);
 				boxFill = boxBrush.ToDxBrush(RenderTarget);
+				tickTextFill = tickTextBrush.ToDxBrush(RenderTarget);
 				testing1Fill = Brushes.Red.ToDxBrush(RenderTarget);
 				testing2Fill = Brushes.Green.ToDxBrush(RenderTarget);
 				testing3Fill = Brushes.Yellow.ToDxBrush(RenderTarget);
@@ -187,137 +213,202 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				return;
 			}
 			if (!suriVpIntraData.isPrepared) suriVpIntraData.Prepare();
+			if (textFill == null) textFill = ChartControl.Properties.ChartText.ToDxBrush(RenderTarget);
 
-			SharpDX.DirectWrite.TextLayout textLayout;
 			RectangleF rect = new RectangleF();
 			float barWidth = (float) (chartControl.GetXByBarIndex(ChartBars, 1) - chartControl.GetXByBarIndex(ChartBars, 0) - chartControl.BarWidth*1.2);
 
-			int vpIndex = 0;
-			for (int visibleBarIndex = ChartBars.FromIndex; visibleBarIndex <= ChartBars.ToIndex; visibleBarIndex++) {
-
-				if (Bars.IsTickReplay) {
-					vpIndex = visibleBarIndex;
-				} else {
+			bool isFirstTick = true;
+			for (int barIndex = ChartBars.FromIndex; barIndex <= ChartBars.ToIndex; barIndex++) {
+				/*if (!Bars.IsTickReplay) {
+					// only for cached VP intra data...
 					// this can only happen in a 1440-minute chart when tickreplay is disabled.
-					// caution: the user may have MORE bars loaded than vp-data is laoded, because cached vp data is only available since *SuriIntraRepo.startOfCachedData*
-					if (ChartBars.Bars.GetTime(visibleBarIndex).Date < SuriIntraRepo.startOfCachedData.Date) {
+					// the user may have MORE bars loaded than vp-data is laoded, because cached vp data is only available since *SuriIntraRepo.startOfCachedData*
+					if (ChartBars.Bars.GetTime(barIndex).Date < SuriIntraRepo.startOfCachedData.Date) {
 						continue;
 					}
-					for (; vpIndex <= suriVpIntraData.barData.Count; vpIndex++) {
-						if (vpIndex == suriVpIntraData.barData.Count) return;
-						DateTime d1 = suriVpIntraData.barData[vpIndex].dateTime;
-						DateTime d2 = ChartBars.Bars.GetTime(visibleBarIndex);
-						if (d1 == d2/* || d1.DayOfYear == d2.DayOfYear && d1.Year == d2.Year*/) {
+					for (; barIndex <= suriVpIntraData.barData.Count; barIndex++) {
+						if (barIndex == suriVpIntraData.barData.Count) return;
+						DateTime d1 = suriVpIntraData.barData[barIndex].dateTime;
+						DateTime d2 = ChartBars.Bars.GetTime(barIndex);
+						if (d1 == d2) { // || d1.DayOfYear == d2.DayOfYear && d1.Year == d2.Year
 							break;
 						}
 					}
+				}*/
+				
+				// Draw for each tick
+				rect.X = chartControl.GetXByBarIndex(ChartBars, barIndex) + offset;
+				foreach (KeyValuePair<int, SuriVpTickData> entry in suriVpIntraData.barData[barIndex].tickData) {
+					SuriVpTickData tickData = entry.Value;
+					DrawVolumeBar(rect, chartScale, tickData, barWidth, barIndex, isFirstTick);
+					DrawNakedPoc(rect, tickData);
+					//DrawLvn();
+					//DrawDistributedVolume();
+					//DrawBidAskDeltaLine(rect, barIndex, tickData, barWidth);
+					isFirstTick = false;
 				}
 				
-				rect.X = chartControl.GetXByBarIndex(ChartBars, visibleBarIndex) + offset;
-				double y = chartScale.GetYByValue(ChartBars.Bars.GetLow(visibleBarIndex));
-				double height = (y - chartScale.GetYByValue(ChartBars.Bars.GetHigh(visibleBarIndex))) / Math.Max(1, suriVpIntraData.barData[vpIndex].tickData.Count-1);
-
-				int i = 1;
-				float? previousDistVolWidth = null;
-				float? previousDelta = null;
-
-				foreach(KeyValuePair<int, SuriVpTickData> entry in suriVpIntraData.barData[vpIndex].tickData) {
-					rect.Y = (float) (y - i * height + height * 0.5f);
-					rect.Width = (float) ((maxWidth ?? barWidth) * entry.Value.volume / suriVpIntraData.barData[vpIndex].pocVolume);
-					rect.Height = (float) height;
-
-					SharpDX.Direct2D1.Brush b;
-					/*if (entry.Value.isLvn)				b = testing1Fill;
-					else if (entry.Value.isHigh)		b = testing2Fill;
-					else */if (entry.Value.isMainPoc)		b = pocFill;
-					else if (entry.Value.isInValueArea)	b = vaFill;
-					else								b = normalAreaFill;
-					RenderTarget.FillRectangle(rect, b);
-
-					/*if (entry.Value.isLvn) {
-						RenderTarget.DrawLine(
-							new Vector2(rect.X + rect.Width + 10 + 100, rect.Y + rect.Height/2.0f),
-							new Vector2(rect.X + rect.Width + 10 + 200, rect.Y + rect.Height/2.0f),
-							testing1Fill, 1.5f
-						);
-					}*/
-
-					/*if (previousDistVolWidth != null) {
-						
-						float distVolWidth = (float) ((maxWidth ?? barWidth) * entry.Value.distributedVolume / vpIntraData.barData[lastIndex].pocVolume);
-						RenderTarget.DrawLine(
-							new Vector2(rect.X + previousDistVolWidth.Value, rect.Y + rect.Height + rect.Height / 2f),
-							new Vector2(rect.X + distVolWidth, rect.Y + rect.Height / 2f),
-							smaFill
-						);
-					}
-					previousDistVolWidth = (float) ((maxWidth ?? barWidth) * entry.Value.distributedVolume / vpIntraData.barData[lastIndex].pocVolume);
-					*/
-					
-					if (drawNakedPoc && entry.Value.isNakedPoc) {
-						float pocX1 = rect.X + rect.Width + 10;
-						float pocX2 = (float) ChartPanel.W - 200;
-						if (pocX2 - pocX1 > 0) {
-							RenderTarget.DrawLine(
-								new Vector2(pocX1, rect.Y + rect.Height/2.0f),
-								new Vector2(pocX2, rect.Y + rect.Height/2.0f),
-								pocFill, 1.5f
-							);
-							string vpocText = "< VPOC";
-							textLayout  = new SharpDX.DirectWrite.TextLayout(Core.Globals.DirectWriteFactory, vpocText, textFormat, 250, textFormat.FontSize);
-							RenderTarget.DrawTextLayout(
-								new Vector2(ChartPanel.W - 190, rect.Y + rect.Height/2.0f - textSize + 2f),
-								textLayout, pocFill, SharpDX.Direct2D1.DrawTextOptions.NoSnap
-							);
-						}
-					}
-
-					// bid ask delta
-					if (SuriAddOn.license == License.Dev) {
-						float delta = entry.Value.asks - entry.Value.bids;
-						delta = (float) (((maxWidth ?? barWidth)/2f) * delta / suriVpIntraData.barData[vpIndex].highestDelta);
-						if (previousDelta != null) {
-							RenderTarget.DrawLine(
-								new Vector2(rect.X + previousDelta.Value, rect.Y + rect.Height + rect.Height / 2f),
-								new Vector2(rect.X + delta              , rect.Y + rect.Height / 2f),
-								footprintFill, 1.5f
-							);
-						}
-						previousDelta = delta;
-					}
-					
-					i++;
-				}
-
-				if (drawText && barWidth > 20) {
-					double delta = suriVpIntraData.barData[vpIndex].delta;
-					string str =	"Σ " + suriVpIntraData.barData[vpIndex].totalVolume + "\n" +
-					                "∆ " + delta + "\n" +
-					                "∆% " + (100 * delta / suriVpIntraData.barData[vpIndex].totalVolume).ToString("F1") + "%\n" +
-					                "Ticks " + (suriVpIntraData.barData[vpIndex].tickData.Count - 1) + "\n" +
-					                "VA " + suriVpIntraData.barData[vpIndex].vaPercentage + "%"
-					;
-					textLayout  = new SharpDX.DirectWrite.TextLayout(Core.Globals.DirectWriteFactory, str, textFormat, 250, textFormat.FontSize);
-					y = chartScale.GetYByValue(ChartBars.Bars.GetLow(visibleBarIndex)) + 10f;
-					RenderTarget.DrawTextLayout(new Vector2(rect.X, (float) y + rect.Height/2.0f), textLayout, textFill, SharpDX.Direct2D1.DrawTextOptions.NoSnap);
-				}
-
-				// box
-				if (false && SuriAddOn.license == License.Dev) {
-					if (suriVpIntraData.boxes.ContainsKey(vpIndex)) {
-						SuriVpBox box = suriVpIntraData.boxes[vpIndex];
-						RectangleF boxRect = new RectangleF {
-							X = chartControl.GetXByBarIndex(ChartBars, visibleBarIndex),
-							Y = chartScale.GetYByValue(box.boxHigh * TickSize)
-						};
-						boxRect.Width = chartControl.GetXByBarIndex(ChartBars, visibleBarIndex - box.length + 1) - boxRect.X;
-						boxRect.Height = chartScale.GetYByValue(box.boxLow * TickSize) - boxRect.Y;
-						RenderTarget.FillRectangle(boxRect, boxFill);
-					}
-				}
-				
+				// Draw per Bar
+				if (drawText && barWidth > 20) DrawText(rect, barIndex, chartScale);
+				//if (SuriAddOn.license == License.Dev) DrawBox(barIndex, chartScale, chartControl);
 			}
 		}
+
+		private bool showSpaceBetweenBars;
+		private bool showTickBarText;
+		private void DrawVolumeBar(RectangleF rect, ChartScale chartScale, SuriVpTickData tickData, float barWidth, int barIndex, bool isFirstBar) {
+			double priceLower = tickData.tick * TickSize - TickSize / 2;
+			float yLower = chartScale.GetYByValue(priceLower);
+			float yUpper = chartScale.GetYByValue(priceLower + TickSize);
+			float height = Math.Abs(yUpper - yLower);
+			if (isFirstBar) {
+				if      ( showSpaceBetweenBars && height <= 4) showSpaceBetweenBars = false;
+				else if (!showSpaceBetweenBars && height >= 6) showSpaceBetweenBars = true;
+				
+				if      ( showTickBarText && height <= 10) showTickBarText = false;
+				else if (!showTickBarText && height >= 12) showTickBarText = true;
+			}
+			if (showSpaceBetweenBars) height -= 1;
+			height = Math.Max(tickData.isMainPoc ? 2 : 1, height);
+			float initialX = rect.X;
+			rect.Y = yUpper;
+			rect.Height = height;
+			
+			SharpDX.Direct2D1.Brush b;
+			/*if (entry.Value.isLvn)				b = testing1Fill;
+			else if (entry.Value.isHigh)		b = testing2Fill;
+			else */
+			if (tickData.isMainPoc)				b = pocFill;
+			else if (tickData.isInValueArea)	b = vaFill;
+			else								b = normalAreaFill;
+			
+			if (showBidAsk) {
+				// left
+				rect.Width = -(float) ((maxWidth ?? barWidth) * tickData.asks / suriVpIntraData.barData[barIndex].pocVolume);
+				rect.X -= bidAskSpace;
+				RenderTarget.FillRectangle(rect, b);
+				// right
+				rect.Width = (float) ((maxWidth ?? barWidth) * tickData.bids / suriVpIntraData.barData[barIndex].pocVolume);
+				rect.X += bidAskSpace * 2;
+				RenderTarget.FillRectangle(rect, b);
+				
+				rect.X -= bidAskSpace;
+				
+				if (drawTickText && showTickBarText) {
+					if (textFormatTickInfo == null || isFirstBar) {
+						textFormatTickInfo = new TextFormat(Globals.DirectWriteFactory,"Arial", rect.Height * 0.85f);
+					}
+					TextLayout textLayout = new TextLayout(Globals.DirectWriteFactory, tickData.asks.ToString("F0"), textFormatTickInfo, rect.X - bidAskSpace - 5, ChartPanel.H);
+					textLayout.TextAlignment = TextAlignment.Trailing;
+					RenderTarget.DrawTextLayout(new Vector2(0, rect.Y), textLayout, tickTextFill, DrawTextOptions.NoSnap);
+					
+					textLayout = new TextLayout(Globals.DirectWriteFactory, tickData.bids.ToString("F0"), textFormatTickInfo, ChartPanel.W, ChartPanel.H);
+					RenderTarget.DrawTextLayout(new Vector2(rect.X + bidAskSpace + 5, rect.Y), textLayout, tickTextFill, DrawTextOptions.NoSnap);
+				}
+			}
+			
+			rect.X = initialX;
+			rect.Width = (float) ((maxWidth ?? barWidth) * tickData.volume / suriVpIntraData.barData[barIndex].pocVolume);
+			
+			if (!showBidAsk) {
+				RenderTarget.FillRectangle(rect, b);
+				if (drawTickText && showTickBarText) {
+					if (textFormatTickInfo == null || isFirstBar) {
+						textFormatTickInfo = new TextFormat(Globals.DirectWriteFactory,"Arial", rect.Height * 0.85f);
+					}
+					TextLayout textLayout = new TextLayout(Globals.DirectWriteFactory, tickData.volume.ToString("F0"), textFormatTickInfo, ChartPanel.W, ChartPanel.H);
+					RenderTarget.DrawTextLayout(new Vector2(rect.X + 10, rect.Y), textLayout, tickTextFill, DrawTextOptions.NoSnap);
+				}
+			}
+		}
+		
+		private void DrawNakedPoc(RectangleF rect, SuriVpTickData tickData) {
+			if (!drawNakedPoc || !tickData.isNakedPoc) return;
+			
+			float pocX1 = rect.X + rect.Width + 10;
+			float pocX2 = (float) ChartPanel.W - 200;
+			if (pocX2 - pocX1 > 0) {
+				RenderTarget.DrawLine(
+					new Vector2(pocX1, rect.Y + rect.Height/2.0f),
+					new Vector2(pocX2, rect.Y + rect.Height/2.0f),
+					pocFill, 1.5f
+				);
+				string vpocText = "< VPOC";
+				TextLayout textLayout  = new SharpDX.DirectWrite.TextLayout(Core.Globals.DirectWriteFactory, vpocText, textFormatBarInfo, 250, textFormatBarInfo.FontSize);
+				RenderTarget.DrawTextLayout(
+					new Vector2(ChartPanel.W - 190, rect.Y + rect.Height/2.0f - textSize + 2f),
+					textLayout, pocFill, SharpDX.Direct2D1.DrawTextOptions.NoSnap
+				);
+			}
+		}
+
+		private float? previousDelta;
+		private void DrawBidAskDeltaLine(RectangleF rect, int barIndex, SuriVpTickData tickData, float barWidth) {
+			if (SuriAddOn.license != License.Dev) return;
+			
+			float delta = tickData.asks - tickData.bids;
+			delta = (float) (((maxWidth ?? barWidth)/2f) * delta / suriVpIntraData.barData[barIndex].highestDelta);
+			if (previousDelta != null) {
+				RenderTarget.DrawLine(
+					new Vector2(rect.X + previousDelta.Value, rect.Y + rect.Height + rect.Height / 2f),
+					new Vector2(rect.X + delta              , rect.Y + rect.Height / 2f),
+					footprintFill, 1.5f
+				);
+			}
+			previousDelta = delta;
+		}
+
+		private void DrawLvn() {
+			/*if (entry.Value.isLvn) {
+				RenderTarget.DrawLine(
+					new Vector2(rect.X + rect.Width + 10 + 100, rect.Y + rect.Height/2.0f),
+					new Vector2(rect.X + rect.Width + 10 + 200, rect.Y + rect.Height/2.0f),
+					testing1Fill, 1.5f
+				);
+			}*/
+		}
+
+		private void DrawDistributedVolume() {
+			/*if (previousDistVolWidth != null) {
+				
+				float distVolWidth = (float) ((maxWidth ?? barWidth) * entry.Value.distributedVolume / vpIntraData.barData[lastIndex].pocVolume);
+				RenderTarget.DrawLine(
+					new Vector2(rect.X + previousDistVolWidth.Value, rect.Y + rect.Height + rect.Height / 2f),
+					new Vector2(rect.X + distVolWidth, rect.Y + rect.Height / 2f),
+					smaFill
+				);
+			}
+			previousDistVolWidth = (float) ((maxWidth ?? barWidth) * entry.Value.distributedVolume / vpIntraData.barData[lastIndex].pocVolume);
+			*/
+		}
+
+		private void DrawText(RectangleF rect, int barIndex, ChartScale chartScale) {
+			double delta = suriVpIntraData.barData[barIndex].delta;
+			string str =	"Σ " + suriVpIntraData.barData[barIndex].totalVolume + "\n" +
+			                "∆ " + delta + "\n" +
+			                "∆% " + (100 * delta / suriVpIntraData.barData[barIndex].totalVolume).ToString("F1") + "%\n" +
+			                "Ticks " + (suriVpIntraData.barData[barIndex].tickData.Count - 1) + "\n" +
+			                "VA " + suriVpIntraData.barData[barIndex].vaPercentage + "%"
+			;
+			var textLayout = new SharpDX.DirectWrite.TextLayout(NinjaTrader.Core.Globals.DirectWriteFactory, str, textFormatBarInfo, ChartPanel.W, ChartPanel.H);
+			float y = chartScale.GetYByValue(ChartBars.Bars.GetLow(barIndex)) + 10f;
+			RenderTarget.DrawTextLayout(new Vector2(rect.X, y + rect.Height/2.0f), textLayout, textFill, SharpDX.Direct2D1.DrawTextOptions.NoSnap);
+		}
+
+		private void DrawBox(int barIndex, ChartScale chartScale, ChartControl chartControl) {
+			if (suriVpIntraData.boxes.ContainsKey(barIndex)) {
+				SuriVpBox box = suriVpIntraData.boxes[barIndex];
+				RectangleF boxRect = new RectangleF {
+					X = chartControl.GetXByBarIndex(ChartBars, barIndex),
+					Y = chartScale.GetYByValue(box.boxHigh * TickSize)
+				};
+				boxRect.Width = chartControl.GetXByBarIndex(ChartBars, barIndex - box.length + 1) - boxRect.X;
+				boxRect.Height = chartScale.GetYByValue(box.boxLow * TickSize) - boxRect.Y;
+				RenderTarget.FillRectangle(boxRect, boxFill);
+			}
+		}
+
 	}
 }
 

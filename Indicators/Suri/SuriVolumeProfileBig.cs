@@ -6,7 +6,6 @@ using NinjaTrader.Data;
 using NinjaTrader.Gui;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using System.Xml.Serialization;
 using NinjaTrader.Cbi;
 using NinjaTrader.Custom.AddOns.SuriCommon;
@@ -21,12 +20,11 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 	public sealed class SuriVolumeProfileBig : Indicator {
 		private SuriVpBigData suriVpBigData;
 		private bool dataLoaded;
-		private bool showSpaceBetweenBars;
+		private SimpleFont font;
 		
 		#region Properties
 		private SharpDX.Direct2D1.Brush normalAreaFill;
 		private SharpDX.Direct2D1.Brush pocFill;
-		private SharpDX.Direct2D1.Brush vaFill;
 		private SharpDX.Direct2D1.Brush textFill;
 		private SharpDX.DirectWrite.TextFormat textFormat;
 		
@@ -161,52 +159,44 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			
 			int highestValue = (int) Math.Floor(chartScale.MaxValue / TickSize);
 			int lowestValue  = (int) Math.Floor(chartScale.MinValue / TickSize);
-			int tickCount = highestValue - lowestValue;
 
 			double? highestVisibleTick = null;
 			if (dynamicWidth) {
 				highestVisibleTick = double.MinValue;
-				for (int i = 0; i < tickCount; i++) {
-					int tick = highestValue - i;
+				for (int tick = highestValue+1; tick >= lowestValue; tick--) {
 					if (suriVpBigData.tickData.ContainsKey(tick)) {
-						SuriVpTickData tickData = suriVpBigData.tickData[tick];
-						if (highestVisibleTick < tickData.volume) highestVisibleTick = tickData.volume;
+						highestVisibleTick = Math.Max(suriVpBigData.tickData[tick].volume, highestVisibleTick.Value);
 					}
 				}
 			}
 
-			RectangleF rect = new RectangleF { X = 0 };
-			bool showText = false;
-			SimpleFont font = null;
-			for (int i = 0; i < tickCount; i++) {
-				int tick = highestValue - i;
+			bool isFirstBar = true;
+			for (int tick = highestValue+1; tick >= lowestValue; tick--) {
 				if (suriVpBigData.tickData.ContainsKey(tick)) {
-					SuriVpTickData tickData = suriVpBigData.tickData[tick];
-					DrawVolumeBar(chartScale, tickData, highestVisibleTick, rect, i == 0);
-					
-					if (i == 0 && rect.Height > 13) showText = true;
-					if (showText) {
-						if (font == null) {
-							font = new SimpleFont {Size = rect.Height * 0.85};
-							textFormat = font.ToDirectWriteTextFormat();
-							textFormat.TextAlignment = SharpDX.DirectWrite.TextAlignment.Leading;
-							textFormat.WordWrapping = SharpDX.DirectWrite.WordWrapping.NoWrap;
-						}
-						SharpDX.DirectWrite.TextLayout textLayout = new SharpDX.DirectWrite.TextLayout(Core.Globals.DirectWriteFactory, tickData.volume.ToString("F0"), textFormat, 250, textFormat.FontSize);
-						RenderTarget.DrawTextLayout(new Vector2(0, rect.Y), textLayout, textFill, SharpDX.Direct2D1.DrawTextOptions.NoSnap);
-					}
+					DrawVolumeBar(chartScale, suriVpBigData.tickData[tick], highestVisibleTick, isFirstBar);
+					isFirstBar = false;
 				}
 			}
 			// draw main poc again because it might be overlapped by other volume bars 
-			DrawVolumeBar(chartScale, suriVpBigData.PocTickData(), highestVisibleTick, rect);
+			DrawVolumeBar(chartScale, suriVpBigData.PocTickData(), highestVisibleTick, false);
 		}
 
-		private void DrawVolumeBar(ChartScale chartScale, SuriVpTickData tickData, double? highestVisibleTick, RectangleF rect, bool isFirstBar = false) {
+		
+		private bool showSpaceBetweenBars;
+		private bool showText;
+		private void DrawVolumeBar(ChartScale chartScale, SuriVpTickData tickData, double? highestVisibleTick, bool isFirstBar) {
+			RectangleF rect = new RectangleF { X = 0 };
 			double priceLower = tickData.tick * TickSize - TickSize / 2;
 			float yLower = chartScale.GetYByValue(priceLower);
 			float yUpper = chartScale.GetYByValue(priceLower + TickSize);
 			float height = Math.Abs(yUpper - yLower);
-			if (isFirstBar && height >= 9) showSpaceBetweenBars = true;
+			if (isFirstBar) {
+				if      ( showSpaceBetweenBars && height <= 4) showSpaceBetweenBars = false;
+				else if (!showSpaceBetweenBars && height >= 6) showSpaceBetweenBars = true;
+				
+				if      ( showText && height <= 10) showText = false;
+				else if (!showText && height >= 12) showText = true;
+			}
 			if (showSpaceBetweenBars) height -= 1;
 			height = Math.Max(tickData.isMainPoc ? 2 : 1, height);
 			
@@ -214,6 +204,17 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			rect.Y = yUpper;
 			rect.Height = height;
 			RenderTarget.FillRectangle(rect, tickData.isMainPoc ? pocFill : normalAreaFill);
+			
+			if (showText) {
+				if (font == null || isFirstBar) {
+					font = new SimpleFont {Size = rect.Height * 0.85};
+					textFormat = font.ToDirectWriteTextFormat();
+					textFormat.TextAlignment = SharpDX.DirectWrite.TextAlignment.Leading;
+					textFormat.WordWrapping = SharpDX.DirectWrite.WordWrapping.NoWrap;
+				}
+				SharpDX.DirectWrite.TextLayout textLayout = new SharpDX.DirectWrite.TextLayout(Core.Globals.DirectWriteFactory, tickData.volume.ToString("F0"), textFormat, 250, textFormat.FontSize);
+				RenderTarget.DrawTextLayout(new Vector2(0, rect.Y), textLayout, textFill, SharpDX.Direct2D1.DrawTextOptions.NoSnap);
+			}
 		}
 		
 	}

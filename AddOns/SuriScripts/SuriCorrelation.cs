@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using NinjaTrader.NinjaScript;
 using System.IO;
 using System.Linq;
-using MathNet.Numerics.Statistics;
+//using MathNet.Numerics.Statistics;
 using NinjaTrader.Cbi;
 using NinjaTrader.Core;
 using NinjaTrader.Data;
@@ -111,12 +111,12 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 					    continue;
 				    }
 
-				    double pearson  = Correlation.Pearson (bars1Matches, bars2Matches) * 100;
+				    /*double pearson  = Correlation.Pearson (bars1Matches, bars2Matches) * 100;
 				    double spearman = Correlation.Spearman(bars1Matches, bars2Matches) * 100;
 				    pearsonWriter .Write(pearson .ToString("F2") + "\t");
 				    spearmanWriter.Write(spearman.ToString("F2") + "\t");
 				    correlationMatchingWriter.Write((100 * Math.Min(pearson+1, spearman+1) / Math.Max(pearson+1, spearman+1)).ToString("F2") + "\t");
-				    meanWriter.Write(((pearson + spearman)/2.0).ToString("F2") + "\t");
+				    meanWriter.Write(((pearson + spearman)/2.0).ToString("F2") + "\t");*/
 			    }
 		    }
 	    }

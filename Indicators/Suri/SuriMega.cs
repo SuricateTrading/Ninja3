@@ -108,7 +108,11 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			
 			if (CurrentBar < days) {
 				PlotBrushes[0][0] = notEnoughDataBrush;
-			} else if(SuriAddOn.license != License.Basic && Value[0] > 99.99) PlotBrushes[0][0] = signalBrush;
+				PlotBrushes[1][0] = notEnoughDataBrush;
+				PlotBrushes[2][0] = notEnoughDataBrush;
+			} else if(SuriAddOn.license != License.Basic && Value[0] > 99.99) {
+				PlotBrushes[0][0] = signalBrush;
+			}
 		}
 		
 	}

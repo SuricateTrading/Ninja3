@@ -34,7 +34,7 @@ namespace NinjaTrader.Gui.NinjaScript {
 			SuriSettings.InitializeSettings();
 			
 			path = Globals.UserDataDir + @"suri\";
-			Directory.CreateDirectory(path + @"\downloads");
+			Directory.CreateDirectory(path + @"downloads");
 			
 			using (WebClient webClient = new WebClient()) {
 				bool isFirstInstall = false;

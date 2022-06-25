@@ -85,7 +85,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 
 	public abstract class SuriSingleVp {
 		[JsonIgnore] public bool isVpBig;
-		public SortedDictionary<int, SuriVpTickData> tickData;
+		public SortedList<int, SuriVpTickData> tickData;
 		[JsonIgnore] public bool isPrepared;
 		public double tickSize;
 		[JsonIgnore] public int tickCount;
@@ -112,7 +112,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			this.isVpBig = isVpBig;
 			this.tickSize = tickSize;
 			pocVolume = double.MinValue;
-			tickData = new SortedDictionary<int, SuriVpTickData>();
+			tickData = new SortedList<int, SuriVpTickData>();
 			low = int.MaxValue;
 			high = int.MinValue;
 		}
@@ -120,7 +120,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 		/** DO NOT USE! For Serialization only! */
 		public SuriSingleVp() {
 			pocVolume = double.MinValue;
-			tickData = new SortedDictionary<int, SuriVpTickData>();
+			tickData = new SortedList<int, SuriVpTickData>();
 			low = int.MaxValue;
 			high = int.MinValue;
 		}

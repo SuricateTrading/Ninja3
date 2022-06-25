@@ -40,9 +40,9 @@ namespace NinjaTrader.NinjaScript.Strategies {
 				BarsRequiredToTrade							= 0;
 				IsInstantiatedOnEachOptimizationIteration	= true;
 				IsExitOnSessionCloseStrategy				= false;
-				IsUnmanaged									= true;
-				//IncludeCommission = true; // https://ninjatrader.com/support/helpGuides/nt8/NT%20HelpGuide%20English.html?includecommission.htm
-				//IncludeTradeHistoryInBacktest = true; // uncomment for performance boost ... https://ninjatrader.com/support/helpGuides/nt8/NT%20HelpGuide%20English.html?includetradehistoryinbacktest.htm
+				IsUnmanaged									= false;
+				// IncludeCommission = true; // https://ninjatrader.com/support/helpGuides/nt8/NT%20HelpGuide%20English.html?includecommission.htm
+				// IncludeTradeHistoryInBacktest = true; // uncomment for performance boost ... https://ninjatrader.com/support/helpGuides/nt8/NT%20HelpGuide%20English.html?includetradehistoryinbacktest.htm
 			}
 		}
         
@@ -54,36 +54,51 @@ namespace NinjaTrader.NinjaScript.Strategies {
 				strategy.UpdateIndicators();
 				Bars.CurrentBar = 0;
 				strategy.Analyze();
+				
 				string signals = JsonConvert.SerializeObject(strategy.signals);
 				//Print(signals);
 				Thread thread = new Thread(() => Clipboard.SetText(signals));
 				thread.SetApartmentState(ApartmentState.STA);
 				thread.Start(); 
-				thread.Join(); //Wait for the thread to end
+				thread.Join(); // Wait for the thread to end
 			}
 			
 			foreach (var signal in strategy.signals) {
-				if (signal.entryIndex == 961 && CurrentBar == 960) {
+				/*if (signal.entryIndex == 961 && CurrentBar == 960) {
 					Print("");
-				}
+				}*/
 				if (signal.orderState == OrderState.Done) continue;
-				
-				// check entry
+
+				string signalName = signal.signalName;
+				// entry
 				if (signal.orderState == OrderState.New && CurrentBar+1 == signal.entryIndex) {
-					SubmitOrderUnmanaged(
-						0,
-						signal.isLong ? OrderAction.Buy : OrderAction.Sell,
-						signal.orderType,
-						1,
-						signal.limitPrice,
-						signal.stopPrice,
-						null,
-						signal.suriRule + " " + (signal.isLong ? "Long" : "Short")
-					);
+					switch (signal.orderType) {
+						case OrderType.Limit:
+							if (signal.isLong) 
+								EnterLongLimit (0, true, signal.quantity, signal.limitPrice, signalName); else
+								EnterShortLimit(0, true, signal.quantity, signal.limitPrice, signalName);
+							break;
+						case OrderType.Market:
+							if (signal.isLong)
+								EnterLong (signal.quantity, signalName); else
+								EnterShort(signal.quantity, signalName);
+							break;
+						case OrderType.StopLimit:
+							if (signal.isLong) 
+								EnterLongStopLimit (0, true, signal.quantity, signal.limitPrice, signal.stopPrice, signalName); else 
+								EnterShortStopLimit(0, true, signal.quantity, signal.limitPrice, signal.stopPrice, signalName); 
+							break;
+						case OrderType.StopMarket:
+							if (signal.isLong) 
+								EnterLongStopMarket (0, true, signal.quantity, signal.stopPrice, signalName); else 
+								EnterShortStopMarket(0, true, signal.quantity, signal.stopPrice, signalName); 
+							break;
+						default: throw new ArgumentOutOfRangeException();
+					}
 					signal.orderState = OrderState.Filled;
 				}
 				
-				// check exit
+				// exit
 				if (signal.orderState == OrderState.Filled && CurrentBar + 1 == signal.exitIndex) {
 					SubmitOrderUnmanaged(
 						0,
@@ -131,6 +146,9 @@ namespace NinjaTrader.NinjaScript.Strategies {
 	    public bool isLong;
 	    public OrderState orderState = OrderState.New;
 	    public string notes = "";
+	    public int quantity = 1;
+
+	    public string signalName { get { return suriRule + " " + (isLong ? "Long" : "Short") + " @" + signalIndex; } }
 		
 	    public OrderType orderType;
 	    /** Optional. Used for entry only. */
