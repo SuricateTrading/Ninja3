@@ -1,7 +1,6 @@
 #region Using declarations
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -19,8 +18,7 @@ using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using VerticalAlignment = System.Windows.VerticalAlignment;
 using System.ComponentModel.DataAnnotations;
 using System.Xml.Serialization;
-using Newtonsoft.Json;
-
+using NinjaTrader.NinjaScript.Indicators.Suri.Weiteres;
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri {
@@ -118,6 +116,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 					new ColumnDefinition{Width = new GridLength(100, GridUnitType.Auto)}, new ColumnDefinition{Width = new GridLength(100, GridUnitType.Auto)},
 					new ColumnDefinition{Width = new GridLength(100, GridUnitType.Auto)}, new ColumnDefinition{Width = new GridLength(100, GridUnitType.Auto)},
 					new ColumnDefinition{Width = new GridLength(100, GridUnitType.Auto)}, new ColumnDefinition{Width = new GridLength(100, GridUnitType.Auto)},
+					new ColumnDefinition{Width = new GridLength(100, GridUnitType.Auto)},
 					new ColumnDefinition{Width = new GridLength(180)}, // combobox
 					new ColumnDefinition{Width = new GridLength(100, GridUnitType.Auto)}, // next button
 					new ColumnDefinition{Width = new GridLength(100, GridUnitType.Auto)}, // expiry
@@ -159,6 +158,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			AddCheckBox("OI %", IsIndicatorVisible(new []{typeof(ComShortOpenInterest)}), 0, ++index, (sender, args) => OnCheckBoxClick(new []{typeof(ComShortOpenInterest)}));
 			AddCheckBox("VP groß", IsIndicatorVisible(new []{typeof(SuriVolumeProfileBig)}), 0, ++index, (sender, args) => OnCheckBoxClick(new []{typeof(SuriVolumeProfileBig)}));
 			AddCheckBox("Produktionskosten", IsIndicatorVisible(new []{typeof(SuriProductionCost)}), 0, ++index, (sender, args) => OnCheckBoxClick(new []{typeof(SuriProductionCost)}));
+			AddCheckBox("Nicht adjustiert", IsIndicatorVisible(new []{typeof(SuriNonAdjusted)}), 0, ++index, (sender, args) => OnCheckBoxClick(new []{typeof(SuriNonAdjusted)}));
 
 			var comList = new ComboBox {
 				BorderBrush = Brushes.CornflowerBlue,

@@ -1,7 +1,9 @@
 #region Using declarations
 using System;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Windows.Media;
+using System.Xml.Serialization;
 using NinjaTrader.Gui;
 using NinjaTrader.Gui.Chart;
 using NinjaTrader.Gui.Tools;
@@ -11,7 +13,6 @@ using NinjaTrader.Data;
 using NinjaTrader.Gui.NinjaScript;
 using SharpDX;
 using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
-
 #endregion
 
 namespace NinjaTrader.NinjaScript.Indicators.Suri.Weiteres {
@@ -19,9 +20,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.Weiteres {
 		private Bars bars;
 		private bool isPrepared;
 		
-		//[NinjaScriptProperty]
-		[Display(Name = "Preis Typ", Order = 0, GroupName = "Parameter", Description = "")]
-		public PriceType priceType { get; set; }
 
 		[NinjaScriptProperty]
 		[Display(Name = "Instrumentname", Order = 0, GroupName = "Parameter", Description = "Lasse das Feld leer, damit das Haupt-Instrument benutzt wird. Ansonsten kann beispielsweise 'GC 04-23' eingegeben werden.")]
@@ -30,7 +28,35 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.Weiteres {
 		[NinjaScriptProperty]
 		[Display(Name = "Merge", Order = 1, GroupName = "Parameter", Description = "Wenn aktiv werden die Daten mit anderen Instrumenten gemerged. Wenn deaktiviert wird nur 1 Instrument angezeigt, siehe Parameter 'Instrumentname'.")]
 		public bool merge { get; set; }
+		
+		[NinjaScriptProperty]
+		[Display(Name = "Benutze Standardfarben", Order = 2, GroupName = "Parameter", Description = "Wenn aktiv dann werden die Barfarben vom normalen Preis angezeigt.")]
+		public bool useStandard { get; set; }
+		
+		[XmlIgnore]
+		[Display(Name = "Farbe steigender Bars", Order = 3, GroupName = "Parameter")]
+		public Brush upBrush { get; set; }
+		[Browsable(false)]
+		public string upBrushSerialize {
+			get { return Serialize.BrushToString(upBrush); }
+			set { upBrush = Serialize.StringToBrush(value); }
+		}
+		
+		[XmlIgnore]
+		[Display(Name = "Farbe fallender Bars", Order = 4, GroupName = "Parameter")]
+		public Brush downBrush { get; set; }
+		[Browsable(false)]
+		public string downBrushSerialize {
+			get { return Serialize.BrushToString(downBrush); }
+			set { downBrush = Serialize.StringToBrush(value); }
+		}
 
+		//[NinjaScriptProperty]
+		[Browsable(false)]
+		[Display(Name = "Preis Typ", Order = 5, GroupName = "Parameter", Description = "")]
+		public PriceType priceType { get; set; }
+		
+		
 		private Series<double> opens   { get { return Values[0]; } }
 		private Series<double> highs   { get { return Values[1]; } }
 		private Series<double> lows	   { get { return Values[2]; } }
@@ -58,6 +84,9 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.Weiteres {
 				market										= "";
 				merge										= false;
 				priceType									= PriceType.Preis;
+				useStandard									= true;
+				upBrush										= Brushes.LimeGreen;
+				downBrush									= Brushes.Red;
 			} else if (State == State.Configure) {
 				AddPlot(Brushes.White, "O");
 				AddPlot(Brushes.White, "H");
@@ -95,8 +124,8 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.Weiteres {
 				wickFill.Dispose();
 			}
 			if (RenderTarget != null && ChartBars != null) {
-				upFill = ChartBars.Properties.ChartStyle.UpBrush.ToDxBrush(RenderTarget);
-				downFill = ChartBars.Properties.ChartStyle.DownBrush.ToDxBrush(RenderTarget);
+				upFill = (useStandard ? ChartBars.Properties.ChartStyle.UpBrush : upBrush).ToDxBrush(RenderTarget);
+				downFill = (useStandard ? ChartBars.Properties.ChartStyle.DownBrush : downBrush).ToDxBrush(RenderTarget);
 				wickFill = ChartBars.Properties.ChartStyle.Stroke.Brush.ToDxBrush(RenderTarget);
 			}
 		}
@@ -171,7 +200,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.Weiteres {
 		}
 
 		public override void OnCalculateMinMax() {
-			if (!isPrepared || Bars == null || bars == null || ChartControl == null) return;
 			try {
 				MaxValue = double.MinValue;
 				MinValue = double.MaxValue;
@@ -236,18 +264,18 @@ namespace NinjaTrader.NinjaScript.Indicators
 	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
 	{
 		private Suri.Weiteres.SuriNonAdjusted[] cacheSuriNonAdjusted;
-		public Suri.Weiteres.SuriNonAdjusted SuriNonAdjusted(string market, bool merge)
+		public Suri.Weiteres.SuriNonAdjusted SuriNonAdjusted(string market, bool merge, bool useStandard)
 		{
-			return SuriNonAdjusted(Input, market, merge);
+			return SuriNonAdjusted(Input, market, merge, useStandard);
 		}
 
-		public Suri.Weiteres.SuriNonAdjusted SuriNonAdjusted(ISeries<double> input, string market, bool merge)
+		public Suri.Weiteres.SuriNonAdjusted SuriNonAdjusted(ISeries<double> input, string market, bool merge, bool useStandard)
 		{
 			if (cacheSuriNonAdjusted != null)
 				for (int idx = 0; idx < cacheSuriNonAdjusted.Length; idx++)
-					if (cacheSuriNonAdjusted[idx] != null && cacheSuriNonAdjusted[idx].market == market && cacheSuriNonAdjusted[idx].merge == merge && cacheSuriNonAdjusted[idx].EqualsInput(input))
+					if (cacheSuriNonAdjusted[idx] != null && cacheSuriNonAdjusted[idx].market == market && cacheSuriNonAdjusted[idx].merge == merge && cacheSuriNonAdjusted[idx].useStandard == useStandard && cacheSuriNonAdjusted[idx].EqualsInput(input))
 						return cacheSuriNonAdjusted[idx];
-			return CacheIndicator<Suri.Weiteres.SuriNonAdjusted>(new Suri.Weiteres.SuriNonAdjusted(){ market = market, merge = merge }, input, ref cacheSuriNonAdjusted);
+			return CacheIndicator<Suri.Weiteres.SuriNonAdjusted>(new Suri.Weiteres.SuriNonAdjusted(){ market = market, merge = merge, useStandard = useStandard }, input, ref cacheSuriNonAdjusted);
 		}
 	}
 }
@@ -256,14 +284,14 @@ namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
 {
 	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
 	{
-		public Indicators.Suri.Weiteres.SuriNonAdjusted SuriNonAdjusted(string market, bool merge)
+		public Indicators.Suri.Weiteres.SuriNonAdjusted SuriNonAdjusted(string market, bool merge, bool useStandard)
 		{
-			return indicator.SuriNonAdjusted(Input, market, merge);
+			return indicator.SuriNonAdjusted(Input, market, merge, useStandard);
 		}
 
-		public Indicators.Suri.Weiteres.SuriNonAdjusted SuriNonAdjusted(ISeries<double> input , string market, bool merge)
+		public Indicators.Suri.Weiteres.SuriNonAdjusted SuriNonAdjusted(ISeries<double> input , string market, bool merge, bool useStandard)
 		{
-			return indicator.SuriNonAdjusted(input, market, merge);
+			return indicator.SuriNonAdjusted(input, market, merge, useStandard);
 		}
 	}
 }
@@ -272,14 +300,14 @@ namespace NinjaTrader.NinjaScript.Strategies
 {
 	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
 	{
-		public Indicators.Suri.Weiteres.SuriNonAdjusted SuriNonAdjusted(string market, bool merge)
+		public Indicators.Suri.Weiteres.SuriNonAdjusted SuriNonAdjusted(string market, bool merge, bool useStandard)
 		{
-			return indicator.SuriNonAdjusted(Input, market, merge);
+			return indicator.SuriNonAdjusted(Input, market, merge, useStandard);
 		}
 
-		public Indicators.Suri.Weiteres.SuriNonAdjusted SuriNonAdjusted(ISeries<double> input , string market, bool merge)
+		public Indicators.Suri.Weiteres.SuriNonAdjusted SuriNonAdjusted(ISeries<double> input , string market, bool merge, bool useStandard)
 		{
-			return indicator.SuriNonAdjusted(input, market, merge);
+			return indicator.SuriNonAdjusted(input, market, merge, useStandard);
 		}
 	}
 }

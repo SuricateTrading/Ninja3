@@ -4,7 +4,6 @@ using System.ComponentModel.DataAnnotations;
 using System.Windows.Media;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Media.Imaging;
 using System.Xml.Serialization;
 using NinjaTrader.Gui.Chart;
@@ -25,8 +24,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		[XmlIgnore] [Range(0, int.MaxValue)] [Display(Name="Links", Order=1, GroupName="Parameter")]
 		public double Left { get; set; }
 
-		[Display(ResourceType = typeof(Custom.Resource), Name = "NinjaScriptIsVisibleOnlyFocused", GroupName = "NinjaScriptIndicatorVisualGroup", Order = 499)]
-		public bool IsVisibleOnlyFocused { get; set; }
 		#endregion
 
 		protected override void OnBarUpdate() {
@@ -177,11 +174,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			};
 
 			grid.Children.Add(tileHolder);
-
-			if (IsVisibleOnlyFocused) {
-				Binding binding = new Binding("IsActive") { Source = ChartControl.OwnerChart, Converter = Application.Current.FindResource("BoolToVisConverter") as IValueConverter};
-				grid.SetBinding(UIElement.VisibilityProperty, binding);
-			}
 			return grid;
 		}
 	}
