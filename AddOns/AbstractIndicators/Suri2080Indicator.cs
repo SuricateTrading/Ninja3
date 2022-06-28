@@ -241,8 +241,8 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			int currentCotIndex = cotRepo.CotIndexOf(CurrentBar);
 			var cot = cotRepo.Get(CurrentBar);
 			for (int i = currentCotIndex - 1; i >= 0; i--) {
-				var current = cotRepo.data[i].commercialsShort;
-				var prev = cotRepo.data[i + 1].commercialsShort;
+				var current = cotRepo.data[i].GetByReportField(reportField);
+				var prev = cotRepo.data[i + 1].GetByReportField(reportField);
 				if (current > topLine && (prev < topLine || current > localHigh)) localHigh = current;
 				if (current < bottomLine && (prev > bottomLine || current < localLow )) localLow  = current;
 
@@ -261,7 +261,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			Values[3][0] = countHigh > 1 ? lowestHigh : topLine;
 			Values[1][0] = countLow  > 1 ? highestLow : bottomLine;
 		}
-
+		
 	}
 }
 

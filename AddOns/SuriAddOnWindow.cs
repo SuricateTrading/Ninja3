@@ -184,6 +184,7 @@ namespace NinjaTrader.Gui.NinjaScript {
 					Window parent = GetWindow(args.Source as DependencyObject);
 					if (oldMachineId.Text.IsNullOrEmpty() || oldMachineId.Text.Length != 32) {
 						NTMessageBoxSimple.Show(parent, "Die eingegebene Maschinen ID scheint falsch zu sein.", "Aktualisiere Maschinen ID", MessageBoxButton.OK, MessageBoxImage.None);
+						return;
 					}
 
 					if (SuriServer.ChangeMachineId(oldMachineId.Text)) {

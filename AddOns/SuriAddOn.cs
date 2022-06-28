@@ -49,16 +49,34 @@ namespace NinjaTrader.Gui.NinjaScript {
 				bool versionHasChanged = !previouslyDownloadedVersion.Equals(SuriCommon.mostRecentVersion);
 				
 				if (isFirstInstall || versionHasChanged) {
-					webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/ninjat.jpg", path + "ninjat.jpg");
-					webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/barinfo.png", path + "barinfo.png");
-					webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/rectanglePlus.png", path + "rectanglePlus.png");
-					webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/strikingHigh.png", path + "strikingHigh.png");
-					webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/strikingLow.png", path + "strikingLow.png");
-					webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/ruler.png", path + "ruler.png");
-					webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/cot1.png", path + "cot1.png");
-					webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/cot2.png", path + "cot2.png");
+					try {
+						webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/ninjat.jpg", path + "ninjat.jpg");
+					} catch (Exception) {/**/}
+					try {
+						webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/barinfo.png", path + "barinfo.png");
+					} catch (Exception) {/**/}
+					try {
+						webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/rectanglePlus.png", path + "rectanglePlus.png");
+					} catch (Exception) {/**/}
+					try {
+						webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/strikingHigh.png", path + "strikingHigh.png");
+					} catch (Exception) {/**/}
+					try {
+						webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/strikingLow.png", path + "strikingLow.png");
+					} catch (Exception) {/**/}
+					try {
+						webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/ruler.png", path + "ruler.png");
+					} catch (Exception) {/**/}
+					try {
+						webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/cot1.png", path + "cot1.png");
+					} catch (Exception) {/**/}
+					try {
+						webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/cot2.png", path + "cot2.png");
+					} catch (Exception) {/**/}
 				}
-				webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/SuriMain.xaml", path + "SuriMain.xaml");
+				try {
+					webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/SuriMain.xaml", path + "SuriMain.xaml");
+				} catch (Exception) {/**/}
 			}
 			
 			startSuri = new NTMenuItem {

@@ -16,7 +16,7 @@ using SharpDX.DirectWrite;
 
 namespace NinjaTrader.Custom.AddOns.SuriCommon {
     public abstract class SuriCommon {
-        public static string version = "1.3.2";
+        public static string version = "1.4.1";
         public static string mostRecentVersion = "";
         
         public static void Print(string s) { Code.Output.Process(s, PrintTo.OutputTab1); }

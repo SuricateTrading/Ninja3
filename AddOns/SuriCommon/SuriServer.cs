@@ -54,10 +54,14 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
         
         /** urlT must be 'cot/get' for example */
         public static bool ChangeMachineId(string oldMachineId) {
-            string url = "https://cloud2.suricate-trading.de:8443/suriguard/change?" + "oldLicense=" + oldMachineId + "&newLicense=" + Cbi.License.MachineId;
-            string response = Post(url, true);
-            var serializer = new JavaScriptSerializer();
-            return serializer.Deserialize<bool>(response);
+            try {
+                string url = "https://cloud2.suricate-trading.de:8443/suriguard/change?" + "oldLicense=" + oldMachineId + "&newLicense=" + Cbi.License.MachineId;
+                string response = Post(url, true);
+                var serializer = new JavaScriptSerializer();
+                return serializer.Deserialize<bool>(response);
+            } catch (Exception) {
+                return false;
+            }
         }
 		
         public static Suri GetSuri(string license) {
@@ -115,6 +119,21 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 
         public int CommercialsNetto() {
             return commercialsLong - commercialsShort;
+        }
+        public int GetByReportField(SuriCotReportField reportField) {
+            switch (reportField) {
+                case SuriCotReportField.OpenInterest: return openInterest;
+                case SuriCotReportField.NoncommercialLong: return nonCommercialsLong;
+                case SuriCotReportField.NoncommercialShort: return nonCommercialsShort;
+                case SuriCotReportField.NoncommercialNet: return nonCommercialsLong - nonCommercialsShort;
+                case SuriCotReportField.CommercialLong: return commercialsLong;
+                case SuriCotReportField.CommercialShort: return commercialsShort;
+                case SuriCotReportField.CommercialNet: return commercialsLong - commercialsShort;
+                case SuriCotReportField.NonreportablePositionsLong: return nonReportablesLong;
+                case SuriCotReportField.NonreportablePositionsShort: return nonReportablesShort;
+                case SuriCotReportField.NonreportablePositionsNet: return nonReportablesLong - nonReportablesShort;
+                default: return 0;
+            }
         }
     }
 

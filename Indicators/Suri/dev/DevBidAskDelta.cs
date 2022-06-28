@@ -9,7 +9,7 @@ using NinjaTrader.Gui.NinjaScript;
 using NinjaTrader.Gui.Tools;
 #endregion
 
-namespace NinjaTrader.NinjaScript.Indicators.Suri {
+namespace NinjaTrader.NinjaScript.Indicators.Suri.dev {
 	public class DevBidAskDelta : Indicator {
 		private readonly SuriVpIntraData suriVpIntraData = new SuriVpIntraData();
 		private int lastBarStored = int.MinValue;
@@ -122,60 +122,3 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 
 
 //
-
-#region NinjaScript generated code. Neither change nor remove.
-
-namespace NinjaTrader.NinjaScript.Indicators
-{
-	public partial class Indicator : NinjaTrader.Gui.NinjaScript.IndicatorRenderBase
-	{
-		private Suri.DevBidAskDelta[] cacheDevBidAskDelta;
-		public Suri.DevBidAskDelta DevBidAskDelta()
-		{
-			return DevBidAskDelta(Input);
-		}
-
-		public Suri.DevBidAskDelta DevBidAskDelta(ISeries<double> input)
-		{
-			if (cacheDevBidAskDelta != null)
-				for (int idx = 0; idx < cacheDevBidAskDelta.Length; idx++)
-					if (cacheDevBidAskDelta[idx] != null &&  cacheDevBidAskDelta[idx].EqualsInput(input))
-						return cacheDevBidAskDelta[idx];
-			return CacheIndicator<Suri.DevBidAskDelta>(new Suri.DevBidAskDelta(), input, ref cacheDevBidAskDelta);
-		}
-	}
-}
-
-namespace NinjaTrader.NinjaScript.MarketAnalyzerColumns
-{
-	public partial class MarketAnalyzerColumn : MarketAnalyzerColumnBase
-	{
-		public Indicators.Suri.DevBidAskDelta DevBidAskDelta()
-		{
-			return indicator.DevBidAskDelta(Input);
-		}
-
-		public Indicators.Suri.DevBidAskDelta DevBidAskDelta(ISeries<double> input )
-		{
-			return indicator.DevBidAskDelta(input);
-		}
-	}
-}
-
-namespace NinjaTrader.NinjaScript.Strategies
-{
-	public partial class Strategy : NinjaTrader.Gui.NinjaScript.StrategyRenderBase
-	{
-		public Indicators.Suri.DevBidAskDelta DevBidAskDelta()
-		{
-			return indicator.DevBidAskDelta(Input);
-		}
-
-		public Indicators.Suri.DevBidAskDelta DevBidAskDelta(ISeries<double> input )
-		{
-			return indicator.DevBidAskDelta(input);
-		}
-	}
-}
-
-#endregion
