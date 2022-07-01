@@ -143,13 +143,13 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 					case 2: drawingToolname = "RectangleBarInfo";	content = new Image { Source = new BitmapImage(new Uri(SuriAddOn.path + "barinfo.png",		UriKind.Absolute)), Width = 16, Height = 16 }; break;
 					case 3: drawingToolname = "SuriRuler";			content = new Image { Source = new BitmapImage(new Uri(SuriAddOn.path + "ruler.png",			UriKind.Absolute)), Width = 16, Height = 16 }; break;
 					case 4: drawingToolname = "Cot1Box";			content = new Image { Source = new BitmapImage(new Uri(SuriAddOn.path + "cot1.png",			UriKind.Absolute)), Width = 16, Height = 16 }; break;
-					case 5: drawingToolname = "Cot2Box";			content = new Image { Source = new BitmapImage(new Uri(SuriAddOn.path + "cot2.png",			UriKind.Absolute)), Width = 16, Height = 16 }; break;
-					case 6: drawingToolname = "Line";				content = Gui.Tools.Icons.DrawLineTool;			break;
-					case 7: drawingToolname = "PathTool";			content = Gui.Tools.Icons.DrawPath;				break;
-					case 8: drawingToolname = "HorizontalLine";		content = Gui.Tools.Icons.DrawHorizLineTool;	break;
-					case 9: drawingToolname = "VerticalLine";		content = Gui.Tools.Icons.DrawVertLineTool;		break;
-					case 10: drawingToolname = "Rectangle";			content = Gui.Tools.Icons.DrawRectangle;		break;
-					case 11: drawingToolname = "Text";				content = Gui.Tools.Icons.DrawText;				break;
+					//case 5: drawingToolname = "Cot2Box";			content = new Image { Source = new BitmapImage(new Uri(SuriAddOn.path + "cot2.png",			UriKind.Absolute)), Width = 16, Height = 16 }; break;
+					case 5: drawingToolname = "Line";				content = Gui.Tools.Icons.DrawLineTool;			break;
+					case 6: drawingToolname = "PathTool";			content = Gui.Tools.Icons.DrawPath;				break;
+					case 7: drawingToolname = "HorizontalLine";		content = Gui.Tools.Icons.DrawHorizLineTool;	break;
+					case 8: drawingToolname = "VerticalLine";		content = Gui.Tools.Icons.DrawVertLineTool;		break;
+					case 9: drawingToolname = "Rectangle";			content = Gui.Tools.Icons.DrawRectangle;		break;
+					case 10: drawingToolname = "Text";				content = Gui.Tools.Icons.DrawText;				break;
 				}
 				Button image = new Button {
 					Content		= content,

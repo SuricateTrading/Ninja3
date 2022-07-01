@@ -30,50 +30,24 @@ namespace NinjaTrader.Gui.NinjaScript {
 		protected override void OnWindowCreated(Window window) {
 			ControlCenter cc = window as ControlCenter;
 			if (cc == null) return;
-
-			SuriSettings.InitializeSettings();
 			
 			path = Globals.UserDataDir + @"suri\";
 			Directory.CreateDirectory(path + @"downloads");
+
+			Status status = SuriServer.GetStatus();
+			if (status != null) SuriCommon.mostRecentVersion = status.ninjaVersion;
+
+			SuriSettings.InitializeSettings();
 			
 			using (WebClient webClient = new WebClient()) {
-				bool isFirstInstall = false;
-				string previouslyDownloadedVersion = "";
-				try {
-					previouslyDownloadedVersion = File.ReadAllText(path + "version.suri");
-				} catch (Exception) {
-					isFirstInstall = true;
-				}
-				webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/version.suri", path + "version.suri");
-				SuriCommon.mostRecentVersion = File.ReadAllText(path + "version.suri");
-				bool versionHasChanged = !previouslyDownloadedVersion.Equals(SuriCommon.mostRecentVersion);
-				
-				if (isFirstInstall || versionHasChanged) {
-					try {
-						webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/ninjat.jpg", path + "ninjat.jpg");
-					} catch (Exception) {/**/}
-					try {
-						webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/barinfo.png", path + "barinfo.png");
-					} catch (Exception) {/**/}
-					try {
-						webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/rectanglePlus.png", path + "rectanglePlus.png");
-					} catch (Exception) {/**/}
-					try {
-						webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/strikingHigh.png", path + "strikingHigh.png");
-					} catch (Exception) {/**/}
-					try {
-						webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/strikingLow.png", path + "strikingLow.png");
-					} catch (Exception) {/**/}
-					try {
-						webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/ruler.png", path + "ruler.png");
-					} catch (Exception) {/**/}
-					try {
-						webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/cot1.png", path + "cot1.png");
-					} catch (Exception) {/**/}
-					try {
-						webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/cot2.png", path + "cot2.png");
-					} catch (Exception) {/**/}
-				}
+				DownloadFileIfNotExisting(webClient, path, "ninjat.jpg");
+				DownloadFileIfNotExisting(webClient, path, "barinfo.png");
+				DownloadFileIfNotExisting(webClient, path, "rectanglePlus.png");
+				DownloadFileIfNotExisting(webClient, path, "strikingHigh.png");
+				DownloadFileIfNotExisting(webClient, path, "strikingLow.png");
+				DownloadFileIfNotExisting(webClient, path, "ruler.png");
+				DownloadFileIfNotExisting(webClient, path, "cot1.png");
+				DownloadFileIfNotExisting(webClient, path, "cot2.png");
 				try {
 					webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/SuriMain.xaml", path + "SuriMain.xaml");
 				} catch (Exception) {/**/}
@@ -98,6 +72,13 @@ namespace NinjaTrader.Gui.NinjaScript {
 			}
 			
 			cc.MainMenu.Add(startSuri);
+		}
+
+		private void DownloadFileIfNotExisting(WebClient webClient, string filePath, string fileName) {
+			if (File.Exists(path + fileName)) return;
+			try {
+				webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/" + fileName, filePath + fileName);
+			} catch (Exception) {/**/}
 		}
 		
 		protected override void OnWindowDestroyed(Window window) {

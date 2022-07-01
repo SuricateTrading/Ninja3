@@ -61,7 +61,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		public bool showBidAsk { get; set; }
 		[Display(Name = "Platz zwischen Bid/Ask", Order = 5, GroupName = "Parameter", Description = "Wenn das Volumen in Bids und Asks unterteilt ist, stellt man hiermit den Platz zwischen den Bid und Ask Balken ein.")]
 		public int bidAskSpace { get; set; }
-		[Display(Name = "Zeige Bid/Ask Delta (P)", Order = 6, GroupName = "Parameter", Description = "Zeichnet eine Linie, die die Differenz zwischen Bids und Asks für jeden Tick anzeigt. Nur für Premium-Suris.")]
+		[Display(Name = "Zeige Bid/Ask Delta", Order = 6, GroupName = "Parameter", Description = "Zeichnet eine Linie, die die Differenz zwischen Bids und Asks für jeden Tick anzeigt.")]
 		public bool showBidAskDelta { get; set; }
 		[Display(Name = "Breite der Bid/Ask Delta Linie", Order = 6, GroupName = "Parameter")]
 		[Range(1, 100)]
@@ -356,7 +356,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 
 		private float? previousDelta;
 		private void DrawBidAskDeltaLine(int barIndex, SuriVpTickData tickData, float barWidth) {
-			if (!showBidAskDelta || SuriAddOn.license != License.Dev && SuriAddOn.license != License.Premium) return;
+			if (!showBidAskDelta) return;
 			float delta = (float) (((maxWidth ?? barWidth)/2f) * (tickData.asks - tickData.bids) / suriVpIntraData.barData[barIndex].highestDelta);
 			if (previousDelta != null) {
 				RenderTarget.DrawLine(

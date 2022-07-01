@@ -104,7 +104,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			{Commodity.SouthAfricanRand,	new CommodityData(57, "6Z", new List<string> {}, "Südafrikanischer Rand", 6, new List<int> {})},
 			{Commodity.UsDollar,			new CommodityData(52, "DX", new List<string> {}, "US Dollar", 3, new List<int> {})},
 			{Commodity.Eurodollar,			new CommodityData(53, "GE", new List<string> {}, "Euro-Dollar", 10, new List<int> {})},
-			{Commodity.BitcoinMicro,		new CommodityData(54, "BTC", new List<string> {"MBT"}, "Bitcoin", 5, new List<int> {})},
+			{Commodity.BitcoinMicro,		new CommodityData(54, "BTC", new List<string> {"MBT", "BIT"}, "Bitcoin", 5, new List<int> {})},
 		};
 		
 	}

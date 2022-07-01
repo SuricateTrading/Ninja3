@@ -35,6 +35,13 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
             }
         }
         
+        public static Status GetStatus() {
+            string url = "https://cloud2.suricate-trading.de:8443/status/get";
+            string response = Post(url, false);
+            var serializer = new JavaScriptSerializer();
+            return serializer.Deserialize<Status>(response);
+        }
+        
         public static List<WasdeData> GetWasdeData(int id, bool isAmerica, string oldDate, string newDate) {
             string url = "https://cloud2.suricate-trading.de:8443/wasde/get?commId=" + id + "&isGlobal=" + !isAmerica + "&oldDate=" + oldDate + "&newDate=" + newDate;
             string response = Post(url, true);
@@ -97,6 +104,11 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
         public bool? IsProjection {get; set;}
         public int EndMarketYear {get; set;}
         public Dictionary<String, Double> Attributes {get; set;}
+    }
+    
+    public sealed class Status {
+        public string ninjaVersion;
+        public string appVersion;
     }
 
     public sealed class DbCotData {
