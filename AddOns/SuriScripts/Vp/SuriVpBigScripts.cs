@@ -11,12 +11,18 @@ using Instrument = NinjaTrader.Cbi.Instrument;
 
 namespace NinjaTrader.Custom.AddOns.SuriCommon.Vp {
     public static class SuriVpBigScripts {
+
+	    public static bool lastExportFinnished;
         
 	    public static void StoreVpBigToFile(bool dev = false, int commodityIndex = 0, bool onlyRecent = true) {
+		    lastExportFinnished = false;
 			KeyValuePair<Commodity, CommodityData> entry;
 			try {
 				entry = SuriStrings.data.ElementAt(commodityIndex);
-			} catch (Exception) { return; }
+			} catch (Exception) {
+				lastExportFinnished = true;
+				return;
+			}
 
 			if (entry.Key == Commodity.BitcoinMicro) {
 				StoreVpBigToFile(dev, commodityIndex + 1, onlyRecent);

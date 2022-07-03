@@ -90,9 +90,6 @@
     <Reference Include="Newtonsoft.Json">
       <HintPath>C:\Program Files (x86)\NinjaTrader 8\bin64\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="MathNet.Numerics">
-      <HintPath>C:\Users\Bo\Documents\NinjaTrader 8\bin\Custom\MathNet.Numerics.dll</HintPath>
-    </Reference>
     <Reference Include="NinjaTrader.Vendor">
       <HintPath>C:\Users\Bo\Documents\NinjaTrader 8\bin\Custom\NinjaTrader.Vendor.dll</HintPath>
     </Reference>
@@ -107,6 +104,7 @@
     <Compile Include="AddOns\SuriData\CottonRepo.cs" />
     <Compile Include="AddOns\SuriData\GenericDbRepo.cs" />
     <Compile Include="AddOns\SuriData\NgasRepo.cs" />
+    <Compile Include="AddOns\SuriData\SuriSchedule.cs" />
     <Compile Include="AddOns\SuriData\TkRepo.cs" />
     <Compile Include="AddOns\SuriData\Vp\SuriBigRepo.cs" />
     <Compile Include="AddOns\SuriData\Vp\SuriVpData.cs" />

@@ -100,7 +100,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				}
 			}
 		}
-		
+		public override string DisplayName { get { return Name; } }
 		protected override void OnRender(ChartControl chartControl, ChartScale chartScale) {
 			base.OnRender(chartControl, chartScale);
 			if (SuriAddOn.license == License.None) SuriCommon.NoValidLicenseError(RenderTarget, ChartControl, ChartPanel);
@@ -145,7 +145,19 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				}
 			} catch (Exception) {/**/}
 		}
-		
+
+		public override void OnCalculateMinMax() {
+			double tmpMin = double.MaxValue;
+			double tmpMax = double.MinValue;
+ 
+			for (int index = ChartBars.FromIndex; index <= ChartBars.ToIndex; index++) {
+				double plotValue = Close.GetValueAt(index);
+				tmpMin = Math.Min(tmpMin, plotValue);
+				tmpMax = Math.Max(tmpMax, plotValue);
+			}
+			MinValue = tmpMin - 50 * TickSize;
+			MaxValue = tmpMax + 50 * TickSize;
+		}
 	}
 
 	public class ProductionCostData {

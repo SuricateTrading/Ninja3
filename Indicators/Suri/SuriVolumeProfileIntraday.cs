@@ -255,7 +255,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 					DrawBidAskDeltaLine(barIndex, tickData, barWidth);
 					
 					//DrawLvn();
-					//DrawDistributedVolume();
+					DrawDistributedVolume(barIndex, tickData, barWidth);
 					
 					isFirstTick = false;
 				}
@@ -378,7 +378,19 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			}*/
 		}
 
-		private void DrawDistributedVolume() {
+		private float? previousDistributedVolume;
+		private void DrawDistributedVolume(int barIndex, SuriVpTickData tickData, float barWidth) {
+			//if (!showBidAskDelta) return;
+			float distributedVolume = (float) ((maxWidth ?? barWidth) * tickData.distributedVolume / suriVpIntraData.barData[barIndex].pocVolume);
+			if (previousDistributedVolume != null) {
+				RenderTarget.DrawLine(
+					new Vector2(rect.X + previousDistributedVolume.Value, rect.Y + rect.Height + rect.Height / 2f),
+					new Vector2(rect.X + distributedVolume              , rect.Y + rect.Height / 2f),
+					testing1Fill, bidAskDeltaLineWidth
+				);
+			}
+			previousDistributedVolume = distributedVolume;
+			
 			/*if (previousDistVolWidth != null) {
 				
 				float distVolWidth = (float) ((maxWidth ?? barWidth) * entry.Value.distributedVolume / vpIntraData.barData[lastIndex].pocVolume);

@@ -17,6 +17,7 @@ using System.Windows.Media.Imaging;
 using NinjaTrader.Core;
 using NinjaTrader.Custom.AddOns.SuriCommon;
 using NinjaTrader.Custom.AddOns.SuriCommon.Vp;
+using NinjaTrader.Custom.AddOns.SuriData;
 using Button = System.Windows.Controls.Button;
 using HorizontalAlignment = System.Windows.HorizontalAlignment;
 using License = NinjaTrader.Custom.AddOns.SuriCommon.License;
@@ -203,27 +204,29 @@ namespace NinjaTrader.Gui.NinjaScript {
 			TabControl tabs = LogicalTreeHelper.FindLogicalNode(page, "tabs") as TabControl;
 			if (tabs == null) return;
 
-			Button downloadVpBig		= new Button { Content = "Download VP Big"		, Padding = new Thickness(15), Margin = new Thickness(5) };
-			Button downloadVpBigDev		= new Button { Content = "Download VP Big Dev"	, Padding = new Thickness(15), Margin = new Thickness(5) };
-			Button downloadVpIntra		= new Button { Content = "Download VP Intra"	, Padding = new Thickness(15), Margin = new Thickness(5) };
-			Button correlation			= new Button { Content = "Korrelation"			, Padding = new Thickness(15), Margin = new Thickness(5) };
-			Button downloadTicks		= new Button { Content = "Download Ticks"		, Padding = new Thickness(15), Margin = new Thickness(5) };
-			Button suriStatistics		= new Button { Content = "Suri Statistics"		, Padding = new Thickness(15), Margin = new Thickness(5) };
-			Button suriTest				= new Button { Content = "Test sumthin sumthin"	, Padding = new Thickness(15), Margin = new Thickness(5) };
-			downloadVpBig.Click		+= (sender, args) => SuriVpBigScripts.StoreVpBigToFile();
-			downloadVpBigDev.Click	+= (sender, args) => SuriVpBigScripts.StoreVpBigToFile(true);
-			downloadVpIntra.Click	+= (sender, args) => SuriVpIntraScripts.StoreVpIntra();
-			correlation.Click		+= (sender, args) => new DevCorrelation().LoadData();
-			downloadTicks.Click		+= (sender, args) => SuriVpIntraScripts.StoreTickData();
-			suriStatistics.Click	+= (sender, args) => new DevStatistics().Start();
-			suriTest.Click			+= (sender, args) => NinjaTk.Start();
+			Button downloadVpBig			= new Button { Content = "Download VP Big"		, Padding = new Thickness(15), Margin = new Thickness(5) };
+			Button downloadVpBigDev			= new Button { Content = "Download VP Big Dev"	, Padding = new Thickness(15), Margin = new Thickness(5) };
+			Button downloadVpIntra			= new Button { Content = "Download VP Intra"	, Padding = new Thickness(15), Margin = new Thickness(5) };
+			Button correlation				= new Button { Content = "Korrelation"			, Padding = new Thickness(15), Margin = new Thickness(5) };
+			Button downloadTicks			= new Button { Content = "Download Ticks"		, Padding = new Thickness(15), Margin = new Thickness(5) };
+			Button suriStatistics			= new Button { Content = "Suri Statistics"		, Padding = new Thickness(15), Margin = new Thickness(5) };
+			Button suriTest					= new Button { Content = "Test sumthin sumthin"	, Padding = new Thickness(15), Margin = new Thickness(5) };
+			Button suriVpBigSchedule		= new Button { Content = "VP Big Schedule"		, Padding = new Thickness(15), Margin = new Thickness(5) };
+			downloadVpBig.Click			+= (sender, args) => SuriVpBigScripts.StoreVpBigToFile();
+			downloadVpBigDev.Click		+= (sender, args) => SuriVpBigScripts.StoreVpBigToFile(true);
+			downloadVpIntra.Click		+= (sender, args) => SuriVpIntraScripts.StoreVpIntra();
+			correlation.Click			+= (sender, args) => new DevCorrelation().LoadData();
+			downloadTicks.Click			+= (sender, args) => SuriVpIntraScripts.StoreTickData();
+			suriStatistics.Click		+= (sender, args) => new DevStatistics().Start();
+			suriTest.Click				+= (sender, args) => NinjaTk.Start();
+			suriVpBigSchedule.Click		+= (sender, args) => SuriSchedule.ToggleVpBigSchedule();
 			
 			tabs.Items.Insert(0, new TabItem {
 				Header = "Admin",
 				Padding = new Thickness(10.5),
 				Content = new ScrollViewer {
 					Content = new StackPanel {
-						Children = { downloadVpBig, downloadVpBigDev, downloadVpIntra, correlation, downloadTicks, suriStatistics, suriTest }
+						Children = { downloadVpBig, downloadVpBigDev, downloadVpIntra, correlation, downloadTicks, suriStatistics, suriTest, suriVpBigSchedule }
 					}
 				}
 			});

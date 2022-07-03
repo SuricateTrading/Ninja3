@@ -81,6 +81,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 				boxes[index] = new SuriVpBox(bars.Count, index, boxHigh, boxLow);
 			}
 		}
+		
 	}
 
 	public abstract class SuriSingleVp {
@@ -310,36 +311,31 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			}
 			PocTickData().isMainPoc = true;
 
+
+			// distributed volume
+			for (int i = 0; i < tickData.Count; i++) {
+				double average = 0;
+				for (int j = i - 2; j < i + 2; j++) {
+					if (j < 0) continue;
+					if (j >= tickData.Count) break;
+					average += tickData[low + j].volume;
+				}
+				tickData[low + i].distributedVolume = average / 5.0;
+			}
+
 			if (!isVpBig) {
 				CalculateVaueArea();
-				
-				
-				// distributed volume
-				// must not be executed in the for-loop above, because entries may be missing.
-				/*if (!isVpBig && SuriAddOn.license == License.Dev && false) {
-					if (i == 0) {
-						entry										.distributedVolume += entry.volume / 2.0;
-						if (i < tickData.Count - 1) At(i + 1)	.distributedVolume += entry.volume / 2.0;
-					} else if (i == tickData.Count - 1) {
-						if (i > 0) At(i - 1)					.distributedVolume += entry.volume / 2.0;
-						entry										.distributedVolume += entry.volume / 2.0;
-					} else {
-						At(i - 1)			.distributedVolume += entry.volume / 3.0;
-						entry					.distributedVolume += entry.volume / 3.0;
-						At(i + 1)			.distributedVolume += entry.volume / 3.0;
-					}
-					
-				}*/
-			
+
+				// sub poc
 				/*foreach (KeyValuePair<int, VpTickData> tick in tickData) {
-					// sub poc
 					if (tick.Value.volume * 1.1 > pocVolume) tick.Value.isSubPoc = true;
 				}*/
 
 				//SetLvns();
 			}
 		}
-
+		
+		
 		#region Intra Only Functions
 		private void SetLvns(int start = 0) {
 			for (int i = start; i < tickData.Count; i++) {
@@ -442,6 +438,8 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 		}
 		#endregion
 	}
+	
+	
 
 	public sealed class SuriVpBigData : SuriSingleVp { public SuriVpBigData(double tickSize) : base(true, tickSize) {} }
 

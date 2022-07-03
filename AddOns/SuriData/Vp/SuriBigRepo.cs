@@ -23,7 +23,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon.Vp {
 			}
 			
 			string fileName = GetVpBigFilePath(instrument, dev, year, week);
-			if (!File.Exists(fileName) || (DateTime.Now - File.GetCreationTime(fileName)).TotalDays >= 2) {
+			if (!File.Exists(fileName) || DateTime.Now.DayOfYear != File.GetCreationTime(fileName).DayOfYear) {
 				// update vp
 				string serverFile = @"https://app.suricate-trading.de/ninja/vpbig" + (dev ? "dev/" : "/") + instrument.MasterInstrument.Name + ".vpbig";
 				try {
