@@ -356,7 +356,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 
 		private float? previousDelta;
 		private void DrawBidAskDeltaLine(int barIndex, SuriVpTickData tickData, float barWidth) {
-			if (!showBidAskDelta) return;
+			if (!showBidAskDelta || barWidth < 70) return;
 			float delta = (float) (((maxWidth ?? barWidth)/2f) * (tickData.asks - tickData.bids) / suriVpIntraData.barData[barIndex].highestDelta);
 			if (previousDelta != null) {
 				RenderTarget.DrawLine(

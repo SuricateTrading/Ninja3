@@ -19,9 +19,9 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		private		Point		startPoint;
 		
 		#region Properties
-		[XmlIgnore] [Range(0, int.MaxValue)] [Display(Name="Oben", Order=0, GroupName="Parameter")]
+		[Range(0, int.MaxValue)] [Display(Name="Oben", Order=0, GroupName="Parameter")]
 		public double Top { get; set; }
-		[XmlIgnore] [Range(0, int.MaxValue)] [Display(Name="Links", Order=1, GroupName="Parameter")]
+		[Range(0, int.MaxValue)] [Display(Name="Links", Order=1, GroupName="Parameter")]
 		public double Left { get; set; }
 
 		#endregion
@@ -134,7 +134,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			
 			Grid contentGrid = new Grid();
 			contentGrid.RowDefinitions.Add(new RowDefinition {Height = new GridLength(1, GridUnitType.Auto)});
-			for (int i = 1; i <= 11; i++) {
+			for (int i = 1; i <= 12; i++) {
 				contentGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star)});
 				string drawingToolname = "";
 				object content = null;
@@ -146,10 +146,14 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 					//case 5: drawingToolname = "Cot2Box";			content = new Image { Source = new BitmapImage(new Uri(SuriAddOn.path + "cot2.png",			UriKind.Absolute)), Width = 16, Height = 16 }; break;
 					case 5: drawingToolname = "Line";				content = Gui.Tools.Icons.DrawLineTool;			break;
 					case 6: drawingToolname = "PathTool";			content = Gui.Tools.Icons.DrawPath;				break;
-					case 7: drawingToolname = "HorizontalLine";		content = Gui.Tools.Icons.DrawHorizLineTool;	break;
-					case 8: drawingToolname = "VerticalLine";		content = Gui.Tools.Icons.DrawVertLineTool;		break;
-					case 9: drawingToolname = "Rectangle";			content = Gui.Tools.Icons.DrawRectangle;		break;
-					case 10: drawingToolname = "Text";				content = Gui.Tools.Icons.DrawText;				break;
+					
+					case 7: drawingToolname = "SuriRedLine";		content = new Image { Source = new BitmapImage(new Uri(SuriAddOn.path + "redline.png",	UriKind.Absolute)), Width = 16, Height = 16}; break;
+					case 8: drawingToolname = "SuriGreenLine";		content = new Image { Source = new BitmapImage(new Uri(SuriAddOn.path + "greenline.png",	UriKind.Absolute)), Width = 16, Height = 16}; break;
+					case 9: drawingToolname = "SuriBlueLine";		content = new Image { Source = new BitmapImage(new Uri(SuriAddOn.path + "blueline.png",	UriKind.Absolute)), Width = 16, Height = 16}; break;
+					
+					case 10: drawingToolname = "VerticalLine";		content = Gui.Tools.Icons.DrawVertLineTool;		break;
+					case 11: drawingToolname = "Rectangle";			content = Gui.Tools.Icons.DrawRectangle;		break;
+					case 12: drawingToolname = "Text";				content = Gui.Tools.Icons.DrawText;				break;
 				}
 				Button image = new Button {
 					Content		= content,

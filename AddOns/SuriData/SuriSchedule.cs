@@ -20,7 +20,7 @@ namespace NinjaTrader.Custom.AddOns.SuriData {
                 while (_thread != null) {
                     Thread.Sleep(1000 * 60);
 
-                    if (!_isLoadingData && DateTime.Now.Hour == 4 &&  DateTime.Now.Minute < 5) {
+                    if (!_isLoadingData && DateTime.Now.Hour == 4 &&  DateTime.Now.Minute < 5 && DateTime.Now.DayOfWeek != DayOfWeek.Sunday) {
                         _isLoadingData = true;
                         SuriCommon.SuriCommon.Print("Export startet");
                         SuriVpBigScripts.StoreVpBigToFile();

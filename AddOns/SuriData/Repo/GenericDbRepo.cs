@@ -50,7 +50,8 @@ namespace NinjaTrader.Custom.AddOns.Data {
         /** May throw IndexOutOfRangeException */
         public T Get(int barIndex) { return data[dataIndices[barIndex]]; }
 
-        public int CotIndexOf(int barIndex) { return dataIndices[barIndex]; }
+        /** Returns the index of the data-field of the given barIndex. */
+        public int DataIndexOf(int barIndex) { return dataIndices[barIndex]; }
         
         /** Gets data from local disk. If local data is outdated, then download from database and store to local disk. */
         private void InitData(DateTime start, DateTime end) {

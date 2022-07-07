@@ -36,12 +36,10 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		public bool isDelayed
 		{ get; set; }
 		
-		[XmlIgnore]
 		[Range(1, int.MaxValue)]
 		[Display(Name="Breite der Hauptlinie", Order=2, GroupName="Parameter")]
 		public int lineWidth
 		{ get; set; }
-		[XmlIgnore]
 		[Range(1, int.MaxValue)]
 		[Display(Name="Breite der sekundären Linien", Order=3, GroupName="Parameter")]
 		public int lineWidthSecondary
@@ -163,9 +161,13 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			DbCotData cotData = null;
 			try {
 				cotData = cotRepo.Get(CurrentBar);
-				if (cotData == null || cotData.Cot1 == null) return;
-				CalcCot1();
-				Values[0][0] = cotData.Cot1.Value;
+				if (cotData == null) return;
+				int cotIndex = cotRepo.DataIndexOf(CurrentBar);
+				Values[0][0] = DataTools.GetOsci(
+					cotIndex,
+					i => cotRepo.data[i].commercialsLong - cotRepo.data[i].commercialsShort,
+					i => Math.Abs((cotRepo.data[i].date - cotRepo.data[cotIndex].date).Days) >= 7 * weeks
+				);
 			} catch (Exception) {
 				if (CurrentBar > 10) Value[0] = Value[1];
 			}
@@ -179,7 +181,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				PlotBrushes[0][0] = noNewCotBrush;
 			} else if (SuriAddOn.license != License.Basic) {
 				if (!isCurrentlyASignal || Value[0] < 90 && Value[0] > 10 ) {
-					isCurrentlyASignal = IsSignal();
+					isCurrentlyASignal = StrategyTasks.ComesFromOtherSide(CurrentBar, i => Value.GetValueAt(i), 10, 90);
 				}
 				if (isCurrentlyASignal) {
 					if (isDelayed) {
@@ -212,35 +214,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 					}
 				}
 			}
-		}
-
-		private void CalcCot1() {
-			var min = int.MaxValue;
-			var max = int.MinValue;
-			int cotIndex = cotRepo.CotIndexOf(CurrentBar);
-			var cot = cotRepo.data[cotIndex];
-			for (int i = cotIndex; i >= 0; i--) {
-				var v = cotRepo.data[i].commercialsLong - cotRepo.data[i].commercialsShort;
-				if (min > v) min = v;
-				if (max < v) max = v;
-				if (Math.Abs((cotRepo.data[i].date - cotRepo.data[cotIndex].date).Days) >= 7 * weeks) break;
-			}
-			cot.Cot1 = 100.0 * (cot.commercialsLong - cot.commercialsShort - min) / (max - min);
-		}
-		
-		/** Does not check SMA. */
-		private bool IsSignal() {
-			if (CurrentBar == 0) return false;
-			if (Value[0] < 90 && Value[0] > 10) return false;
-			if ((Value[1] > 10 && Value[0] <= 10 || Value[1] < 90 && Value[0] >= 90) == false) return false;
-
-			// check if we come from the other side
-			for (int i = 2; i <= CurrentBar-1; i++) {
-				if (Value[i] <= 10 && Value[i - 1] > 10 || Value[i] >= 90 && Value[i - 1] < 90) {
-					return IsValidDataPoint(i) && Math.Abs(Value[i] - Value[0]) >= 80;
-				}
-			}
-			return false;
 		}
 
 	}

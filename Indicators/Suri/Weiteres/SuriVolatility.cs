@@ -16,7 +16,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri.Weiteres {
 	public sealed class SuriVolatility : Indicator {
 		#region Properties
 		[NinjaScriptProperty]
-		[Display(Name = "Tage", Order = 0, Description = "Tage", GroupName = "Parameter")]
+		[Display(Name = "Bars", Order = 0, Description = "Tage", GroupName = "Parameter")]
 		public int? days { get; set; }
 		
 		[NinjaScriptProperty]

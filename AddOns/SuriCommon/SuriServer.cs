@@ -63,7 +63,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
         public static bool ChangeMachineId(string oldMachineId) {
             try {
                 string url = "https://cloud2.suricate-trading.de:8443/suriguard/change?" + "oldLicense=" + oldMachineId + "&newLicense=" + Cbi.License.MachineId;
-                string response = Post(url, true);
+                string response = Post(url, false);
                 var serializer = new JavaScriptSerializer();
                 return serializer.Deserialize<bool>(response);
             } catch (Exception) {

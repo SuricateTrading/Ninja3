@@ -100,12 +100,13 @@
     <Compile Include="AddOns\NinjaTk\SuriChartData.cs" />
     <Compile Include="AddOns\SuriCommon\RenderCommons.cs" />
     <Compile Include="AddOns\SuriCommon\SuriSettings.cs" />
-    <Compile Include="AddOns\SuriData\CotRepo.cs" />
-    <Compile Include="AddOns\SuriData\CottonRepo.cs" />
-    <Compile Include="AddOns\SuriData\GenericDbRepo.cs" />
-    <Compile Include="AddOns\SuriData\NgasRepo.cs" />
+    <Compile Include="AddOns\SuriData\DataTools.cs" />
+    <Compile Include="AddOns\SuriData\Repo\CotRepo.cs" />
+    <Compile Include="AddOns\SuriData\Repo\CottonRepo.cs" />
+    <Compile Include="AddOns\SuriData\Repo\GenericDbRepo.cs" />
+    <Compile Include="AddOns\SuriData\Repo\NgasRepo.cs" />
+    <Compile Include="AddOns\SuriData\Repo\TkRepo.cs" />
     <Compile Include="AddOns\SuriData\SuriSchedule.cs" />
-    <Compile Include="AddOns\SuriData\TkRepo.cs" />
     <Compile Include="AddOns\SuriData\Vp\SuriBigRepo.cs" />
     <Compile Include="AddOns\SuriData\Vp\SuriVpData.cs" />
     <Compile Include="AddOns\SuriData\Vp\SuriIntraRepo.cs" />
@@ -173,6 +174,7 @@
     <Compile Include="DrawingTools\Cot1Box.cs" />
     <Compile Include="DrawingTools\MarkableBar.cs" />
     <Compile Include="DrawingTools\Cot2Box.cs" />
+    <Compile Include="DrawingTools\SuriLine.cs" />
     <Compile Include="DrawingTools\SuriRuler.cs" />
     <Compile Include="ImportTypes\%40TickDataImportType.cs" />
     <Compile Include="Indicators\%40BarTimer.cs" />

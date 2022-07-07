@@ -1,7 +1,5 @@
 #region Using declarations
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
 using NinjaTrader.Gui.Chart;
@@ -17,7 +15,7 @@ using HorizontalAlignment = System.Windows.HorizontalAlignment;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using VerticalAlignment = System.Windows.VerticalAlignment;
 using System.ComponentModel.DataAnnotations;
-using System.Xml.Serialization;
+using NinjaTrader.NinjaScript.DrawingTools;
 using NinjaTrader.NinjaScript.Indicators.Suri.Weiteres;
 #endregion
 
@@ -34,9 +32,11 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		public override string DisplayName { get { return "Toolbar"; } }
 		protected override void OnBarUpdate() {}
 		
-		[XmlIgnore]
 		[Display(Name="Zeige Verfallsdatum", Order=0, GroupName="Parameter")]
 		public bool showExpiry { get; set; }
+		
+		[Display(Name="Verschiebe Verfalls-Linie um x Tage", Order=0, GroupName="Parameter")]
+		public int moveExpiryLine { get; set; }
 		
 		protected override void OnStateChange() {
 			if (State == State.SetDefaults) {
@@ -47,6 +47,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				DisplayInDataBox					= false;
 				IsSuspendedWhileInactive			= true;
 				showExpiry							= true;
+				moveExpiryLine						= 14;
 			} else if (State == State.Historical) {
 				if (ChartControl != null) ChartControl.Dispatcher.InvokeAsync(CreateWpfControls);
 			} else if (State == State.Terminated) {
@@ -116,10 +117,11 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 					new ColumnDefinition{Width = new GridLength(100, GridUnitType.Auto)}, new ColumnDefinition{Width = new GridLength(100, GridUnitType.Auto)},
 					new ColumnDefinition{Width = new GridLength(100, GridUnitType.Auto)}, new ColumnDefinition{Width = new GridLength(100, GridUnitType.Auto)},
 					new ColumnDefinition{Width = new GridLength(100, GridUnitType.Auto)}, new ColumnDefinition{Width = new GridLength(100, GridUnitType.Auto)},
-					new ColumnDefinition{Width = new GridLength(100, GridUnitType.Auto)},
+					new ColumnDefinition{Width = new GridLength(100, GridUnitType.Auto)}, new ColumnDefinition{Width = new GridLength(100, GridUnitType.Auto)},
 					new ColumnDefinition{Width = new GridLength(180)}, // combobox
 					new ColumnDefinition{Width = new GridLength(100, GridUnitType.Auto)}, // next button
 					new ColumnDefinition{Width = new GridLength(100, GridUnitType.Auto)}, // expiry
+					new ColumnDefinition{Width = new GridLength(100, GridUnitType.Auto)}, // notes
 					new ColumnDefinition{Width = new GridLength(100, GridUnitType.Auto)}, // loading text
 				},
 				RowDefinitions = { new RowDefinition() },
@@ -159,6 +161,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			AddCheckBox("VP groß", IsIndicatorVisible(new []{typeof(SuriVolumeProfileBig)}), 0, ++index, (sender, args) => OnCheckBoxClick(new []{typeof(SuriVolumeProfileBig)}));
 			AddCheckBox("Produktionskosten", IsIndicatorVisible(new []{typeof(SuriProductionCost)}), 0, ++index, (sender, args) => OnCheckBoxClick(new []{typeof(SuriProductionCost)}));
 			AddCheckBox("Nicht adjustiert", IsIndicatorVisible(new []{typeof(SuriNonAdjusted)}), 0, ++index, (sender, args) => OnCheckBoxClick(new []{typeof(SuriNonAdjusted)}));
+			AddCheckBox("Vola", IsIndicatorVisible(new []{typeof(SuriVolatility)}), 0, ++index, (sender, args) => OnCheckBoxClick(new []{typeof(SuriVolatility)}));
 
 			var comList = new ComboBox {
 				BorderBrush = Brushes.CornflowerBlue,
@@ -175,13 +178,14 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				}
 				CommodityData commodityData = SuriStrings.data[commodity.Value];
 				comList.Items.Add(commodityData.shortName + "\t" + commodityData.longName);
-
 			}
 			
 			Commodity? currentComm = SuriStrings.GetComm(Instrument.MasterInstrument.Name);
 			if (currentComm != null) {
 				var c = SuriStrings.data[currentComm.Value];
 				comList.SelectedItem = c.shortName + "\t" + c.longName;
+			} else {
+				comList.SelectedItem = Instrument.MasterInstrument.Name;
 			}
 			comList.SelectionChanged += (sender, args) => {
 				string change = ((ComboBox) sender).SelectedItem as string;
@@ -206,18 +210,10 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				ToolTip = "Nächster Markt",
 			};
 			nextButton.Click += (sender, args) => {
-				string selectedMarket = comList.SelectedItem as string;
-				if (selectedMarket == null) return;
-				string shortName = Regex.Replace( selectedMarket, "\t.+", "");
-				int i = 0;
-				foreach (KeyValuePair<Commodity,CommodityData> entry in SuriStrings.data) {
-					i++;
-					if (i == SuriStrings.data.Count) i = 0;
-					if (entry.Value.shortName.Equals(shortName)) {
-						ChangeMarket(SuriStrings.data.ElementAt(i).Value.shortName);
-						return;
-					}
-				}
+				var item = comList.Items[(comList.SelectedIndex + 1) % comList.Items.Count] as string;
+				if (item == null) return;
+				string shortName = Regex.Replace( item, "\t.+", "");
+				ChangeMarket(shortName);
 			};
 			Grid.SetRow(nextButton, 0);
 			Grid.SetColumn(nextButton, ++index);
@@ -232,6 +228,8 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				Grid.SetRow(expiryText, 0);
 				Grid.SetColumn(expiryText, ++index);
 				menu.Children.Add(expiryText);
+
+				Draw.VerticalLine(this, "Verfallsdatum", Instrument.Expiry.AddDays(-moveExpiryLine), Brushes.CornflowerBlue);
 			}
 			
 			loadingText = new TextBlock {
@@ -243,12 +241,12 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			menu.Children.Add(loadingText);
 		}
 
-		private void ChangeMarket(string marketName) {
+		private void ChangeMarket(string comboboxMarketName) {
 			Keyboard.ClearFocus();
 			ChartControl.OwnerChart.Focus();
 			loadingText.Text = "Laden...";
 
-			string shortName = Regex.Replace(marketName, "\t.*", "");
+			string shortName = Regex.Replace(comboboxMarketName, "\t.*", "");
 			Instrument nextInstrument = Instrument.GetInstrument(shortName + Instrument.GetInstrument(shortName+" ##-##").MasterInstrument.GetNextExpiry(DateTime.Now).ToString(" MM-yy"));
 			if (nextInstrument == null) return;
 				

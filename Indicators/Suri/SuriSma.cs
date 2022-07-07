@@ -23,12 +23,10 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		public int days
 		{ get; set; }
 		
-		[XmlIgnore]
 		[Display(Name="Zeige normalen SMA (aus) oder Steigungswinkel (an)", Order=1, GroupName="Parameter")]
 		public bool useSlope
 		{ get; set; }
 		
-		[XmlIgnore]
 		[Range(1, int.MaxValue)]
 		[Display(Name="Breite der Linien", Order=2, GroupName="Parameter")]
 		public int lineWidth

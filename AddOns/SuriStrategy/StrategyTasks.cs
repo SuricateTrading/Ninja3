@@ -64,7 +64,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
         }
 
         public static SuriBarType GetBarType(Bars bars, int index, double tickSize) {
-            double	prevCloseValue = bars.GetClose(index-1);
+            double prevCloseValue = bars.GetClose(index-1);
             double open = bars.GetOpen(index);
             double close = bars.GetClose(index);
             if (prevCloseValue > Math.Max(open, close) || prevCloseValue < Math.Min(open, close)) {
@@ -85,5 +85,32 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
         }
 
         public static bool BarGoesUp(Bars bars, int index) { return bars.GetClose(index) > bars.GetOpen(index); }
+        
+        /// <summary>
+        /// Returns true iff we come from the other side FOR THE FIRST TIME. So going down multiple times only counts the first time if we came from the other side.
+        /// </summary>
+        public static bool ComesFromOtherSide(int index, Func<int, double> getValue, double bottom, double top) {
+            if (index == 0) return false;
+            
+            double currentValue  = getValue(index);
+            double previousValue = getValue(index - 1);
+            bool isInBottomArea = currentValue <= bottom;
+            bool isInTopArea    = currentValue >= top;
+            
+            if (!isInBottomArea && !isInTopArea) return false;
+            if (!(isInBottomArea && previousValue > bottom || isInTopArea && previousValue < top)) return false;
+
+            // We are in the extreme-areas. Now Check if we come from the other side.
+            bool leftExtremeAreas = false;
+            for (int i = index - 1; i >= 0; i--) {
+                double v = getValue(i);
+                if (double.IsNaN(v)) return false;
+                if (isInBottomArea && v > bottom || isInTopArea && v < top) leftExtremeAreas = true;
+                if (leftExtremeAreas && (isInBottomArea && v <= bottom || isInTopArea && v >= top)) return false; // has returned into extreme area.
+                if (isInBottomArea && v >= top || isInTopArea && v <= bottom) return true;
+            }
+            return false;
+        }
+        
     }
 }

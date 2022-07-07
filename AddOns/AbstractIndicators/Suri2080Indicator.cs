@@ -37,7 +37,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		}
 		
 		[NinjaScriptProperty]
-		[XmlIgnore]
 		[Range(1, int.MaxValue)]
 		[Display(Name="Jahre", Order=0, GroupName="Parameter")]
 		public int years { get; set; }
@@ -62,12 +61,10 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		public virtual int bottomLinePercent
 		{ get; set; }
 
-		[XmlIgnore]
 		[Range(1, int.MaxValue)]
 		[Display(Name="Breite der Hauptlinie", Order=2, GroupName="Parameter")]
 		public int lineWidth
 		{ get; set; }
-		[XmlIgnore]
 		[Range(1, int.MaxValue)]
 		[Display(Name="Breite der sekundären Linien", Order=3, GroupName="Parameter")]
 		public int lineWidthSecondary
@@ -167,6 +164,9 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 
 		protected abstract double GetMainValue(DbCotData cotData);
 
+		private int? lastMinIndex;
+		private int? lastMaxIndex;
+		
 		protected override void OnBarUpdate() {
 			if (SuriAddOn.license == License.None || cotRepo == null || cotRepo.IsEmpty()) return;
 			
@@ -185,7 +185,22 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			}
 			if (cotData == null) return;
 			
-			SetMinMax();
+			//SetMinMax();
+			Tuple<int, int> minMaxIndex = DataTools.GetMinMax(
+				cotRepo.DataIndexOf(CurrentBar),
+				lastMinIndex,
+				lastMaxIndex,
+				years,
+				i => GetMainValue(cotRepo.data[i]), 
+				i => cotRepo.data[i].date
+			);
+			if (minMaxIndex != null) {
+				lastMinIndex = minMaxIndex.Item1;
+				lastMaxIndex = minMaxIndex.Item2;
+				min = GetMainValue(cotRepo.data[lastMinIndex.Value]);
+				max = GetMainValue(cotRepo.data[lastMaxIndex.Value]);
+			}
+			
 			Values[1][0] = ValueOf(bottomLinePercent / 100.0);
 			Values[2][0] = ValueOf(0.5);
 			Values[3][0] = ValueOf(topLinePercent / 100.0);
@@ -205,7 +220,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		}
 		
 		private void SetMinMax() {
-			int currentCotIndex = cotRepo.CotIndexOf(CurrentBar);
+			int currentCotIndex = cotRepo.DataIndexOf(CurrentBar);
 			DateTime currentReportDate = cotRepo.data[currentCotIndex].date;
 			
 			if (lastMinDate == null || lastMaxDate == null ||
@@ -238,7 +253,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			int countHigh = 0;
 			int countLow = 0;
 
-			int currentCotIndex = cotRepo.CotIndexOf(CurrentBar);
+			int currentCotIndex = cotRepo.DataIndexOf(CurrentBar);
 			var cot = cotRepo.Get(CurrentBar);
 			for (int i = currentCotIndex - 1; i >= 0; i--) {
 				var current = cotRepo.data[i].GetByReportField(reportField);

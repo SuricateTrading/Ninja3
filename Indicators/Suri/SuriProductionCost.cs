@@ -47,7 +47,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		};
 		
 		
-		[XmlIgnore]
 		[Range(1, int.MaxValue)]
 		[Display(Name="Breite der Linie", Order=2, GroupName="Parameter")]
 		public int lineWidth

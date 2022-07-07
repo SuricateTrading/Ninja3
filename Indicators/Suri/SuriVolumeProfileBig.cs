@@ -109,6 +109,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				pocBrush									= Brushes.Red;
 				textBrush									= Brushes.White;
 			} else if (State == State.DataLoaded) {
+				SetZOrder(-100);
 				dataLoaded = false;
 				if ((SuriAddOn.license == License.Premium || SuriAddOn.license == License.Dev) && loadRecent) {
 					suriVpBigData = SuriBigRepo.GetVpBig(Instrument);

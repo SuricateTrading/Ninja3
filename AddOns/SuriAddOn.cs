@@ -48,6 +48,9 @@ namespace NinjaTrader.Gui.NinjaScript {
 				DownloadFileIfNotExisting(webClient, path, "ruler.png");
 				DownloadFileIfNotExisting(webClient, path, "cot1.png");
 				DownloadFileIfNotExisting(webClient, path, "cot2.png");
+				DownloadFileIfNotExisting(webClient, path, "greenline.png");
+				DownloadFileIfNotExisting(webClient, path, "redline.png");
+				DownloadFileIfNotExisting(webClient, path, "blueline.png");
 				try {
 					webClient.DownloadFile(@"https://app.suricate-trading.de/ninja/SuriMain.xaml", path + "SuriMain.xaml");
 				} catch (Exception) {/**/}
