@@ -28,7 +28,7 @@ namespace NinjaTrader.Custom.AddOns.SuriData {
                 Math.Abs((getDate(lastMinIndex.Value) - currentDate).Days / 365.0) >= years ||
                 Math.Abs((getDate(lastMaxIndex.Value) - currentDate).Days / 365.0) >= years
             ) {
-                // the last max or min is too far away. Recalculate.
+                // the last min or max is too far away. Recalculate.
                 double min = double.MaxValue;
                 double max = double.MinValue;
                 for (int i = index; i >= 0; i--) {
@@ -46,6 +46,38 @@ namespace NinjaTrader.Custom.AddOns.SuriData {
             return new Tuple<int, int>(lastMinIndex.Value, lastMaxIndex.Value);
         }
         
+        public static Tuple<double, double> MoveLines(int index, double topLine, double bottomLine, int years, Func<int, double> getValue, Func<int, DateTime> getDate) {
+            double localHigh  = double.MaxValue;
+            double localLow   = double.MaxValue;
+            double highestLow = double.MinValue;
+            double lowestHigh = double.MaxValue;
+            int countHigh = 0;
+            int countLow = 0;
+            bool isInit = false;
+
+            for (int i = index - 1; i >= 0; i--) {
+                var current = getValue(i);
+                var prev = getValue(i + 1);
+                if (current > topLine    && (prev < topLine    || current > localHigh)) { localHigh = current; isInit = true; }
+                if (current < bottomLine && (prev > bottomLine || current < localLow )) { localLow = current;  isInit = true; }
+
+                if (isInit && current < topLine && prev > topLine) {
+                    if (lowestHigh > localHigh) lowestHigh = localHigh;
+                    countHigh++;
+                }
+                if (isInit && current > bottomLine && prev < bottomLine) {
+                    if (highestLow < localLow) highestLow = localLow;
+                    countLow++;
+                }
+
+                if (Math.Abs((getDate(i) - getDate(index)).Days / 365.0) >= years) break;
+            }
+
+            return new Tuple<double, double>(
+                countHigh > 1 ? lowestHigh : topLine,
+                countLow  > 1 ? highestLow : bottomLine
+            );
+        }
         
         
     }

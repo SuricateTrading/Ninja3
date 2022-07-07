@@ -20,8 +20,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		private CotRepo cotRepo;
 		private double min = double.MaxValue;
 		private double max = double.MinValue;
-		private DateTime? lastMinDate;
-		private DateTime? lastMaxDate;
 		
 		#region Properties
 		[TypeConverter(typeof(FriendlyEnumConverter))]
@@ -148,8 +146,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				AddPlot(new Stroke(bottomBrush, lineWidthSecondary), PlotStyle.Line, bottomLinePercent + "%");
 				AddPlot(new Stroke(brush50, lineWidthSecondary), PlotStyle.Line, "50%");
 				AddPlot(new Stroke(topBrush, lineWidthSecondary), PlotStyle.Line, topLinePercent + "%");
-				lastMinDate = null;
-				lastMaxDate = null;
 			} else if (State == State.DataLoaded) {
 				if (Bars.Count > 0) cotRepo = new CotRepo(Instrument, Bars, false, Bars.GetTime(0).AddYears(-years).AddDays(-14));
 			}
@@ -185,7 +181,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			}
 			if (cotData == null) return;
 			
-			//SetMinMax();
 			Tuple<int, int> minMaxIndex = DataTools.GetMinMax(
 				cotRepo.DataIndexOf(CurrentBar),
 				lastMinIndex,
@@ -194,17 +189,27 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				i => GetMainValue(cotRepo.data[i]), 
 				i => cotRepo.data[i].date
 			);
-			if (minMaxIndex != null) {
-				lastMinIndex = minMaxIndex.Item1;
-				lastMaxIndex = minMaxIndex.Item2;
-				min = GetMainValue(cotRepo.data[lastMinIndex.Value]);
-				max = GetMainValue(cotRepo.data[lastMaxIndex.Value]);
-			}
+			lastMinIndex = minMaxIndex.Item1;
+			min = GetMainValue(cotRepo.data[lastMinIndex.Value]);
+			lastMaxIndex = minMaxIndex.Item2;
+			max = GetMainValue(cotRepo.data[lastMaxIndex.Value]);
 			
 			Values[1][0] = ValueOf(bottomLinePercent / 100.0);
 			Values[2][0] = ValueOf(0.5);
 			Values[3][0] = ValueOf(topLinePercent / 100.0);
-			if (moveLines) MoveLines();
+			if (moveLines) {
+				Tuple<double, double> movedLineIndex = DataTools.MoveLines(
+					cotRepo.DataIndexOf(CurrentBar),
+					Values[3][0],
+					Values[1][0],
+					years,
+					i => GetMainValue(cotRepo.data[i]), 
+					i => cotRepo.data[i].date
+				);
+				Values[1][0] = movedLineIndex.Item2;
+				Values[3][0] = movedLineIndex.Item1;
+			}
+			
 			
 			if ((Time[0].Date - cotData.date).TotalDays > 12) {
 				PlotBrushes[0][0] = noNewCotBrush;
@@ -217,64 +222,6 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 					if (Values[0][0] < Values[1][0] && !bottomBrush.ToString().Equals("#00FFFFFF")) { PlotBrushes[0][0] = bottomBrush; }
 				}
 			}
-		}
-		
-		private void SetMinMax() {
-			int currentCotIndex = cotRepo.DataIndexOf(CurrentBar);
-			DateTime currentReportDate = cotRepo.data[currentCotIndex].date;
-			
-			if (lastMinDate == null || lastMaxDate == null ||
-				Math.Abs((lastMinDate.Value - currentReportDate).Days / 365.0) >= years ||
-			    Math.Abs((lastMaxDate.Value - currentReportDate).Days / 365.0) >= years
-			) {
-				// the last max or min is too far away. Recalculate.
-				min = double.MaxValue;
-				max = double.MinValue;
-				for (int i = currentCotIndex; i >= 0; i--) {
-					double cotValue = GetMainValue(cotRepo.data[i]);
-					DateTime date = cotRepo.data[i].date;
-					if (min > cotValue) { min = cotValue; lastMinDate = date; }
-					if (max < cotValue) { max = cotValue; lastMaxDate = date; }
-					if (Math.Abs((date - currentReportDate).Days / 365.0) >= years) break;
-				}
-			} else {
-				if (min > Value[0]) { min = Value[0]; lastMinDate = currentReportDate; }
-				if (max < Value[0]) { max = Value[0]; lastMaxDate = currentReportDate; }
-			}
-		}
-
-		private void MoveLines() {
-			double bottomLine	= ValueOf(bottomLinePercent / 100.0);
-			double topLine		= ValueOf(topLinePercent    / 100.0);
-			int localHigh  = int.MaxValue;
-			int localLow   = int.MaxValue;
-			int highestLow = int.MinValue;
-			int lowestHigh = int.MaxValue;
-			int countHigh = 0;
-			int countLow = 0;
-
-			int currentCotIndex = cotRepo.DataIndexOf(CurrentBar);
-			var cot = cotRepo.Get(CurrentBar);
-			for (int i = currentCotIndex - 1; i >= 0; i--) {
-				var current = cotRepo.data[i].GetByReportField(reportField);
-				var prev = cotRepo.data[i + 1].GetByReportField(reportField);
-				if (current > topLine && (prev < topLine || current > localHigh)) localHigh = current;
-				if (current < bottomLine && (prev > bottomLine || current < localLow )) localLow  = current;
-
-				if (localHigh != int.MinValue && current < topLine && prev > topLine) {
-					if (lowestHigh > localHigh) lowestHigh = localHigh;
-					countHigh++;
-				}
-				if (localLow != int.MaxValue && current > bottomLine && prev < bottomLine) {
-					if (highestLow < localLow) highestLow = localLow;
-					countLow++;
-				}
-
-				if (Math.Abs((cotRepo.data[i].date - cot.date).Days / 365.0) >= years) break;
-			}
-			
-			Values[3][0] = countHigh > 1 ? lowestHigh : topLine;
-			Values[1][0] = countLow  > 1 ? highestLow : bottomLine;
 		}
 		
 	}
