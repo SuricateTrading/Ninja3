@@ -26,7 +26,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		private SharpDX.Direct2D1.Brush normalAreaFill;
 		private SharpDX.Direct2D1.Brush pocFill;
 		private SharpDX.Direct2D1.Brush textFill;
-		private SharpDX.Direct2D1.Brush testFill;
+		private SharpDX.Direct2D1.Brush lvnFill;
 		private SharpDX.DirectWrite.TextFormat textFormat;
 		
 		/*[Browsable(false)]
@@ -143,13 +143,13 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				normalAreaFill.Dispose();
 				pocFill.Dispose();
 				textFill.Dispose();
-				testFill.Dispose();
+				lvnFill.Dispose();
 			}
 			if (RenderTarget != null) {
 				normalAreaFill = normalAreaBrush.ToDxBrush(RenderTarget);
 				pocFill = pocBrush.ToDxBrush(RenderTarget);
 				textFill = textBrush.ToDxBrush(RenderTarget);
-				testFill = Brushes.Yellow.ToDxBrush(RenderTarget);
+				lvnFill = Brushes.Yellow.ToDxBrush(RenderTarget);
 			}
 		}
 		
@@ -208,7 +208,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 			rect.Width = (float) ((ChartPanel.W * width / 100.0) * tickData.volume / (highestVisibleTick ?? suriVpBigData.pocVolume));
 			rect.Y = yUpper;
 			rect.Height = height;
-			RenderTarget.FillRectangle(rect, tickData.isLvn ? testFill : (tickData.isMainPoc ? pocFill : normalAreaFill));
+			RenderTarget.FillRectangle(rect, tickData.isLvn ? lvnFill : ((tickData.isMainPoc || tickData.isSubPoc) ? pocFill : normalAreaFill));
 			
 			if (showText) {
 				if (font == null || isFirstBar) {

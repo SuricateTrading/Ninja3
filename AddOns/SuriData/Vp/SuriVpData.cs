@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Windows.Forms;
 using Newtonsoft.Json;
+using NinjaTrader.Custom.AddOns.SuriData;
 using NinjaTrader.Data;
 
 namespace NinjaTrader.Custom.AddOns.SuriCommon {
@@ -87,6 +89,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 	public abstract class SuriSingleVp {
 		[JsonIgnore] public bool isVpBig;
 		public SortedList<int, SuriVpTickData> tickData;
+		private SortedList<int, SuriVpTickData> clusters = new SortedList<int, SuriVpTickData>();
 		[JsonIgnore] public bool isPrepared;
 		public double tickSize;
 		[JsonIgnore] public int tickCount;
@@ -297,6 +300,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 				// add missing values with a volume of zero
 				if (!tickData.ContainsKey(low + i)) {
 					tickData[low + i] = new SuriVpTickData(low + i);
+					SuriCommon.Print("asdsd");
 				}
 				
 				// poc
@@ -313,7 +317,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 
 
 			// distributed volume
-			for (int i = 0; i < tickData.Count; i++) {
+			/*for (int i = 0; i < tickData.Count; i++) {
 				double average = 0;
 				for (int j = i - 2; j < i + 2; j++) {
 					if (j < 0) continue;
@@ -321,7 +325,10 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 					average += tickData[low + j].volume;
 				}
 				tickData[low + i].distributedVolume = average / 5.0;
-			}
+			}*/
+
+			CalcClusters();
+			MergeClusters();
 
 			if (!isVpBig) {
 				CalculateVaueArea();
@@ -332,6 +339,74 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 				}*/
 
 				//SetLvns();
+			}
+		}
+		
+		private void CalcClusters() {
+			// params
+			int initialSearchRange = 20;
+			
+			clusters.Add(low + pocIndex, PocTickData());
+			
+			// first find local pocs and lvns in a very rough way.
+			for (int i = low + pocIndex + 1; i < low + tickData.Count; i++) {
+				int? index = null;
+				double value = double.MaxValue;
+				int noNewFound = 0;
+				
+				// find local lvn
+				for (; i < low + tickData.Count && noNewFound < initialSearchRange; i++) {
+					if (value > tickData[i].volume) {
+						value = tickData[i].volume;
+						noNewFound = 0;
+						index = i;
+					} else {
+						noNewFound++;
+					}
+				}
+				if (index == null) {
+					SuriCommon.Print("Achtung: Ein LVN konnte nicht gefunden werden!");
+					break;
+				}
+				i = index.Value;
+				tickData[i].isLvn = true;
+				clusters.Add(i, tickData[i]);
+
+				if (i == low + tickData.Count - 1) break; // break when reaching alltime high
+				
+				// find local poc
+				index = null;
+				value = double.MinValue;
+				noNewFound = 0;
+				for (; i < low + tickData.Count && noNewFound < initialSearchRange; i++) {
+					if (value < tickData[i].volume) {
+						value = tickData[i].volume;
+						noNewFound = 0;
+						index = i;
+					} else {
+						noNewFound++;
+					}
+				}
+				if (index == null) break;
+				i = index.Value;
+				tickData[i].isSubPoc = true;
+				clusters.Add(i, tickData[i]);
+			}
+		}
+
+		/// Tries to merge insignificant clusters
+		private void MergeClusters() {
+			// params
+			int clusterMinTickRange = 60; // "Die minimale Größe eines Clusters in Ticks."
+			int minPocLvnDistanceTickRange = 20; // "Die minimale Entfernung eines POCs zu einem der LVNs in Ticks."
+			int strength = 30; // "Mit welcher Stärke ein Cluster erkannt wird. Ein hoher Wert zeichnet nur sehr starke Cluster ein. Ein niedriger auch kleine Cluster. Der Wert ist in Prozent und gibt an, wie viel Prozent der POC mindestens vom LVN entfernt sein muss. Ein Wert von 100% heißt, dass der POC mindestens doppelt so hoch wie der höchste LVN des Clusters sein muss."
+
+			for (int i = 0; i < clusters.Count; i++) {
+				var tickData = clusters.Values[i];
+				var tickRange = 0;
+				if (tickRange < clusterMinTickRange) {
+					// expand cluster
+				}
 			}
 		}
 		

@@ -20,6 +20,8 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		private CotRepo cotRepo;
 		private double min = double.MaxValue;
 		private double max = double.MinValue;
+		private int? lastMinIndex;
+		private int? lastMaxIndex;
 		
 		#region Properties
 		[TypeConverter(typeof(FriendlyEnumConverter))]
@@ -160,11 +162,9 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 
 		protected abstract double GetMainValue(DbCotData cotData);
 
-		private int? lastMinIndex;
-		private int? lastMaxIndex;
 		
 		protected override void OnBarUpdate() {
-			if (SuriAddOn.license == License.None || cotRepo == null || cotRepo.IsEmpty()) return;
+			if (SuriAddOn.license == License.None || cotRepo == null || cotRepo.IsEmpty() || !IsFirstTickOfBar) return;
 			
 			DbCotData cotData = null;
 			try {

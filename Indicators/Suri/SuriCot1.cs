@@ -152,7 +152,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
         }
 
 		protected override void OnBarUpdate() {
-			if (SuriAddOn.license == License.None || cotRepo == null || cotRepo.IsEmpty()) return;
+			if (SuriAddOn.license == License.None || cotRepo == null || cotRepo.IsEmpty() || !IsFirstTickOfBar) return;
 			if (!(Bars.BarsPeriod.BarsPeriodType == BarsPeriodType.Day && Bars.BarsPeriod.Value == 1 || Bars.BarsPeriod.BarsPeriodType == BarsPeriodType.Minute && Bars.BarsPeriod.Value == 1440)) {
 				Draw.TextFixed(this, "Warning", "CoT 1 ist nur für ein 1-Tages Chart oder 1440-Minuten Chart verfügbar.", TextPosition.Center);
 				return;
