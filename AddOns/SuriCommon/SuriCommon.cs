@@ -19,7 +19,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
         public static string version = "1.4.1";
         public static string mostRecentVersion = "";
         
-        public static void Print(string s) { Code.Output.Process(s, PrintTo.OutputTab1); }
+        public static void Print(object s) { Code.Output.Process(s.ToString(), PrintTo.OutputTab1); }
 
         private static Random _random = new Random();
         public static int random { get { return _random.Next(1, 1000000); } }

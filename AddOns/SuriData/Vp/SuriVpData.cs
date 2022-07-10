@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Forms;
 using Newtonsoft.Json;
 using NinjaTrader.Custom.AddOns.SuriData;
@@ -346,17 +347,17 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			// params
 			int initialSearchRange = 20;
 			
-			clusters.Add(low + pocIndex, PocTickData());
+			//clusters.Add(low + pocIndex, PocTickData());
 			
 			// first find local pocs and lvns in a very rough way.
-			for (int i = low + pocIndex + 1; i < low + tickData.Count; i++) {
+			for (int i = low; i < low + tickData.Count; i++) {
 				int? index = null;
 				double value = double.MaxValue;
 				int noNewFound = 0;
 				
 				// find local lvn
 				for (; i < low + tickData.Count && noNewFound < initialSearchRange; i++) {
-					if (value > tickData[i].volume) {
+					if (value >= tickData[i].volume) {
 						value = tickData[i].volume;
 						noNewFound = 0;
 						index = i;
@@ -379,7 +380,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 				value = double.MinValue;
 				noNewFound = 0;
 				for (; i < low + tickData.Count && noNewFound < initialSearchRange; i++) {
-					if (value < tickData[i].volume) {
+					if (value <= tickData[i].volume) {
 						value = tickData[i].volume;
 						noNewFound = 0;
 						index = i;
@@ -392,6 +393,12 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 				tickData[i].isSubPoc = true;
 				clusters.Add(i, tickData[i]);
 			}
+			
+			// There may be POCs at the high or low, however they can never be used to build a cluster. A cluster must always has a LVN near the top and bottom.
+			var bottomData = clusters.First().Value;
+			var topData    = clusters.Last() .Value;
+			if (bottomData.isSubPoc || bottomData.isMainPoc) clusters.RemoveAt(0);
+			if (topData   .isSubPoc || topData   .isMainPoc) clusters.RemoveAt(clusters.Count - 1);
 		}
 
 		/// Tries to merge insignificant clusters
@@ -399,15 +406,75 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			// params
 			int clusterMinTickRange = 60; // "Die minimale Größe eines Clusters in Ticks."
 			int minPocLvnDistanceTickRange = 20; // "Die minimale Entfernung eines POCs zu einem der LVNs in Ticks."
-			int strength = 30; // "Mit welcher Stärke ein Cluster erkannt wird. Ein hoher Wert zeichnet nur sehr starke Cluster ein. Ein niedriger auch kleine Cluster. Der Wert ist in Prozent und gibt an, wie viel Prozent der POC mindestens vom LVN entfernt sein muss. Ein Wert von 100% heißt, dass der POC mindestens doppelt so hoch wie der höchste LVN des Clusters sein muss."
+			int strength = 20; // "Mit welcher Stärke ein Cluster erkannt wird. Ein hoher Wert zeichnet nur sehr starke Cluster ein. Ein niedriger auch kleine Cluster. Der Wert ist in Prozent und gibt an, wie viel Prozent der POC mindestens vom LVN entfernt sein muss. Ein Wert von 100% heißt, dass der POC mindestens doppelt so hoch wie der höchste LVN des Clusters sein muss."
+			int minPocSizePercent = 10; // "Wie hoch ein POC mindestens sein muss im Vergleich zum Haupt-POC."
 
-			for (int i = 0; i < clusters.Count; i++) {
-				var tickData = clusters.Values[i];
-				var tickRange = 0;
-				if (tickRange < clusterMinTickRange) {
-					// expand cluster
+			bool hasMerged = false;
+			
+			for (int i = 0; i < clusters.Count - 2; i++) {
+				if (!clusters.Values[i].isLvn) continue;
+
+				SuriVpTickData bottomPoc = null;
+				if (i > 0) bottomPoc = clusters.Values[i - 1];
+				SuriVpTickData bottomLvn = clusters.Values[i];
+				SuriVpTickData poc = clusters.Values[i + 1];
+				SuriVpTickData topLvn = clusters.Values[i + 2];
+				SuriVpTickData topPoc = null;
+				if (i < clusters.Count - 3) topPoc = clusters.Values[i + 3];
+				
+				SuriVpTickData pocToBeRemoved = null;
+				SuriVpTickData lvnToBeRemoved = null;
+				
+				
+				// remove single POCs which are insignificant ???
+				
+				
+				// check if cluster is too thin
+				if (topLvn.tick - bottomLvn.tick < clusterMinTickRange) {
+					hasMerged = true;
+					if (topLvn.volume > bottomLvn.volume) {
+						lvnToBeRemoved = topLvn;
+						pocToBeRemoved = topPoc == null || poc.volume < topPoc.volume ? poc : topPoc;
+					} else {
+						lvnToBeRemoved = bottomLvn;
+						pocToBeRemoved = bottomPoc == null || poc.volume < bottomPoc.volume ? poc : bottomPoc;
+					}
+					clusters.Remove(lvnToBeRemoved.tick);
+					lvnToBeRemoved.isLvn = false;
+					pocToBeRemoved.isSubPoc = false;
+					clusters.Remove(pocToBeRemoved.tick);
+					continue;
+				}
+				
+				
+				// check if cluster is too weak
+				if (100 - 100 * topLvn.volume / (double)poc.volume < strength) {
+					lvnToBeRemoved = topLvn;
+					pocToBeRemoved = topPoc == null || poc.volume < topPoc.volume ? poc : topPoc;
+				} else if (100 - 100 * bottomLvn.volume / (double)poc.volume < strength) {
+					lvnToBeRemoved = bottomLvn;
+					pocToBeRemoved = bottomPoc == null || poc.volume < bottomPoc.volume ? poc : bottomPoc;
+				}
+				if (lvnToBeRemoved != null) {
+					hasMerged = true;
+					clusters.Remove(lvnToBeRemoved.tick);
+					lvnToBeRemoved.isLvn = false;
+					pocToBeRemoved.isSubPoc = false;
+					clusters.Remove(pocToBeRemoved.tick);
+					continue;
+				}
+				
+				
+				// check if LVN is too close to poc
+				if (poc.tick - bottomLvn.tick < minPocLvnDistanceTickRange) {
+					
+				}
+				if (topLvn.tick - poc.tick < minPocLvnDistanceTickRange) {
+					
 				}
 			}
+
+			if (hasMerged) MergeClusters();
 		}
 		
 		
