@@ -111,6 +111,7 @@ namespace NinjaTrader.NinjaScript.DrawingTools {
 			SharpDX.DirectWrite.TextFormat	textFormat	= wpfFont.ToDirectWriteTextFormat();
 			textFormat.TextAlignment					= SharpDX.DirectWrite.TextAlignment.Leading;
 			textFormat.WordWrapping						= SharpDX.DirectWrite.WordWrapping.NoWrap;
+			float textHeight = chartControl.Properties.LabelFont == null ? 16f : (float) chartControl.Properties.LabelFont.Size;
 			
 			double stop = isLong ? double.MaxValue : double.MinValue;
 			for (int j = 0; j < 10; j++) {
@@ -127,50 +128,62 @@ namespace NinjaTrader.NinjaScript.DrawingTools {
 				(isLong ? "Long " : "Short ") + "Entry @ " + (isLong ? weekHigh : weekLow) + "\nInitiales Risiko: " + stopLossValue + " $",
 				textFormat, 250, textFormat.FontSize
 			);
-			RenderTarget.DrawTextLayout(new SharpDX.Vector2((float) weekStartX, entryY - (isLong ? 44f : 0f)), textLayout, chartControl.Properties.ChartText.ToDxBrush(RenderTarget), SharpDX.Direct2D1.DrawTextOptions.NoSnap);
+			RenderTarget.DrawTextLayout(new SharpDX.Vector2((float) weekStartX, entryY - (isLong ? textHeight * 4f : 0f)), textLayout, chartControl.Properties.ChartText.ToDxBrush(RenderTarget), SharpDX.Direct2D1.DrawTextOptions.NoSnap);
 
 			double entryStartX = chartControl.GetXByBarIndex(chartScale.GetFirstChartBars(), endOfWeekIndex.Value)   + strokePixAdjust + chartControl.BarWidth;
 			
 			bool foundEntry = false;
-			for (int entryIndex = endOfWeekIndex.Value + 1; entryIndex < bars.Count && !foundEntry; entryIndex++) {
+			int entryIndex = endOfWeekIndex.Value + 1;
+			for (; entryIndex < bars.Count; entryIndex++) {
 				if (isLong && bars.GetHigh(entryIndex) >= weekHigh || !isLong && bars.GetLow(entryIndex) <= weekLow) {
 					foundEntry = true;
-					double entryEndX   = chartControl.GetXByBarIndex(chartScale.GetFirstChartBars(), entryIndex            ) + strokePixAdjust + chartControl.BarWidth;
-					double stopStartX  = chartControl.GetXByBarIndex(chartScale.GetFirstChartBars(), entryIndex-9   ) + strokePixAdjust - chartControl.BarWidth;
-					RenderTarget.DrawLine(
-						new Vector2((float) entryStartX, entryY),
-						new Vector2((float) entryEndX,   entryY),
-						Brushes.Green.ToDxBrush(RenderTarget),
-						2
-					);
-					
-					// draw stop
-					stop = isLong ? double.MaxValue : double.MinValue;
-					for (int j = 0; j < 10; j++) {
-						if (isLong)  stop = Math.Min(stop, bars.GetLow (entryIndex-j));
-						if (!isLong) stop = Math.Max(stop, bars.GetHigh(entryIndex-j));
-					}
-					if (isLong ) stop -= chartControl.Instrument.MasterInstrument.TickSize;
-					if (!isLong) stop += chartControl.Instrument.MasterInstrument.TickSize;
-					float stopY = chartScale.GetYByValue(stop);
-					RenderTarget.DrawLine(
-						new Vector2((float) stopStartX, stopY),
-						new Vector2((float) entryEndX,  stopY),
-						Brushes.Red.ToDxBrush(RenderTarget),
-						2
-					);
-
-					stopLossValue = SuriCommon.PriceToCurrency(chartControl.Instrument, Math.Abs(entryValue - stop));
-					string signalExpiredWarning = "";
-					if ((bars.GetTime(entryIndex) - bars.GetTime(startOfWeekIndex.Value)).TotalDays > 42) {
-						signalExpiredWarning = "\nAchtung: Signal ist erloschen!";
-					}
-					
-					textLayout  = new SharpDX.DirectWrite.TextLayout(Core.Globals.DirectWriteFactory, "Stop @ " + stop + "\nRisiko: " + stopLossValue.ToString("F0") + " $" + signalExpiredWarning, textFormat, 250, textFormat.FontSize);
-					RenderTarget.DrawTextLayout(new SharpDX.Vector2((float) (entryEndX - (entryEndX - stopStartX) / 2.0), stopY - (isLong ? 0f : 44f)), textLayout, chartControl.Properties.ChartText.ToDxBrush(RenderTarget), SharpDX.Direct2D1.DrawTextOptions.NoSnap);
+					break;
 				}
 			}
+			
+			
+			double entryEndX   = chartControl.GetXByBarIndex(chartScale.GetFirstChartBars(), entryIndex            ) + strokePixAdjust + chartControl.BarWidth;
+			double stopStartX  = chartControl.GetXByBarIndex(chartScale.GetFirstChartBars(), entryIndex-9   ) + strokePixAdjust - chartControl.BarWidth;
+			if (foundEntry) {
+				RenderTarget.DrawLine(
+					new Vector2((float) entryStartX, entryY),
+					new Vector2((float) entryEndX,   entryY),
+					Brushes.Green.ToDxBrush(RenderTarget),
+					2
+				);
+			}
+					
+			// draw stop
+			stop = isLong ? double.MaxValue : double.MinValue;
+			for (int j = 0; j < 10; j++) {
+				if (isLong)  stop = Math.Min(stop, bars.GetLow (entryIndex-j));
+				if (!isLong) stop = Math.Max(stop, bars.GetHigh(entryIndex-j));
+			}
+			if (isLong ) stop -= chartControl.Instrument.MasterInstrument.TickSize;
+			if (!isLong) stop += chartControl.Instrument.MasterInstrument.TickSize;
+			float stopY = chartScale.GetYByValue(stop);
+			RenderTarget.DrawLine(
+				new Vector2((float) stopStartX, stopY),
+				new Vector2((float) entryEndX,  stopY),
+				Brushes.Red.ToDxBrush(RenderTarget),
+				2
+			);
 
+			stopLossValue = SuriCommon.PriceToCurrency(chartControl.Instrument, Math.Abs(entryValue - stop));
+			string signalExpiredWarning = "";
+			if ((bars.GetTime(entryIndex) - bars.GetTime(startOfWeekIndex.Value)).TotalDays > 42) {
+				signalExpiredWarning = "\nAchtung: Signal ist erloschen!";
+			}
+			
+			textLayout  = new SharpDX.DirectWrite.TextLayout(Core.Globals.DirectWriteFactory, "Stop @ " + stop + "\nRisiko: " + stopLossValue.ToString("F0") + " $" + signalExpiredWarning, textFormat, 250, textFormat.FontSize);
+			RenderTarget.DrawTextLayout(
+				new SharpDX.Vector2((float) (entryEndX - (entryEndX - stopStartX) / 2.0), stopY - (isLong ? 0f : textHeight)),
+				textLayout,
+				chartControl.Properties.ChartText.ToDxBrush(RenderTarget),
+				SharpDX.Direct2D1.DrawTextOptions.NoSnap
+			);
+			
+			
 			if (!foundEntry) {
 				var style = new StrokeStyleProperties { DashStyle = DashStyle.Dash };
 				RenderTarget.DrawLine(

@@ -310,10 +310,11 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 					if (textFormatTickInfo == null || isFirstBar) {
 						textFormatTickInfo = new TextFormat(Globals.DirectWriteFactory,"Arial", rect.Height * 0.85f);
 					}
+					// left
 					TextLayout textLayout = new TextLayout(Globals.DirectWriteFactory, tickData.bids.ToString("F0"), textFormatTickInfo, rect.X - bidAskSpace - 5, ChartPanel.H);
 					textLayout.TextAlignment = TextAlignment.Trailing;
 					RenderTarget.DrawTextLayout(new Vector2(0, rect.Y), textLayout, tickTextFill, DrawTextOptions.NoSnap);
-					
+					// right
 					textLayout = new TextLayout(Globals.DirectWriteFactory, tickData.asks.ToString("F0"), textFormatTickInfo, ChartPanel.W, ChartPanel.H);
 					RenderTarget.DrawTextLayout(new Vector2(rect.X + bidAskSpace + 5, rect.Y), textLayout, tickTextFill, DrawTextOptions.NoSnap);
 				}

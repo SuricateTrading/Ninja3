@@ -293,7 +293,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 			}
 		}
 		
-		public void Prepare() {
+		public void Prepare(bool autLines = false) {
 			isPrepared = true;
 			tickCount = high - low;
 			
@@ -301,7 +301,6 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 				// add missing values with a volume of zero
 				if (!tickData.ContainsKey(low + i)) {
 					tickData[low + i] = new SuriVpTickData(low + i);
-					SuriCommon.Print("asdsd");
 				}
 				
 				// poc
@@ -328,8 +327,13 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 				tickData[low + i].distributedVolume = average / 5.0;
 			}*/
 
-			CalcClusters();
-			MergeClusters();
+			if (autLines) {
+				CalcClusters();
+				MergeClusters();
+				// todo: try to move every LVN between 2 POCs to the smallest tick
+				// todo: try to move every POC between 2 LVNs to the highest  tick
+				// merge again afterwards
+			}
 
 			if (!isVpBig) {
 				CalculateVaueArea();
@@ -345,7 +349,7 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 		
 		private void CalcClusters() {
 			// params
-			int initialSearchRange = 20;
+			int initialSearchRange = 25;
 			
 			//clusters.Add(low + pocIndex, PocTickData());
 			
@@ -448,10 +452,10 @@ namespace NinjaTrader.Custom.AddOns.SuriCommon {
 				
 				
 				// check if cluster is too weak
-				if (100 - 100 * topLvn.volume / (double)poc.volume < strength) {
+				if (100 - 100 * topLvn.volume / poc.volume < strength) {
 					lvnToBeRemoved = topLvn;
 					pocToBeRemoved = topPoc == null || poc.volume < topPoc.volume ? poc : topPoc;
-				} else if (100 - 100 * bottomLvn.volume / (double)poc.volume < strength) {
+				} else if (100 - 100 * bottomLvn.volume / poc.volume < strength) {
 					lvnToBeRemoved = bottomLvn;
 					pocToBeRemoved = bottomPoc == null || poc.volume < bottomPoc.volume ? poc : bottomPoc;
 				}

@@ -55,6 +55,9 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 		[Display(Name = "Dynamische Breite", Order = 4, GroupName = "Parameter", Description = "Wenn aktiv, dann wird die Breite des VPs ausgehend von dem breitesten aktuell sichtbaren Tick berechnet.\nWenn nicht aktiv, wird die Breite des VPs ausgehend vom Haupt-POC berechnet. \nDie Berechnung mit aktivierter Checkbox ist rechenintensiv! Schalte es aus, wenn es bei Dir hängt.")]
 		public bool dynamicWidth { get; set; }
 		
+		[Display(Name = "Auto Linien", Order = 4, GroupName = "Parameter", Description = "Berechnet automatisch LVNs und POCs.")]
+		public bool autLines { get; set; }
+		
 		#region Colors
 		[XmlIgnore]
 		[Display(Name = "Volumen", Order = 1, GroupName = "Farben")]
@@ -108,6 +111,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				normalAreaBrush								= Brushes.DimGray;
 				pocBrush									= Brushes.Red;
 				textBrush									= Brushes.White;
+				autLines									= true;
 			} else if (State == State.DataLoaded) {
 				SetZOrder(-100);
 				dataLoaded = false;
@@ -159,7 +163,7 @@ namespace NinjaTrader.NinjaScript.Indicators.Suri {
 				return;
 			}
 			if (!dataLoaded || Bars == null || Bars.Instrument == null || IsInHitTest) return;
-			if (!suriVpBigData.isPrepared) suriVpBigData.Prepare();
+			if (!suriVpBigData.isPrepared) suriVpBigData.Prepare(autLines);
 			
 			int highestValue = (int) Math.Floor(chartScale.MaxValue / TickSize);
 			int lowestValue  = (int) Math.Floor(chartScale.MinValue / TickSize);

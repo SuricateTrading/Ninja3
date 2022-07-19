@@ -189,7 +189,7 @@ namespace NinjaTrader.Gui.NinjaScript {
 					}
 
 					if (SuriServer.ChangeMachineId(oldMachineId.Text)) {
-						NTMessageBoxSimple.Show(parent, "Die Maschinen ID wurde erfolgreich aktualisiert!", "Aktualisiere Maschinen ID", MessageBoxButton.OK, MessageBoxImage.None);
+						NTMessageBoxSimple.Show(parent, "Die Maschinen ID wurde erfolgreich aktualisiert! Nach einem Neustart von Ninja Trader sollte alles wieder bereit sein.", "Aktualisiere Maschinen ID", MessageBoxButton.OK, MessageBoxImage.None);
 					} else {
 						NTMessageBoxSimple.Show(parent, "Die Maschinen ID konnte nicht geändert werden. Bitte prüfe, ob Du sie richtig eingegeben hast.", "Aktualisiere Maschinen ID", MessageBoxButton.OK, MessageBoxImage.None);
 					}
